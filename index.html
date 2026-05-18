@@ -456,18 +456,27 @@ select{cursor:pointer}
         <div id="audio-player-wrap" style="display:none;margin-top:8px">
           <div style="font-size:12px;font-weight:600;color:var(--text0);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="audio-filename">文件名</div>
           <audio id="audio-player" controls style="width:100%;border-radius:var(--r-sm);height:36px" preload="metadata"></audio>
-          <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
-            <button class="btn btn-primary btn-sm" onclick="playAndRecognize()" id="play-recognize-btn">▶ 播放并转写</button>
-            <button class="btn btn-secondary btn-sm" onclick="resetAudioUpload()">🗑 重新上传</button>
+
+          <!-- Whisper status + progress -->
+          <div id="whisper-status-wrap" style="margin-top:10px">
+            <div id="whisper-status" style="font-size:12.5px;color:var(--text2);line-height:1.5"></div>
+            <div id="whisper-progress-wrap" style="display:none;margin-top:6px">
+              <div style="background:var(--border);border-radius:99px;height:5px;overflow:hidden">
+                <div id="whisper-bar" style="height:100%;background:linear-gradient(90deg,var(--accent),#a78bfa);width:0%;transition:width .4s;border-radius:99px"></div>
+              </div>
+              <div id="whisper-progress-label" style="font-size:11px;color:var(--text3);margin-top:3px"></div>
+            </div>
           </div>
-          <div style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.5" id="audio-tip">
-            💡 播放时会同步开启麦克风识别<br>请确保扬声器音量可被麦克风拾取
+
+          <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
+            <button class="btn btn-secondary btn-sm" id="retranscribe-btn" style="display:none" onclick="retranscribe()">🔄 重新转写</button>
+            <button class="btn btn-secondary btn-sm" onclick="resetAudioUpload()">🗑 重新上传</button>
           </div>
         </div>
 
         <!-- Upload transcript feed -->
         <div class="tx-feed" id="tx-upload-feed" style="margin-top:8px;display:none">
-          <div class="tx-live" id="tx-upload-live">等待播放...</div>
+          <div class="tx-live" id="tx-upload-live"></div>
         </div>
       </div>
 
@@ -1562,9 +1571,11 @@ function handleAudioDrop(e) {
   else toast('请拖入音频文件（MP3/WAV/M4A 等）');
 }
 
+let _currentAudioFile = null;
+
 function handleAudioFile(file) {
   if (!file) return;
-  // Revoke previous
+  _currentAudioFile = file;
   if (audioObjectURL) URL.revokeObjectURL(audioObjectURL);
   audioObjectURL = URL.createObjectURL(file);
 
@@ -1574,7 +1585,90 @@ function handleAudioFile(file) {
   document.getElementById('audio-dropzone').style.display = 'none';
   document.getElementById('audio-player-wrap').style.display = '';
   document.getElementById('tx-upload-feed').style.display = '';
-  document.getElementById('tx-upload-live').textContent = '点击"播放并转写"开始...';
+  document.getElementById('retranscribe-btn').style.display = 'none';
+  // Auto-start Whisper transcription immediately
+  startWhisperTranscribe(file);
+}
+
+async function startWhisperTranscribe(file) {
+  const setStatus = (msg) => {
+    const el = document.getElementById('whisper-status');
+    if (el) el.textContent = msg;
+  };
+  const setProgress = (pct, label) => {
+    const wrap = document.getElementById('whisper-progress-wrap');
+    if (wrap) wrap.style.display = (pct >= 0 && pct < 100) ? '' : 'none';
+    const bar = document.getElementById('whisper-bar');
+    if (bar) bar.style.width = pct + '%';
+    const lbl = document.getElementById('whisper-progress-label');
+    if (lbl && label) lbl.textContent = label;
+  };
+  document.getElementById('retranscribe-btn').style.display = 'none';
+  const liveEl = document.getElementById('tx-upload-live');
+  if (liveEl) liveEl.textContent = '';
+
+  try {
+    if (!window._whisperPipe) {
+      setStatus('⏳ 首次使用，正在加载语音识别模型（约 74MB，加载后自动缓存）...');
+      setProgress(0, '准备下载...');
+      const { pipeline, env } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2');
+      env.allowLocalModels = false;
+      window._whisperPipe = await pipeline(
+        'automatic-speech-recognition',
+        'Xenova/whisper-base',
+        {
+          progress_callback: (info) => {
+            if (info.status === 'downloading' && info.total) {
+              const pct = Math.round((info.loaded / info.total) * 100);
+              setProgress(pct, `下载中 ${pct}%（${(info.loaded/1024/1024).toFixed(1)}/${(info.total/1024/1024).toFixed(1)} MB）`);
+            } else if (info.status === 'loading') {
+              setStatus('⚙️ 模型加载中，请稍候...');
+              setProgress(99, '初始化模型...');
+            }
+          }
+        }
+      );
+    }
+
+    setProgress(100, '');
+    setStatus('🎵 正在解码音频...');
+    const arrayBuffer = await file.arrayBuffer();
+    const audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
+    const decoded = await audioCtx.decodeAudioData(arrayBuffer.slice(0));
+    audioCtx.close();
+    const audio = decoded.getChannelData(0);
+
+    setStatus('🤖 AI 转写中，请稍候...');
+    const langMap = { 'zh-CN': 'chinese', 'zh-TW': 'chinese', 'en-US': 'english', 'ja-JP': 'japanese' };
+    const result = await window._whisperPipe(audio, {
+      language: langMap[S.settings.lang] || 'chinese',
+      task: 'transcribe',
+      chunk_length_s: 30,
+      stride_length_s: 5,
+      return_timestamps: true
+    });
+
+    const chunks = (result.chunks || []).filter(ch => ch.text.trim().length >= 2);
+    if (chunks.length > 0) {
+      chunks.forEach(ch => {
+        const text = ch.text.trim();
+        addTxToFeed(text, 'tx-upload-feed', null);
+        if (S.meeting) S.meeting.transcript.push({ time: Date.now(), text });
+        if (S.settings.autoAction !== false) autoDetect(text);
+      });
+      setStatus(`✅ 转写完成，共识别 ${chunks.length} 段文字`);
+    } else {
+      setStatus('⚠️ 未识别到内容，请检查音频文件是否含有语音');
+    }
+  } catch (err) {
+    console.error('Whisper error:', err);
+    setStatus('❌ 转写失败：' + err.message);
+  }
+  document.getElementById('retranscribe-btn').style.display = '';
+}
+
+function retranscribe() {
+  if (_currentAudioFile) startWhisperTranscribe(_currentAudioFile);
 }
 
 function resetAudioUpload() {
@@ -1589,78 +1683,6 @@ function resetAudioUpload() {
   document.getElementById('tx-upload-feed').style.display = 'none';
 }
 
-function playAndRecognize() {
-  const player = document.getElementById('audio-player');
-  if (!player.src) { toast('请先上传录音文件'); return; }
-
-  const btn = document.getElementById('play-recognize-btn');
-
-  if (player.paused) {
-    // Start playback + mic recognition simultaneously
-    player.play();
-    btn.textContent = '⏸ 暂停';
-    // Route transcript items to upload feed
-    S._uploadMode = true;
-    startMicForUpload();
-    // Auto-stop recognition when audio ends
-    player.onended = () => {
-      stopMic();
-      btn.textContent = '▶ 播放并转写';
-      S._uploadMode = false;
-      const live = document.getElementById('tx-upload-live');
-      if (live) live.textContent = '✅ 播放结束，转写完成';
-    };
-  } else {
-    player.pause();
-    btn.textContent = '▶ 继续播放';
-    stopMic();
-    S._uploadMode = false;
-  }
-}
-
-function startMicForUpload() {
-  if (!SR) {
-    toast('⚠️ 请使用 Chrome 或 Edge 浏览器以启用语音识别');
-    return;
-  }
-  if (S.recognition) S.recognition.abort();
-
-  const r = new SR();
-  r.lang = S.settings.lang || 'zh-CN';
-  r.continuous = true;
-  r.interimResults = true;
-  S.recognition = r;
-  S.micActive = true;
-
-  r.onresult = (e) => {
-    let interim = '';
-    for (let i = e.resultIndex; i < e.results.length; i++) {
-      const txt = e.results[i][0].transcript;
-      if (e.results[i].isFinal) {
-        addTxToFeed(txt, 'tx-upload-feed', 'tx-upload-live');
-        if (S.meeting) S.meeting.transcript.push({ time: Date.now(), text: txt });
-        if (S.settings.autoAction !== false) autoDetect(txt);
-      } else {
-        interim += txt;
-      }
-    }
-    const live = document.getElementById('tx-upload-live');
-    if (live) live.textContent = interim || '';
-  };
-
-  r.onerror = (e) => {
-    if (e.error === 'not-allowed') {
-      alert('麦克风权限被拒绝，请在浏览器设置中允许');
-      stopMic();
-    }
-  };
-  r.onend = () => {
-    const player = document.getElementById('audio-player');
-    if (S.micActive && !player?.paused) try { S.recognition.start(); } catch(e) {}
-  };
-
-  try { r.start(); } catch(e) { toast('录音启动失败：' + e.message); }
-}
 
 function addTxToFeed(text, feedId, liveId) {
   const feed = document.getElementById(feedId);
@@ -1748,7 +1770,7 @@ document.addEventListener('drop', (e) => {
   // Switch to upload tab and load file
   switchTxMode('upload', document.getElementById('txmode-upload'));
   handleAudioFile(file);
-  toast('🎵 录音文件已加载，点击"播放并转写"开始');
+  toast('🎵 录音文件已加载，AI 转写即将开始...');
 });
 
 // ══════════════════════════════════════════════════
