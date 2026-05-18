@@ -772,6 +772,59 @@ function init() {
   if (localStorage.getItem('mp3_gist_pat')) {
     document.getElementById('gist-pat-input').value = '••••••••••••••••••••';
   }
+
+  // Restore in-progress meeting after accidental refresh
+  const inProgress = S.meetings.find(m => !m.endTime);
+  if (inProgress) {
+    S.meeting = inProgress;
+    // Restore room UI
+    document.getElementById('room-title').textContent = inProgress.title;
+    document.getElementById('room-badge').textContent = '📅 ' + new Date(inProgress.startTime).toLocaleDateString('zh-CN',{month:'2-digit',day:'2-digit'});
+    document.getElementById('room-notes').value = inProgress.notes || '';
+    document.getElementById('room-code').value = inProgress.code || '';
+    // Replay transcript into feed
+    const feed = document.getElementById('tx-feed');
+    feed.innerHTML = '<div class="tx-live" id="tx-live"></div>';
+    inProgress.transcript.slice().reverse().forEach(item => {
+      const time = new Date(item.time).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+      const safeText = item.text.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const el = document.createElement('div');
+      el.className = 'tx-item final';
+      el.innerHTML = `<div class="tx-time">${time}</div><span class="tx-body">${safeText}</span><span class="tx-insert-btn" onclick="insertTxToNotes(this)">插入笔记 ↗</span>`;
+      feed.insertBefore(el, feed.firstChild);
+    });
+    // Restore timer
+    clearInterval(S.timerInterval);
+    S.timerInterval = setInterval(() => {
+      if (!S.meeting) return;
+      const secs = Math.floor((Date.now() - S.meeting.startTime) / 1000);
+      document.getElementById('room-timer').textContent =
+        String(Math.floor(secs/60)).padStart(2,'0') + ':' + String(secs%60).padStart(2,'0');
+    }, 1000);
+    setCodeMode(false);
+    document.getElementById('code-mode-toggle').style.display = '';
+    nav('room');
+    // Show restore toast
+    setTimeout(() => toast('📋 已恢复上次会议记录：' + inProgress.title), 400);
+  }
+
+  // Auto-save before unload (e.g. accidental refresh during meeting)
+  window.addEventListener('beforeunload', () => {
+    if (S.meeting) {
+      S.meeting.notes = document.getElementById('room-notes')?.value || S.meeting.notes;
+      S.meeting.code = document.getElementById('room-code')?.value || S.meeting.code;
+      // Save in-progress meeting into meetings list temporarily
+      const idx = S.meetings.findIndex(m => m.id === S.meeting.id);
+      if (idx === -1) S.meetings.unshift(S.meeting);
+      else S.meetings[idx] = S.meeting;
+      saveData();
+    }
+  });
+
+  // Periodic auto-save every 30s during active meeting
+  setInterval(() => {
+    if (S.meeting) saveData();
+  }, 30000);
 }
 
 function saveData() {
@@ -948,7 +1001,10 @@ function endMeeting() {
     S.meeting.code = document.getElementById('room-code').value;
     S.meeting.actions = getActions();
     S.meeting.summary = buildSummary(S.meeting);
-    S.meetings.unshift(S.meeting);
+    // Replace existing entry or prepend (avoid duplicates from auto-save)
+    const existIdx = S.meetings.findIndex(m => m.id === S.meeting.id);
+    if (existIdx >= 0) S.meetings[existIdx] = S.meeting;
+    else S.meetings.unshift(S.meeting);
     if (S.meetings.length > 200) S.meetings.pop();
     saveData();
     updateStats();
@@ -1657,6 +1713,8 @@ async function startWhisperTranscribe(file) {
         if (S.settings.autoAction !== false) autoDetect(text);
       });
       setStatus(`✅ 转写完成，共识别 ${chunks.length} 段文字`);
+      // Auto-save transcript to localStorage so refresh won't lose data
+      if (S.meeting) saveData();
     } else {
       setStatus('⚠️ 未识别到内容，请检查音频文件是否含有语音');
     }
