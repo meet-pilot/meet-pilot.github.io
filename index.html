@@ -1729,16 +1729,20 @@ async function startCloudTranscribe(file, apiKey) {
 
   const endpoint = localStorage.getItem('mp3_speech_api_endpoint')
     || 'https://api.openai.com/v1/audio/transcriptions';
+  // Auto-select model name based on provider
+  const modelName = endpoint.includes('siliconflow') ? 'FunAudioLLM/SenseVoiceSmall' : 'whisper-1';
   const langMap = { 'zh-CN': 'zh', 'zh-TW': 'zh', 'en-US': 'en', 'ja-JP': 'ja' };
 
   try {
     setStatus('☁️ 上传音频中，请稍候...');
     const formData = new FormData();
     formData.append('file', file, file.name);
-    formData.append('model', 'whisper-1');
+    formData.append('model', modelName);
     formData.append('language', langMap[S.settings.lang] || 'zh');
     formData.append('response_format', 'verbose_json');
-    formData.append('timestamp_granularities[]', 'segment');
+    if (!endpoint.includes('siliconflow')) {
+      formData.append('timestamp_granularities[]', 'segment');
+    }
 
     const res = await fetch(endpoint, {
       method: 'POST',
