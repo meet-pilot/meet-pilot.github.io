@@ -233,6 +233,12 @@ select{cursor:pointer}
 .mlabel{font-size:13px;font-weight:600;color:var(--text0);margin-bottom:6px}
 .mactions{display:flex;gap:10px;justify-content:flex-end;margin-top:22px}
 
+/* ── Audio upload ── */
+.audio-dropzone{border:2px dashed var(--border);border-radius:var(--r);padding:18px 12px;text-align:center;cursor:pointer;transition:all .2s;background:var(--bg2)}
+.audio-dropzone:hover,.audio-dropzone.drag-over{border-color:var(--accent);background:var(--accent-dim)}
+.txmode-btn.active{background:var(--accent-dim);color:var(--accent)}
+.txmode-btn:hover{background:var(--bg2);color:var(--text0)}
+
 /* ── Toast ── */
 .toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--text0);color:var(--bg1);padding:10px 22px;border-radius:99px;font-size:14px;font-weight:500;z-index:999;pointer-events:none;animation:toastIn .3s ease;white-space:nowrap}
 @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
@@ -408,11 +414,48 @@ select{cursor:pointer}
 
     <!-- Right: transcript + actions -->
     <div class="rpanel room-right-panel">
-      <div class="rpanel-title">实时转录</div>
-      <div id="speech-warn"></div>
-      <div class="tx-feed" id="tx-feed">
-        <div class="tx-live" id="tx-live">🎙 点击下方按钮开始录音...</div>
+      <!-- Transcript mode tabs -->
+      <div style="display:flex;gap:2px;margin-bottom:4px">
+        <button class="txmode-btn active" id="txmode-live" onclick="switchTxMode('live',this)" style="padding:4px 10px;border-radius:var(--r-sm);font-size:12px;font-weight:600;color:var(--text2);transition:all .18s">🎙 实时录音</button>
+        <button class="txmode-btn" id="txmode-upload" onclick="switchTxMode('upload',this)" style="padding:4px 10px;border-radius:var(--r-sm);font-size:12px;font-weight:600;color:var(--text2);transition:all .18s">📁 上传录音</button>
       </div>
+
+      <!-- Live mic panel -->
+      <div id="tx-live-panel">
+        <div id="speech-warn"></div>
+        <div class="tx-feed" id="tx-feed">
+          <div class="tx-live" id="tx-live">🎙 点击下方按钮开始录音...</div>
+        </div>
+      </div>
+
+      <!-- Audio upload panel -->
+      <div id="tx-upload-panel" style="display:none">
+        <div class="audio-dropzone" id="audio-dropzone" onclick="document.getElementById('audio-file-input').click()" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="handleAudioDrop(event)">
+          <div style="font-size:28px;margin-bottom:6px">🎵</div>
+          <div style="font-size:13px;font-weight:600;color:var(--text0)">点击上传录音文件</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:3px">支持 MP3、WAV、M4A、OGG、WebM</div>
+        </div>
+        <input type="file" id="audio-file-input" accept="audio/*" style="display:none" onchange="handleAudioFile(this.files[0])">
+
+        <!-- Audio player (shown after upload) -->
+        <div id="audio-player-wrap" style="display:none;margin-top:8px">
+          <div style="font-size:12px;font-weight:600;color:var(--text0);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="audio-filename">文件名</div>
+          <audio id="audio-player" controls style="width:100%;border-radius:var(--r-sm);height:36px" preload="metadata"></audio>
+          <div style="margin-top:8px;display:flex;gap:6px;flex-wrap:wrap">
+            <button class="btn btn-primary btn-sm" onclick="playAndRecognize()" id="play-recognize-btn">▶ 播放并转写</button>
+            <button class="btn btn-secondary btn-sm" onclick="resetAudioUpload()">🗑 重新上传</button>
+          </div>
+          <div style="font-size:11px;color:var(--text3);margin-top:6px;line-height:1.5" id="audio-tip">
+            💡 播放时会同步开启麦克风识别<br>请确保扬声器音量可被麦克风拾取
+          </div>
+        </div>
+
+        <!-- Upload transcript feed -->
+        <div class="tx-feed" id="tx-upload-feed" style="margin-top:8px;display:none">
+          <div class="tx-live" id="tx-upload-live">等待播放...</div>
+        </div>
+      </div>
+
       <div class="divider"></div>
       <div style="display:flex;align-items:center;gap:6px">
         <div class="rpanel-title" style="flex:1">行动项</div>
@@ -744,8 +787,7 @@ function applyCodingGlobal() {
   const on = S.codingGlobal;
   const tog = document.getElementById('coding-global-toggle');
   if (tog) tog.checked = on;
-  // Show/hide code mode toggle in room
-  document.getElementById('code-mode-toggle').style.display = on ? '' : 'none';
+  // Code mode toggle is always visible in room — global setting only controls default
 }
 function toggleCodingGlobal() {
   S.codingGlobal = document.getElementById('coding-global-toggle').checked;
@@ -839,9 +881,9 @@ function startMeeting() {
   // Code mode reset
   setCodeMode(false);
   document.getElementById('code-tab-btn').style.display = 'none';
-  applyCodingGlobal();
   document.getElementById('code-mode-cb').checked = false;
   document.getElementById('code-mode-toggle').classList.remove('on');
+  document.getElementById('code-mode-toggle').style.display = '';  // always visible
 
   // Timer
   clearInterval(S.timerInterval);
@@ -1457,6 +1499,147 @@ function toast(msg) {
   el.textContent = msg;
   document.body.appendChild(el);
   setTimeout(() => el.remove(), 2500);
+}
+
+
+// ══════════════════════════════════════════════════
+//  AUDIO UPLOAD & PLAYBACK TRANSCRIPTION
+// ══════════════════════════════════════════════════
+let audioObjectURL = null;
+
+function switchTxMode(mode, btn) {
+  document.querySelectorAll('.txmode-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('tx-live-panel').style.display  = mode === 'live'   ? '' : 'none';
+  document.getElementById('tx-upload-panel').style.display = mode === 'upload' ? '' : 'none';
+  // When switching back to live, keep speech-warn in live panel
+  if (mode === 'live') {
+    const w = document.getElementById('speech-warn');
+    document.getElementById('tx-live-panel').insertBefore(w, document.getElementById('tx-live-panel').firstChild);
+  }
+}
+
+function handleAudioDrop(e) {
+  e.preventDefault();
+  document.getElementById('audio-dropzone').classList.remove('drag-over');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('audio/')) handleAudioFile(file);
+  else toast('请拖入音频文件（MP3/WAV/M4A 等）');
+}
+
+function handleAudioFile(file) {
+  if (!file) return;
+  // Revoke previous
+  if (audioObjectURL) URL.revokeObjectURL(audioObjectURL);
+  audioObjectURL = URL.createObjectURL(file);
+
+  const player = document.getElementById('audio-player');
+  player.src = audioObjectURL;
+  document.getElementById('audio-filename').textContent = file.name;
+  document.getElementById('audio-dropzone').style.display = 'none';
+  document.getElementById('audio-player-wrap').style.display = '';
+  document.getElementById('tx-upload-feed').style.display = '';
+  document.getElementById('tx-upload-live').textContent = '点击"播放并转写"开始...';
+}
+
+function resetAudioUpload() {
+  stopMic();
+  const player = document.getElementById('audio-player');
+  player.pause();
+  player.src = '';
+  if (audioObjectURL) { URL.revokeObjectURL(audioObjectURL); audioObjectURL = null; }
+  document.getElementById('audio-file-input').value = '';
+  document.getElementById('audio-dropzone').style.display = '';
+  document.getElementById('audio-player-wrap').style.display = 'none';
+  document.getElementById('tx-upload-feed').style.display = 'none';
+}
+
+function playAndRecognize() {
+  const player = document.getElementById('audio-player');
+  if (!player.src) { toast('请先上传录音文件'); return; }
+
+  const btn = document.getElementById('play-recognize-btn');
+
+  if (player.paused) {
+    // Start playback + mic recognition simultaneously
+    player.play();
+    btn.textContent = '⏸ 暂停';
+    // Route transcript items to upload feed
+    S._uploadMode = true;
+    startMicForUpload();
+    // Auto-stop recognition when audio ends
+    player.onended = () => {
+      stopMic();
+      btn.textContent = '▶ 播放并转写';
+      S._uploadMode = false;
+      const live = document.getElementById('tx-upload-live');
+      if (live) live.textContent = '✅ 播放结束，转写完成';
+    };
+  } else {
+    player.pause();
+    btn.textContent = '▶ 继续播放';
+    stopMic();
+    S._uploadMode = false;
+  }
+}
+
+function startMicForUpload() {
+  if (!SR) {
+    toast('⚠️ 请使用 Chrome 或 Edge 浏览器以启用语音识别');
+    return;
+  }
+  if (S.recognition) S.recognition.abort();
+
+  const r = new SR();
+  r.lang = S.settings.lang || 'zh-CN';
+  r.continuous = true;
+  r.interimResults = true;
+  S.recognition = r;
+  S.micActive = true;
+
+  r.onresult = (e) => {
+    let interim = '';
+    for (let i = e.resultIndex; i < e.results.length; i++) {
+      const txt = e.results[i][0].transcript;
+      if (e.results[i].isFinal) {
+        addTxToFeed(txt, 'tx-upload-feed', 'tx-upload-live');
+        if (S.meeting) S.meeting.transcript.push({ time: Date.now(), text: txt });
+        if (S.settings.autoAction !== false) autoDetect(txt);
+      } else {
+        interim += txt;
+      }
+    }
+    const live = document.getElementById('tx-upload-live');
+    if (live) live.textContent = interim || '';
+  };
+
+  r.onerror = (e) => {
+    if (e.error === 'not-allowed') {
+      alert('麦克风权限被拒绝，请在浏览器设置中允许');
+      stopMic();
+    }
+  };
+  r.onend = () => {
+    const player = document.getElementById('audio-player');
+    if (S.micActive && !player?.paused) try { S.recognition.start(); } catch(e) {}
+  };
+
+  try { r.start(); } catch(e) { toast('录音启动失败：' + e.message); }
+}
+
+function addTxToFeed(text, feedId, liveId) {
+  const feed = document.getElementById(feedId);
+  const live = document.getElementById(liveId);
+  if (!feed) return;
+  if (live) live.textContent = '';
+  const now = new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const el = document.createElement('div');
+  el.className = 'tx-item final';
+  el.innerHTML = `<div class="tx-time">${now}</div>${text}`;
+  feed.insertBefore(el, live ? live.nextSibling : feed.firstChild);
+  while (feed.children.length > 60) feed.removeChild(feed.lastChild);
+  // Also mirror to live transcript feed
+  addTx(text, true);
 }
 
 // ══════════════════════════════════════════════════
