@@ -158,15 +158,20 @@ select{cursor:pointer}
 .room-drop-overlay{display:none;position:fixed;inset:0;z-index:500;background:rgba(99,102,241,.12);border:4px dashed var(--accent);pointer-events:none;align-items:center;justify-content:center;flex-direction:column;gap:12px}
 .room-drop-overlay.active{display:flex}
 .room-drop-overlay .drop-hint{font-size:20px;font-weight:800;color:var(--accent);background:var(--bg1);padding:18px 32px;border-radius:var(--r-lg);box-shadow:var(--shadow-lg);text-align:center}
-/* Upload area inside right panel */
-.upload-compact{display:flex;flex-direction:column;gap:8px;flex-shrink:0}
-.upload-dropzone-sm{border:2px dashed var(--border);border-radius:var(--r-sm);padding:12px;text-align:center;cursor:pointer;transition:all .18s;background:var(--bg2)}
+/* Upload area inside right panel — fixed height, never squeezes actions */
+.upload-compact{display:flex;flex-direction:column;gap:6px;flex-shrink:0;max-height:200px;overflow-y:auto}
+.upload-dropzone-sm{border:2px dashed var(--border);border-radius:var(--r-sm);padding:10px;text-align:center;cursor:pointer;transition:all .18s;background:var(--bg2);flex-shrink:0}
 .upload-dropzone-sm:hover,.upload-dropzone-sm.drag-over{border-color:var(--accent);background:var(--accent-dim)}
-.upload-status{font-size:12px;color:var(--text2);line-height:1.5;min-height:18px}
-.upload-progress-wrap{display:none;margin-top:4px}
+.upload-status{font-size:11.5px;color:var(--text2);line-height:1.5;min-height:16px}
+.upload-progress-wrap{display:none;margin-top:2px}
 
-/* Action items */
-.actions-wrap{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
+/* Action items — fills remaining rpanel height */
+.actions-wrap{flex:1;min-height:60px;overflow-y:auto;display:flex;flex-direction:column;gap:3px}
+/* Agenda items with jump-to highlight */
+.agenda-item.highlight{background:rgba(99,102,241,.22)!important;transition:background .1s}
+/* Highlight flash in notes */
+@keyframes noteHighlight{0%,100%{background:transparent}30%{background:rgba(99,102,241,.22)}}
+.notes-flash{animation:noteHighlight 1.6s ease}
 .ac-item{display:flex;gap:7px;align-items:flex-start;padding:6px 8px;border-radius:var(--r-sm);background:var(--bg2);font-size:12.5px;color:var(--text1);animation:fadeUp .3s}
 .ac-item input[type=checkbox]{margin-top:2px;accent-color:var(--accent);cursor:pointer;flex-shrink:0}
 .ac-item .ac-text{flex:1}
@@ -869,6 +874,8 @@ function nav(name) {
     document.getElementById('bn-'+n)?.classList.toggle('active', n===name);
   });
   if (name === 'history') renderHist();
+  // Ensure timer is always running when room is visible
+  if (name === 'room') ensureTimer();
 }
 
 // ══════════════════════════════════════════════════
@@ -1014,15 +1021,17 @@ function startMeeting() {
   document.getElementById('room-live-badge').style.display = 'none';
   document.getElementById('room-notes').value = '';
   document.getElementById('room-code').value = '';
-  document.getElementById('tx-feed').innerHTML = '<div class="tx-live" id="tx-live">🎙 点击下方按钮开始录音...</div>';
   document.getElementById('actions-wrap').innerHTML = '';
   document.getElementById('auto-detected-count').style.display = 'none';
+  autoDetectedCount = 0;
 
-  // Agenda
+  // Agenda — start empty, will be filled by smartNotes / real-time sync
   const ul = document.getElementById('room-agenda');
-  ul.innerHTML = agenda.map((a,i) =>
-    `<li class="agenda-item" onclick="this.classList.toggle('done')"><span class="ag-num">${i+1}</span>${a}</li>`
-  ).join('');
+  ul.innerHTML = agenda.length
+    ? agenda.map((a,i) =>
+        `<li class="agenda-item" onclick="agendaJump(this)">\
+<span class="ag-num">${i+1}</span><span>${a}</span></li>`).join('')
+    : '<li style="font-size:12px;color:var(--text3);padding:6px 8px">智能整理后自动生成</li>';
 
   // Code mode reset
   setCodeMode(false);
@@ -1033,12 +1042,8 @@ function startMeeting() {
 
   // Timer
   clearInterval(S.timerInterval);
-  S.timerInterval = setInterval(() => {
-    if (!S.meeting) return;
-    const secs = Math.floor((Date.now() - S.meeting.startTime) / 1000);
-    document.getElementById('room-timer').textContent =
-      String(Math.floor(secs/60)).padStart(2,'0') + ':' + String(secs%60).padStart(2,'0');
-  }, 1000);
+  S.timerInterval = null; // reset so ensureTimer() will start fresh
+  // Timer starts via nav('room') → ensureTimer()
 
   checkSpeech();
   nav('room');
@@ -1050,6 +1055,25 @@ function startMeeting() {
       if (S.meeting && !S.micActive) startMic();
     }, 700);
   }
+}
+
+// Ensure timer is ticking whenever the room is visible (handles resume / nav back)
+function ensureTimer() {
+  if (!S.meeting) return;
+  if (S.timerInterval) return; // already running
+  if (S.meeting.endTime) {
+    // Frozen — show elapsed
+    const secs = Math.floor((S.meeting.endTime - S.meeting.startTime) / 1000);
+    document.getElementById('room-timer').textContent =
+      String(Math.floor(secs/60)).padStart(2,'0') + ':' + String(secs%60).padStart(2,'0');
+    return;
+  }
+  S.timerInterval = setInterval(() => {
+    if (!S.meeting) return;
+    const secs = Math.floor((Date.now() - S.meeting.startTime) / 1000);
+    document.getElementById('room-timer').textContent =
+      String(Math.floor(secs/60)).padStart(2,'0') + ':' + String(secs%60).padStart(2,'0');
+  }, 1000);
 }
 
 function endMeeting() {
@@ -1196,6 +1220,8 @@ function addTx(text, final, spkId) {
   notes.scrollTop = notes.scrollHeight;
   // Save to meeting transcript in order
   if (S.meeting) S.meeting.transcript.push({ time: Date.now(), text: text.trim(), spkId: spkId ?? null });
+  // Real-time agenda auto-refresh
+  autoSyncAgenda();
 }
 
 // ══════════════════════════════════════════════════
@@ -1720,20 +1746,9 @@ function resumeMeeting(id) {
     }
   }
 
-  // Timer: show elapsed time (frozen if ended, counting if still in progress)
+  // Timer — let nav('room') → ensureTimer() handle it
   clearInterval(S.timerInterval);
-  if (!m.endTime) {
-    S.timerInterval = setInterval(() => {
-      if (!S.meeting) return;
-      const secs = Math.floor((Date.now() - S.meeting.startTime) / 1000);
-      document.getElementById('room-timer').textContent =
-        String(Math.floor(secs/60)).padStart(2,'0') + ':' + String(secs%60).padStart(2,'0');
-    }, 1000);
-  } else {
-    const secs = Math.floor((m.endTime - m.startTime) / 1000);
-    document.getElementById('room-timer').textContent =
-      String(Math.floor(secs/60)).padStart(2,'0') + ':' + String(secs%60).padStart(2,'0');
-  }
+  S.timerInterval = null;
 
   setCodeMode(false);
   document.getElementById('code-mode-toggle').style.display = '';
@@ -2047,14 +2062,15 @@ function notesInsertTime() {
   ta.focus();
 }
 
+// ── smartNotes: populate agenda + action items panels, NOTHING to textarea ──
 function smartNotes() {
-  // Read from in-memory meeting transcript (always chronological)
   let tx = (S.meeting?.transcript || []).filter(t => t.text?.trim().length > 1);
 
-  // Fallback: read notes textarea directly and split by lines
+  // Fallback: parse notes textarea into pseudo-transcript
   if (!tx.length) {
     const ta = document.getElementById('room-notes');
-    const lines = (ta?.value || '').split('\n').map(l => l.trim()).filter(l => l.length > 3 && !l.startsWith('---') && !l.startsWith('#'));
+    const lines = (ta?.value || '').split('\n').map(l => l.trim())
+      .filter(l => l.length > 3 && !l.startsWith('---') && !l.startsWith('#') && !l.startsWith('['));
     if (lines.length) tx = lines.map(text => ({ text, spkId: null }));
   }
 
@@ -2067,81 +2083,160 @@ function smartNotes() {
   btn.disabled = true;
   btn.textContent = '⏳ 整理中...';
 
-  const texts = tx.map(t => t.text.trim());
-  const fullText = texts.join('。');
-
-  // ── 1. 按说话人 / 时间分段（SenseVoice 无 spk_id 时按每 60s 自动分段）──
+  // ── 1. 分段：按说话人切换 或 每 6 条一段 ──
   const hasSpeaker = tx.some(t => t.spkId != null);
   const segments = [];
   if (hasSpeaker) {
-    let cur = { spk: tx[0].spkId, items: [tx[0].text] };
+    let cur = { spk: tx[0].spkId, items: [tx[0]] };
     for (let i = 1; i < tx.length; i++) {
-      if (tx[i].spkId !== cur.spk) {
-        segments.push(cur);
-        cur = { spk: tx[i].spkId, items: [tx[i].text] };
-      } else {
-        cur.items.push(tx[i].text);
-      }
+      if (tx[i].spkId !== cur.spk) { segments.push(cur); cur = { spk: tx[i].spkId, items: [tx[i]] }; }
+      else cur.items.push(tx[i]);
     }
     segments.push(cur);
   } else {
-    // 无说话人信息：每 5 条转录合为一段，模拟段落结构
-    for (let i = 0; i < tx.length; i += 5) {
-      segments.push({ spk: null, items: tx.slice(i, i + 5).map(t => t.text) });
+    const CHUNK = 6;
+    for (let i = 0; i < tx.length; i += CHUNK)
+      segments.push({ spk: null, items: tx.slice(i, i + CHUNK) });
+  }
+
+  // ── 2. 为每段生成摘要标题（取首句截断，加说话人标签）──
+  function summarySentence(items) {
+    const joined = items.map(t => t.text.trim()).join('；');
+    // 取首个完整句子（截断到30字）
+    const first = joined.split(/[。！？]/)[0] || joined;
+    return first.length > 30 ? first.slice(0, 28) + '…' : first;
+  }
+
+  // ── 3. 行动项提取（严格模式）──
+  // 必须同时包含「主体+动作/截止」才采纳
+  const actionPatterns = [
+    /([^\s，。]{2,8})(?:需要|要|负责|去|来|请|应该)([^，。！？]{4,})/g,
+    /([^\s，。]{2,8})(?:跟进|确认|调研|整理|提交|完成|输出|梳理|准备|协调|安排|联系|落实)([^，。！？]{0,20})/g,
+    /下一步[：:]?\s*([^，。！？\n]{5,40})/g,
+    /action\s*item[：:]?\s*([^，。！？\n]{5,40})/gi,
+    /待办[：:]?\s*([^，。！？\n]{5,40})/g,
+    /TODO[：:]?\s*([^，。！？\n]{5,40})/gi,
+  ];
+
+  const fullText = tx.map(t => t.text.trim()).join('。');
+  const rawActions = new Set();
+  for (const pat of actionPatterns) {
+    let m;
+    pat.lastIndex = 0;
+    while ((m = pat.exec(fullText)) !== null) {
+      const candidate = m[0].trim();
+      if (candidate.length >= 6 && candidate.length <= 60) rawActions.add(candidate);
     }
   }
-
-  // ── 2. 关键词提取 ──
-  const decKW  = ['决定','确认','同意','通过','明确','共识','达成','结论'];
-  const todoKW = ['需要','记得','跟进','负责','安排','下一步','TODO','待办','计划','会去','去做'];
-  const qKW    = ['问题','疑问','不确定','待定','需要讨论','怎么','为什么'];
-
-  const allSents = fullText.split(/[。！？\n，,]/).map(s => s.trim()).filter(s => s.length > 4);
-  const decisions = [...new Set(allSents.filter(s => decKW.some(k => s.includes(k))))].slice(0, 6);
-  const todos     = [...new Set(allSents.filter(s => todoKW.some(k => s.includes(k))))].slice(0, 8);
-  const questions = [...new Set(allSents.filter(s => qKW.some(k => s.includes(k))))].slice(0, 4);
-
-  // ── 3. 拼装结构化笔记 ──
-  const nowStr = new Date().toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
-  let note = `# ${S.meeting?.title || '会议笔记'}\n_智能整理于 ${nowStr} · 共 ${tx.length} 条转录_\n\n`;
-
-  note += hasSpeaker ? `## 💬 讨论内容（按说话人分段）\n` : `## 💬 讨论内容\n`;
-  segments.forEach((seg, idx) => {
-    const label = seg.spk != null
-      ? `**说话人 ${parseInt(seg.spk) + 1}**`
-      : (segments.length > 1 ? `**段落 ${idx + 1}**` : '');
-    const content = seg.items.join('；');
-    note += label ? `\n${label}：${content}\n` : `\n${content}\n`;
+  // 额外：句子包含明确动词短语且≥8字
+  const verbKW = ['跟进','确认','调研','整理','提交','完成','输出','梳理','准备','协调','联系','落实','负责','安排'];
+  fullText.split(/[。！？\n]/).forEach(s => {
+    s = s.trim();
+    if (s.length >= 8 && s.length <= 60 && verbKW.some(k => s.includes(k))) rawActions.add(s);
   });
-  note += '\n';
+  const actions = [...rawActions].slice(0, 10);
 
-  if (decisions.length) {
-    note += `## ✅ 决议事项\n`;
-    decisions.forEach(d => { note += `- ${d}\n`; });
-    note += '\n';
-  }
-  if (todos.length) {
-    note += `## 📌 待办 / 行动项\n`;
-    todos.forEach(t => { note += `- [ ] ${t}\n`; });
-    note += '\n';
-  }
-  if (questions.length) {
-    note += `## ❓ 待确认问题\n`;
-    questions.forEach(q => { note += `- ${q}\n`; });
-    note += '\n';
+  // ── 4. 更新议程面板 ──
+  const ul = document.getElementById('room-agenda');
+  if (segments.length) {
+    ul.innerHTML = segments.map((seg, idx) => {
+      const label = seg.spk != null ? `说话人${parseInt(seg.spk)+1}：` : '';
+      const summary = label + summarySentence(seg.items);
+      // Store first word of first item as noteref anchor
+      const noteref = encodeURIComponent(seg.items[0].text.trim().slice(0, 12));
+      return `<li class="agenda-item" data-noteref="${noteref}" onclick="agendaJump(this)">
+        <span class="ag-num">${idx+1}</span><span title="${summary}">${summary}</span>
+      </li>`;
+    }).join('');
+  } else {
+    ul.innerHTML = '<li style="font-size:12px;color:var(--text3);padding:6px 8px">暂无可分段内容</li>';
   }
 
-  const ta = document.getElementById('room-notes');
-  notesSnapshot();
-  // Append smart summary AFTER existing notes, don't overwrite
-  const sep = '\n\n--- ✨ 智能整理 ---\n';
-  ta.value = ta.value.trimEnd() + sep + note.trimStart();
-  ta.scrollTop = ta.scrollHeight;
-  ta.focus();
+  // ── 5. 更新行动项面板（替换自动识别部分，保留手动添加项）──
+  const wrap = document.getElementById('actions-wrap');
+  // Remove previously auto-generated items (data-auto="1"), keep manual ones
+  wrap.querySelectorAll('.ac-item[data-auto="1"]').forEach(el => el.remove());
+
+  if (actions.length) {
+    const frag = document.createDocumentFragment();
+    actions.forEach(text => {
+      const div = document.createElement('div');
+      div.className = 'ac-item';
+      div.dataset.auto = '1';
+      div.innerHTML = `<input type="checkbox"><span class="ac-text">${text}</span>`;
+      div.querySelector('input').addEventListener('change', e => {
+        div.classList.toggle('done', e.target.checked);
+      });
+      frag.appendChild(div);
+    });
+    wrap.prepend(frag);
+    const badge = document.getElementById('auto-detected-count');
+    if (badge) { badge.textContent = `🤖 自动识别 ${actions.length} 条`; badge.style.display = ''; }
+  }
 
   btn.disabled = false;
   btn.textContent = '✨ 智能整理笔记';
-  toast(`✅ 已生成：${segments.length} 段 · ${decisions.length} 条决议 · ${todos.length} 条待办`);
+  toast(`✅ 议程 ${segments.length} 段 · 行动项 ${actions.length} 条`);
+}
+
+// ── agendaJump: click agenda item → scroll notes + flash highlight ──
+function agendaJump(el) {
+  const ref = decodeURIComponent(el.dataset.noteref || '');
+  if (!ref) return;
+  const ta = document.getElementById('room-notes');
+  if (!ta) return;
+  const idx = ta.value.indexOf(ref);
+  if (idx < 0) { toast('对应纪要文本未找到'); return; }
+
+  // Scroll textarea to the matching position
+  // Measure line height to approximate scroll position
+  const lines = ta.value.slice(0, idx).split('\n');
+  const lineH = parseInt(getComputedStyle(ta).lineHeight) || 20;
+  ta.scrollTop = Math.max(0, (lines.length - 2)) * lineH;
+
+  // Highlight the agenda item briefly
+  el.classList.add('highlight');
+  setTimeout(() => el.classList.remove('highlight'), 1600);
+
+  // Flash the notes textarea
+  ta.classList.add('notes-flash');
+  setTimeout(() => ta.classList.remove('notes-flash'), 1700);
+}
+
+/// ── autoSyncAgenda: lightweight real-time agenda refresh after every N new lines ──
+let _autoSyncCount = 0;
+function autoSyncAgenda() {
+  _autoSyncCount++;
+  // Re-run every 8 new transcript entries, but only update agenda (skip actions)
+  if (_autoSyncCount % 8 !== 0) return;
+  const tx = (S.meeting?.transcript || []).filter(t => t.text?.trim().length > 1);
+  if (tx.length < 4) return;
+  const CHUNK = 6;
+  const hasSpeaker = tx.some(t => t.spkId != null);
+  const segments = [];
+  if (hasSpeaker) {
+    let cur = { spk: tx[0].spkId, items: [tx[0]] };
+    for (let i = 1; i < tx.length; i++) {
+      if (tx[i].spkId !== cur.spk) { segments.push(cur); cur = { spk: tx[i].spkId, items: [tx[i]] }; }
+      else cur.items.push(tx[i]);
+    }
+    segments.push(cur);
+  } else {
+    for (let i = 0; i < tx.length; i += CHUNK)
+      segments.push({ spk: null, items: tx.slice(i, i + CHUNK) });
+  }
+  const ul = document.getElementById('room-agenda');
+  if (!ul || !segments.length) return;
+  ul.innerHTML = segments.map((seg, idx) => {
+    const label = seg.spk != null ? `说话人${parseInt(seg.spk)+1}：` : '';
+    const joined = seg.items.map(t => t.text.trim()).join('；');
+    const first = joined.split(/[。！？]/)[0] || joined;
+    const summary = label + (first.length > 30 ? first.slice(0, 28) + '…' : first);
+    const noteref = encodeURIComponent(seg.items[0].text.trim().slice(0, 12));
+    return `<li class="agenda-item" data-noteref="${noteref}" onclick="agendaJump(this)">
+      <span class="ag-num">${idx+1}</span><span title="${summary}">${summary}</span>
+    </li>`;
+  }).join('');
 }
 
 // ══════════════════════════════════════════════════
