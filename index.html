@@ -114,7 +114,7 @@ select{cursor:pointer}
 .room-header-left .room-meta{display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap}
 .room-header-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 
-.room-grid{display:grid;grid-template-columns:190px 1fr 1fr;gap:14px}
+.room-grid{display:grid;grid-template-columns:190px 1fr 1fr;gap:14px;align-items:stretch}
 
 /* Side panels */
 .rpanel{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px}
@@ -131,13 +131,13 @@ select{cursor:pointer}
 .divider{height:1px;background:var(--border)}
 
 /* Center panel */
-.center-panel{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px}
-.center-tabs{display:flex;gap:2px}
+.center-panel{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:6px;overflow:hidden}
+.center-tabs{display:flex;gap:2px;flex-shrink:0}
 .center-tabs button{padding:5px 12px;border-radius:var(--r-sm);font-size:13px;font-weight:500;color:var(--text2);transition:all .18s}
 .center-tabs button.active{background:var(--accent-dim);color:var(--accent);font-weight:700}
-.ctab{display:none;flex:1;flex-direction:column;gap:8px}
+.ctab{display:none;flex:1;flex-direction:column;gap:6px;min-height:0;overflow:hidden}
 .ctab.active{display:flex}
-.notes-ta{flex:1;resize:none;font-size:14px;line-height:1.7;min-height:180px;background:var(--bg2)}
+.notes-ta{resize:none;font-size:14px;line-height:1.7;height:100%;min-height:0;flex:1;overflow-y:auto;background:var(--bg2)}
 .notes-toolbar{display:flex;gap:5px;flex-wrap:wrap;align-items:center;padding:6px 0 8px;border-bottom:1px solid var(--border);margin-bottom:8px}
 .ntb-btn{padding:4px 10px;border-radius:var(--r-sm);font-size:12px;font-weight:600;color:var(--text2);background:var(--bg2);border:1px solid var(--border);cursor:pointer;transition:all .15s;white-space:nowrap}
 .ntb-btn:hover{background:var(--border);color:var(--text0)}
@@ -1638,7 +1638,8 @@ function setFilt(f, btn) {
 function renderHist() {
   const q = (document.getElementById('hist-search')?.value||'').toLowerCase();
   let list = S.meetings;
-  if (q) list = list.filter(m => m.title.toLowerCase().includes(q));
+  if (q) list = list.filter(m => m.title.toLowerCase().includes(q) ||
+    (m.transcript||[]).some(t => t.text.toLowerCase().includes(q)));
   const el = document.getElementById('hist-list');
   if (!list.length) {
     el.innerHTML = '<div class="empty"><div class="empty-ico">📋</div><p>没有匹配的会议记录</p></div>';
@@ -1647,13 +1648,19 @@ function renderHist() {
   el.innerHTML = '<div class="meeting-list">' + list.map(m => {
     const dur = m.endTime ? Math.round((m.endTime-m.startTime)/60000) : null;
     const dt = new Date(m.startTime).toLocaleString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+    const txCount = (m.transcript||[]).length;
+    const isActive = !m.endTime;
+    const badge = isActive
+      ? `<span style="font-size:11px;padding:2px 8px;border-radius:99px;background:rgba(16,185,129,.12);color:var(--success);font-weight:700;margin-left:6px">进行中</span>`
+      : (txCount ? `<span style="font-size:11px;color:var(--text3);margin-left:6px">${txCount} 条转录</span>` : '');
     return `<div class="m-item">
-      <div class="m-ico" style="background:var(--accent-dim)">📋</div>
-      <div class="m-info" onclick="viewMeeting(${m.id})" style="cursor:pointer">
-        <div class="m-title">${m.title}</div>
+      <div class="m-ico" style="background:var(--accent-dim)">${isActive?'🔴':'📋'}</div>
+      <div class="m-info" onclick="viewMeeting(${m.id})" style="cursor:pointer;flex:1;min-width:0">
+        <div class="m-title">${m.title}${badge}</div>
         <div class="m-meta">${dt}${dur?' · '+dur+'分钟':''}</div>
       </div>
-      <div style="display:flex;gap:6px;flex-shrink:0">
+      <div style="display:flex;gap:6px;flex-shrink:0;align-items:center">
+        <button class="btn btn-secondary btn-sm" title="继续编辑" onclick="resumeMeeting(${m.id})">✏️ 继续</button>
         <button class="btn btn-secondary btn-sm" onclick="exportById(${m.id},'markdown')">📥</button>
         <button class="btn btn-danger btn-sm" onclick="delMeeting(${m.id})">🗑</button>
       </div>
@@ -1669,6 +1676,103 @@ function viewMeeting(id) {
   renderSummary(m);
   document.getElementById('sum-export-btn').onclick = () => exportById(id, 'markdown');
   nav('summary');
+}
+
+function resumeMeeting(id) {
+  const m = S.meetings.find(x => x.id === id);
+  if (!m) return;
+  // Save current meeting if active
+  if (S.meeting && S.meeting.id !== id) {
+    S.meeting.notes = document.getElementById('room-notes')?.value || S.meeting.notes;
+    const ci = S.meetings.findIndex(x => x.id === S.meeting.id);
+    if (ci >= 0) S.meetings[ci] = S.meeting; else S.meetings.unshift(S.meeting);
+  }
+  S.meeting = m;
+
+  // Restore header
+  document.getElementById('room-title').textContent = m.title;
+  const dt = new Date(m.startTime).toLocaleDateString('zh-CN',{month:'2-digit',day:'2-digit'});
+  document.getElementById('room-badge').textContent = '📅 ' + dt;
+
+  // Restore notes & code
+  document.getElementById('room-notes').value = m.notes || '';
+  const codeEl = document.getElementById('room-code');
+  if (codeEl) codeEl.value = m.code || '';
+
+  // Restore action items
+  const actWrap = document.getElementById('actions-list');
+  if (actWrap) {
+    actWrap.innerHTML = '';
+    (m.actions || []).forEach(a => {
+      const d = document.createElement('div');
+      d.className = 'action-item' + (a.done ? ' done' : '');
+      d.innerHTML = `<input type="checkbox" ${a.done?'checked':''} onchange="toggleAction(this,${a.id})">
+        <span class="action-text" contenteditable="true" onblur="updateAction(this,${a.id})">${a.text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span>
+        <button class="action-del" onclick="delAction(${a.id})">✕</button>`;
+      actWrap.appendChild(d);
+    });
+  }
+
+  // Replay transcript into live feed (most recent on top)
+  const feed = document.getElementById('tx-feed');
+  if (feed) {
+    feed.innerHTML = '<div class="tx-live" id="tx-live"></div>';
+    const txItems = (m.transcript || []).slice();
+    // Show up to 60 items to avoid overload
+    txItems.slice(-60).forEach(item => {
+      const t = item.time ? new Date(item.time).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',second:'2-digit'}) : '--:--:--';
+      const safeText = (item.text||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+      const spkIdx = item.spkId != null ? parseInt(item.spkId) % 5 : null;
+      const spkHtml = spkIdx != null ? `<span class="tx-spk tx-spk-${spkIdx}">说话人${spkIdx+1}</span>` : '';
+      const el = document.createElement('div');
+      el.className = 'tx-item final';
+      el.innerHTML = `<div class="tx-item-row"><div class="tx-time">${spkHtml}${t}</div><span class="tx-insert-btn" onclick="insertTxToNotes(this)">插入笔记 ↗</span></div><span class="tx-body">${safeText}</span>`;
+      feed.insertBefore(el, feed.firstChild);
+    });
+  }
+
+  // Replay uploaded transcript into upload feed
+  const uploadFeed = document.getElementById('tx-upload-feed');
+  if (uploadFeed) {
+    const uploadTx = (m.transcript || []).filter(t => t.source === 'upload');
+    if (uploadTx.length) {
+      uploadFeed.innerHTML = '';
+      uploadFeed.style.display = '';
+      uploadTx.slice(-60).forEach(item => {
+        const t = item.time ? new Date(item.time).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',second:'2-digit'}) : '--:--:--';
+        const safeText = (item.text||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
+        const spkIdx = item.spkId != null ? parseInt(item.spkId) % 5 : null;
+        const spkHtml = spkIdx != null ? `<span class="tx-spk tx-spk-${spkIdx}">说话人${spkIdx+1}</span>` : '';
+        const el = document.createElement('div');
+        el.className = 'tx-item final';
+        el.innerHTML = `<div class="tx-item-row"><div class="tx-time">${spkHtml}${t}</div><span class="tx-insert-btn" onclick="insertTxToNotes(this)">插入笔记 ↗</span></div><span class="tx-body">${safeText}</span>`;
+        uploadFeed.appendChild(el);
+      });
+    } else {
+      uploadFeed.style.display = 'none';
+    }
+  }
+
+  // Timer: show elapsed time (frozen if ended, counting if still in progress)
+  clearInterval(S.timerInterval);
+  if (!m.endTime) {
+    S.timerInterval = setInterval(() => {
+      if (!S.meeting) return;
+      const secs = Math.floor((Date.now() - S.meeting.startTime) / 1000);
+      document.getElementById('room-timer').textContent =
+        String(Math.floor(secs/60)).padStart(2,'0') + ':' + String(secs%60).padStart(2,'0');
+    }, 1000);
+  } else {
+    const secs = Math.floor((m.endTime - m.startTime) / 1000);
+    document.getElementById('room-timer').textContent =
+      String(Math.floor(secs/60)).padStart(2,'0') + ':' + String(secs%60).padStart(2,'0');
+  }
+
+  setCodeMode(false);
+  document.getElementById('code-mode-toggle').style.display = '';
+  checkSpeech();
+  nav('room');
+  toast('📋 已载入：' + m.title);
 }
 
 function delMeeting(id) {
@@ -1813,7 +1917,7 @@ async function startCloudTranscribe(file, apiKey) {
         const text = seg.text;
         const spkId = seg.spk_id ?? seg.speaker ?? null;
         addTxToFeed(text, 'tx-upload-feed', null, spkId);
-        if (S.meeting) S.meeting.transcript.push({ time: Date.now(), text, spkId });
+        if (S.meeting) S.meeting.transcript.push({ time: Date.now(), text, spkId, source: 'upload' });
         if (S.settings.autoAction !== false) autoDetect(text);
       });
       setStatus(`✅ 云端转写完成，共 ${segments.length} 段`);
@@ -1891,7 +1995,7 @@ async function startLocalWhisper(file) {
       chunks.forEach(ch => {
         const text = ch.text.trim();
         addTxToFeed(text, 'tx-upload-feed', null);
-        if (S.meeting) S.meeting.transcript.push({ time: Date.now(), text });
+        if (S.meeting) S.meeting.transcript.push({ time: Date.now(), text, source: 'upload' });
         if (S.settings.autoAction !== false) autoDetect(text);
       });
       setStatus(`✅ 转写完成，共识别 ${chunks.length} 段文字`);
