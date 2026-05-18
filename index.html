@@ -1792,13 +1792,25 @@ async function startCloudTranscribe(file, apiKey) {
 
     setStatus('🔍 解析结果...');
     const result = await res.json();
-    const segments = result.segments?.length ? result.segments : (result.text ? [{ text: result.text }] : []);
+    const rawSegments = result.segments?.length ? result.segments : (result.text ? [{ text: result.text }] : []);
+
+    // Split long segments into sentences for better usability
+    const segments = [];
+    rawSegments.forEach(seg => {
+      const cleaned = (seg.text || '').replace(/<\|[^|]*\|>/g, '').trim();
+      if (cleaned.length < 2) return;
+      // If segment is very long (>120 chars), split by sentence punctuation
+      if (cleaned.length > 120) {
+        const parts = cleaned.split(/(?<=[。！？；\n])\s*/).filter(p => p.trim().length > 1);
+        parts.forEach(p => segments.push({ ...seg, text: p.trim() }));
+      } else {
+        segments.push({ ...seg, text: cleaned });
+      }
+    });
 
     if (segments.length > 0) {
       segments.forEach(seg => {
-        // Strip SenseVoice special tokens like <|zh|><|NEUTRAL|><|Speech|><|woitn|>
-        const text = (seg.text || '').replace(/<\|[^|]*\|>/g, '').trim();
-        if (text.length < 2) return;
+        const text = seg.text;
         const spkId = seg.spk_id ?? seg.speaker ?? null;
         addTxToFeed(text, 'tx-upload-feed', null, spkId);
         if (S.meeting) S.meeting.transcript.push({ time: Date.now(), text, spkId });
@@ -1986,8 +1998,18 @@ function notesInsertTime() {
 }
 
 function smartNotes() {
-  // Read from current in-memory meeting transcript (updated by both mic and upload)
-  const tx = (S.meeting?.transcript || []).filter(t => t.text?.trim().length > 1);
+  // Primary: read from in-memory meeting transcript
+  let tx = (S.meeting?.transcript || []).filter(t => t.text?.trim().length > 1);
+
+  // Fallback: scrape from upload feed DOM (in case transcript wasn't saved to S.meeting)
+  if (!tx.length) {
+    const feedItems = document.querySelectorAll('#tx-upload-feed .tx-body, #tx-feed .tx-body');
+    if (feedItems.length) {
+      tx = [...feedItems].map(el => ({ text: el.textContent.trim(), spkId: null }))
+                         .filter(t => t.text.length > 1);
+    }
+  }
+
   if (!tx.length) {
     toast('暂无转录内容，请先录音或上传录音后再整理');
     return;
