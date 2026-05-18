@@ -138,6 +138,13 @@ select{cursor:pointer}
 .ctab{display:none;flex:1;flex-direction:column;gap:8px}
 .ctab.active{display:flex}
 .notes-ta{flex:1;resize:none;font-size:14px;line-height:1.7;min-height:180px;background:var(--bg2)}
+.notes-toolbar{display:flex;gap:5px;flex-wrap:wrap;align-items:center;padding:6px 0 8px;border-bottom:1px solid var(--border);margin-bottom:8px}
+.ntb-btn{padding:4px 10px;border-radius:var(--r-sm);font-size:12px;font-weight:600;color:var(--text2);background:var(--bg2);border:1px solid var(--border);cursor:pointer;transition:all .15s;white-space:nowrap}
+.ntb-btn:hover{background:var(--border);color:var(--text0)}
+.ntb-danger:hover{background:rgba(239,68,68,.1);color:var(--danger);border-color:var(--danger)}
+.ntb-smart{padding:5px 14px;border-radius:var(--r-sm);font-size:12px;font-weight:700;color:#fff;background:linear-gradient(90deg,var(--accent),#a78bfa);border:none;cursor:pointer;transition:opacity .15s;white-space:nowrap;margin-left:auto;box-shadow:0 2px 8px rgba(99,102,241,.35)}
+.ntb-smart:hover{opacity:.88}
+.ntb-smart:disabled{opacity:.5;cursor:not-allowed}
 .code-wrap{position:relative;border-radius:var(--r-sm);overflow:hidden;border:1.5px solid var(--border);background:#0d1117;transition:border-color .2s;flex:1}
 .code-wrap:focus-within{border-color:var(--accent)}
 .line-nums{position:absolute;left:0;top:0;bottom:0;width:34px;background:rgba(0,0,0,.25);padding:10px 0;text-align:center;color:#4a5568;font-size:12px;font-family:monospace;line-height:1.6;pointer-events:none;user-select:none;overflow:hidden}
@@ -408,10 +415,15 @@ select{cursor:pointer}
       </div>
       <!-- Notes -->
       <div class="ctab active" id="ctab-notes">
-        <textarea class="notes-ta" id="room-notes" placeholder="在这里记录会议笔记…
-
-自动识别到的待办事项会在右侧行动项中显示
-支持 Markdown · Ctrl+Enter 插入分隔线"></textarea>
+        <!-- Notes toolbar -->
+        <div class="notes-toolbar">
+          <button class="ntb-btn" onclick="notesUndo()" title="撤销">↩ 撤销</button>
+          <button class="ntb-btn" onclick="notesInsertHr()" title="插入分隔线">— 分隔</button>
+          <button class="ntb-btn" onclick="notesInsertTime()" title="插入时间戳">🕐 时间</button>
+          <button class="ntb-btn ntb-danger" onclick="notesClear()" title="清空笔记">🗑 清空</button>
+          <button class="ntb-smart" onclick="smartNotes()" id="smart-notes-btn" title="从转录内容智能提取要点">✨ 智能整理笔记</button>
+        </div>
+        <textarea class="notes-ta" id="room-notes" placeholder="在这里记录会议笔记…&#10;&#10;点击右侧转录段落的「插入笔记 ↗」可快速摘录&#10;点击上方「✨ 智能整理笔记」可自动提取要点"></textarea>
       </div>
       <!-- Code -->
       <div class="ctab" id="ctab-code">
@@ -1899,6 +1911,141 @@ function addTxToFeed(text, feedId, liveId, spkId) {
   feed.insertBefore(el, live ? live.nextSibling : feed.firstChild);
   while (feed.children.length > 60) feed.removeChild(feed.lastChild);
   addTx(text, true);
+}
+
+// ══════════════════════════════════════════════════
+//  NOTES TOOLBAR ACTIONS
+// ══════════════════════════════════════════════════
+let _notesHistory = [];
+
+function notesSnapshot() {
+  const ta = document.getElementById('room-notes');
+  _notesHistory.push({ v: ta.value, s: ta.selectionStart });
+  if (_notesHistory.length > 50) _notesHistory.shift();
+}
+
+function notesUndo() {
+  if (!_notesHistory.length) return toast('没有可撤销的内容');
+  const snap = _notesHistory.pop();
+  const ta = document.getElementById('room-notes');
+  ta.value = snap.v;
+  ta.selectionStart = ta.selectionEnd = snap.s;
+  ta.focus();
+}
+
+function notesClear() {
+  const ta = document.getElementById('room-notes');
+  if (!ta.value.trim()) return;
+  if (!confirm('确认清空笔记？此操作可通过"撤销"恢复。')) return;
+  notesSnapshot();
+  ta.value = '';
+  ta.focus();
+  toast('笔记已清空，可点击"撤销"恢复');
+}
+
+function notesInsertHr() {
+  const ta = document.getElementById('room-notes');
+  notesSnapshot();
+  const cur = ta.selectionStart;
+  const ins = '\n\n---\n\n';
+  ta.value = ta.value.slice(0, cur) + ins + ta.value.slice(cur);
+  ta.selectionStart = ta.selectionEnd = cur + ins.length;
+  ta.focus();
+}
+
+function notesInsertTime() {
+  const ta = document.getElementById('room-notes');
+  notesSnapshot();
+  const cur = ta.selectionStart;
+  const now = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
+  const ins = `\n**[${now}]** `;
+  ta.value = ta.value.slice(0, cur) + ins + ta.value.slice(cur);
+  ta.selectionStart = ta.selectionEnd = cur + ins.length;
+  ta.focus();
+}
+
+function smartNotes() {
+  const tx = S.meeting?.transcript || [];
+  if (!tx.length) { toast('暂无转录内容，请先开始录音或上传录音'); return; }
+
+  const btn = document.getElementById('smart-notes-btn');
+  btn.disabled = true;
+  btn.textContent = '⏳ 整理中...';
+
+  const texts = tx.map(t => t.text);
+  const fullText = texts.join('。');
+
+  // ── 1. 按说话人 / 时间段分段 ──
+  const segments = [];
+  let cur = { spk: tx[0].spkId ?? null, items: [tx[0].text] };
+  for (let i = 1; i < tx.length; i++) {
+    const spk = tx[i].spkId ?? null;
+    if (spk !== null && spk !== cur.spk) {
+      segments.push(cur);
+      cur = { spk, items: [tx[i].text] };
+    } else {
+      cur.items.push(tx[i].text);
+    }
+  }
+  segments.push(cur);
+
+  // ── 2. 关键词提取：决议 / 待办 / 问题 ──
+  const decKW  = ['决定','确认','同意','通过','明确','共识','达成'];
+  const todoKW = ['需要','记得','跟进','确认','负责','安排','下一步','TODO','待办','计划'];
+  const qKW    = ['问题','疑问','不确定','待定','需要讨论'];
+
+  const allSents = fullText.split(/[。！？\n]/).filter(s => s.trim().length > 4);
+  const decisions = [...new Set(allSents.filter(s => decKW.some(k => s.includes(k))))].slice(0, 6);
+  const todos     = [...new Set(allSents.filter(s => todoKW.some(k => s.includes(k))))].slice(0, 8);
+  const questions = [...new Set(allSents.filter(s => qKW.some(k => s.includes(k))))].slice(0, 4);
+
+  // ── 3. 拼装笔记 ──
+  const now = new Date().toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+  let note = `# ${S.meeting?.title || '会议笔记'}\n_智能整理于 ${now}_\n\n`;
+
+  if (segments.length > 1) {
+    note += `## 💬 讨论内容（按说话人分段）\n`;
+    segments.forEach(seg => {
+      const label = seg.spk != null ? `**说话人 ${parseInt(seg.spk)+1}**` : '**发言**';
+      note += `\n${label}：${seg.items.join('；')}\n`;
+    });
+    note += '\n';
+  } else {
+    // 单人或无分段，按每5条分一段
+    note += `## 💬 讨论内容\n`;
+    for (let i = 0; i < texts.length; i += 5) {
+      note += '\n' + texts.slice(i, i + 5).join('。') + '\n';
+    }
+    note += '\n';
+  }
+
+  if (decisions.length) {
+    note += `## ✅ 决议事项\n`;
+    decisions.forEach(d => { note += `- ${d.trim()}\n`; });
+    note += '\n';
+  }
+
+  if (todos.length) {
+    note += `## 📌 待办 / 行动项\n`;
+    todos.forEach(t => { note += `- [ ] ${t.trim()}\n`; });
+    note += '\n';
+  }
+
+  if (questions.length) {
+    note += `## ❓ 待确认问题\n`;
+    questions.forEach(q => { note += `- ${q.trim()}\n`; });
+    note += '\n';
+  }
+
+  const ta = document.getElementById('room-notes');
+  notesSnapshot();
+  ta.value = note;
+  ta.scrollTop = 0;
+  ta.focus();
+
+  btn.disabled = false;
+  btn.textContent = '✨ 智能整理笔记';
+  toast(`✅ 智能笔记已生成：${segments.length} 个段落，${decisions.length} 条决议，${todos.length} 条待办`);
 }
 
 // ══════════════════════════════════════════════════
