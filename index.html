@@ -474,15 +474,15 @@ select{cursor:pointer}
       </div>
 
       <!-- Live mic panel -->
-      <div id="tx-live-panel">
+      <div id="tx-live-panel" style="display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden">
         <div id="speech-warn" style="flex-shrink:0"></div>
-        <div class="tx-feed" id="tx-feed">
+        <div class="tx-feed" id="tx-feed" style="flex:1;min-height:120px">
           <div class="tx-live" id="tx-live">🎙 点击下方按钮开始录音...</div>
         </div>
       </div>
 
       <!-- Audio upload panel -->
-      <div id="tx-upload-panel" style="display:none">
+      <div id="tx-upload-panel" style="display:none;flex-direction:column;flex:1;min-height:0;overflow:hidden">
         <div class="audio-dropzone" id="audio-dropzone"
           onclick="document.getElementById('audio-file-input').click()"
           ondragover="event.preventDefault();this.classList.add('drag-over')"
@@ -518,7 +518,7 @@ select{cursor:pointer}
         </div>
 
         <!-- Upload transcript feed -->
-        <div class="tx-feed" id="tx-upload-feed" style="margin-top:8px;display:none">
+        <div class="tx-feed" id="tx-upload-feed" style="flex:1;min-height:120px;margin-top:8px;display:none">
           <div class="tx-live" id="tx-upload-live"></div>
         </div>
       </div>
@@ -1761,7 +1761,7 @@ function resumeMeeting(id) {
     const uploadTx = (m.transcript || []).filter(t => t.source === 'upload');
     if (uploadTx.length) {
       uploadFeed.innerHTML = '';
-      uploadFeed.style.display = '';
+      uploadFeed.style.display = 'flex';
       uploadTx.slice(-60).forEach(item => {
         const t = item.time ? new Date(item.time).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',second:'2-digit'}) : '--:--:--';
         const safeText = (item.text||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
@@ -1772,6 +1772,9 @@ function resumeMeeting(id) {
         el.innerHTML = `<div class="tx-item-row"><input type="checkbox" class="tx-check" onchange="txToggleSelect(this)"><div class="tx-time">${spkHtml}${t}</div><span class="tx-insert-btn" onclick="insertTxToNotes(this)">插入笔记 ↗</span></div><span class="tx-body" onclick="txBodyClick(event,this)">${safeText}</span>`;
         uploadFeed.appendChild(el);
       });
+      // Switch to upload tab to show the transcripts
+      const uploadBtn = document.getElementById('txmode-upload');
+      if (uploadBtn) switchTxMode('upload', uploadBtn);
     } else {
       uploadFeed.style.display = 'none';
     }
@@ -1833,12 +1836,16 @@ let audioObjectURL = null;
 function switchTxMode(mode, btn) {
   document.querySelectorAll('.txmode-btn').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
-  document.getElementById('tx-live-panel').style.display  = mode === 'live'   ? '' : 'none';
-  document.getElementById('tx-upload-panel').style.display = mode === 'upload' ? '' : 'none';
-  // When switching back to live, keep speech-warn in live panel
+  const livePanel   = document.getElementById('tx-live-panel');
+  const uploadPanel = document.getElementById('tx-upload-panel');
   if (mode === 'live') {
+    livePanel.style.display   = 'flex';
+    uploadPanel.style.display = 'none';
     const w = document.getElementById('speech-warn');
-    document.getElementById('tx-live-panel').insertBefore(w, document.getElementById('tx-live-panel').firstChild);
+    livePanel.insertBefore(w, livePanel.firstChild);
+  } else {
+    livePanel.style.display   = 'none';
+    uploadPanel.style.display = 'flex';
   }
 }
 
@@ -1863,7 +1870,7 @@ function handleAudioFile(file) {
   document.getElementById('audio-filename').textContent = file.name;
   document.getElementById('audio-dropzone').style.display = 'none';
   document.getElementById('audio-player-wrap').style.display = '';
-  document.getElementById('tx-upload-feed').style.display = '';
+  document.getElementById('tx-upload-feed').style.display = 'flex';
   document.getElementById('retranscribe-btn').style.display = 'none';
   // Auto-start Whisper transcription immediately
   startWhisperTranscribe(file);
@@ -1945,6 +1952,7 @@ async function startCloudTranscribe(file, apiKey) {
         if (S.settings.autoAction !== false) autoDetect(text);
       });
       setStatus(`✅ 云端转写完成，共 ${segments.length} 段`);
+      appendTranscriptToNotes(segments.map(s => s.text));
       if (S.meeting) saveData();
     } else {
       setStatus('⚠️ 未识别到内容，请检查音频文件是否含有语音');
@@ -2023,6 +2031,7 @@ async function startLocalWhisper(file) {
         if (S.settings.autoAction !== false) autoDetect(text);
       });
       setStatus(`✅ 转写完成，共识别 ${chunks.length} 段文字`);
+      appendTranscriptToNotes(chunks.map(c => c.text.trim()));
       if (S.meeting) saveData();
     } else {
       setStatus('⚠️ 未识别到内容，请检查音频文件是否含有语音');
@@ -2290,6 +2299,21 @@ function txBatchInsert() {
   switchTab('notes', document.querySelector('.center-tabs button'));
   toast(`已将 ${items.length} 段插入笔记`);
   txClearSelect();
+}
+
+// Auto-append transcription result to notes after upload transcription
+function appendTranscriptToNotes(texts) {
+  if (!texts || !texts.length) return;
+  const notes = document.getElementById('room-notes');
+  if (!notes) return;
+  const now = new Date().toLocaleString('zh-CN', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+  const filename = document.getElementById('audio-filename')?.textContent?.trim() || '录音文件';
+  const header = `\n\n--- 📁 ${filename} (${now}) ---\n`;
+  const body = texts.map(t => t.trim()).filter(Boolean).join('\n');
+  notes.value = (notes.value.trimEnd()) + header + body + '\n';
+  // Switch to notes tab so user sees the result
+  switchTab('notes', document.querySelector('.center-tabs button'));
+  toast(`✅ 转写内容已写入笔记（${texts.length} 段）`);
 }
 
 function insertTxToNotes(btn) {
