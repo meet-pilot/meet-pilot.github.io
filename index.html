@@ -2062,37 +2062,47 @@ function notesInsertTime() {
   ta.focus();
 }
 
-// ── segmentTitle: 从段落 items 提炼主旨关键词作标题（供 smartNotes + autoSyncAgenda 共用）──
+// ── segmentTitle: 从段落 items 选出内容密度最高的句子作为主旨标题 ──
 function segmentTitle(items) {
-  const STOP = new Set([
-    '的','了','在','是','我','有','和','就','不','都','一','上','也','很','到','说','要',
-    '去','你','会','着','看','好','自己','这','那','它','他','她','我们','你们','他们',
-    '但','而','或','与','及','以','为','对','从','把','被','让','使','于','向','给',
-    '啊','哦','嗯','呢','吧','然后','就是','所以','因为','如果','其实','这个','那个',
-    '什么','怎么','可以','已经','还是','一个','一些','没有','现在','时候','可能','应该',
-    '需要','知道','觉得','感觉','很多','一下','这样','那样','一直','一起','一定',
-    '大家','今天','明天','昨天','之前','之后','关于','关系',
+  // 单字功能词（出现在此集合的字，在句子打分时扣分）
+  const STOP_CH = new Set('的了在是我有和就不都也很到说要去你会着好这那它他她但而以为对从把被让于给啊哦嗯呢吧嘛么吗哇哎嘿唉哟');
+  // 短语级停用词（包含这些词组时额外扣分）
+  const STOP_BI = new Set([
+    '就是','然后','所以','因为','但是','如果','其实','这个','那个','什么','怎么',
+    '可以','已经','还是','一个','一些','没有','现在','时候','可能','应该','需要',
+    '知道','觉得','感觉','很多','一下','这样','那样','一直','一起','一定',
+    '大家','主要','其他','另外','比较','有些','有点','有时','对对','嗯嗯','哈哈',
+    '我们','你们','他们','就行','好的','对的','是的','不是','还有','以及',
   ]);
-  const text = items.map(t => t.text.trim()).join('');
-  const freq = {};
-  for (let len = 2; len <= 4; len++) {
-    for (let i = 0; i <= text.length - len; i++) {
-      const w = text.slice(i, i + len);
-      if (!/^[\u4e00-\u9fff]+$/.test(w)) continue;
-      if (STOP.has(w)) continue;
-      if (len === 2 && w[0] === w[1]) continue; // 过滤"哈哈"/"嗯嗯"
-      freq[w] = (freq[w] || 0) + 1;
+
+  const text = items.map(t => t.text.trim()).join('。');
+  // 切句（按标点 + 停顿词切分）
+  const sents = text.split(/[。！？，,\n]+/).map(s => s.trim())
+    .filter(s => s.replace(/[^\u4e00-\u9fff]/g, '').length >= 4); // 至少4个汉字
+
+  function score(s) {
+    let sc = 0;
+    const cjk = [...s].filter(c => /[\u4e00-\u9fff]/.test(c));
+    for (const c of cjk) sc += STOP_CH.has(c) ? -1 : 2;
+    for (let i = 0; i < s.length - 1; i++) {
+      if (STOP_BI.has(s.slice(i, i + 2))) sc -= 3;
     }
+    // 奖励适中长度（8~18字最佳）
+    if (cjk.length >= 5 && cjk.length <= 14) sc += 4;
+    return sc;
   }
-  const ranked = Object.entries(freq)
-    .map(([w, cnt]) => ({ w, score: cnt * w.length }))
-    .sort((a, b) => b.score - a.score)
-    .slice(0, 3).map(x => x.w);
-  if (ranked.length >= 2) return ranked.slice(0, 2).join('·');
-  if (ranked.length === 1) return ranked[0];
-  const sents = text.split(/[。！？]/).filter(s => s.length >= 5);
-  const first = sents[0] || text;
-  return first.length > 22 ? first.slice(0, 20) + '…' : first;
+
+  if (sents.length) {
+    const best = sents.reduce((a, b) => score(a) >= score(b) ? a : b);
+    // 去掉开头的填充词（嗯/啊/哦/对/就是…）
+    const clean = best.replace(/^[嗯啊哦哇哎对好是那这就然后]+[，,]?\s*/u, '');
+    const out = clean || best;
+    return out.length > 20 ? out.slice(0, 18) + '…' : out;
+  }
+
+  // 兜底：去除所有停用字后取前16字
+  const stripped = [...text].filter(c => /[\u4e00-\u9fff]/.test(c) && !STOP_CH.has(c)).join('');
+  return stripped.slice(0, 16) || text.slice(0, 16) || '（无内容）';
 }
 
 // ── smartNotes: populate agenda + action items panels, NOTHING to textarea ──
