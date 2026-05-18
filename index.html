@@ -1,1408 +1,1375 @@
 <!DOCTYPE html>
-<html lang="zh-CN" data-theme="dark">
+<html lang="zh-CN" data-theme="light">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>MeetPilot · Vibe Coding 会议助手</title>
+<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<title>MeetPilot · 智能会议助手</title>
 <style>
-/* ══════════════════════════════════════════
-   TOKENS
-══════════════════════════════════════════ */
-:root {
-  --accent:       #58A6FF;
-  --accent-dim:   #1F4068;
-  --success:      #3FB950;
-  --warning:      #D29922;
-  --danger:       #F85149;
-  --purple:       #BC8CFF;
-  --orange:       #FFA657;
-  --radius:       10px;
-  --radius-sm:    6px;
-  --shadow:       0 1px 3px rgba(0,0,0,.4);
-  --shadow-lg:    0 8px 24px rgba(0,0,0,.5);
-  --font-code:    'JetBrains Mono','Fira Code','Cascadia Code',monospace;
+:root{
+  --bg0:#F0F4F8;--bg1:#FFFFFF;--bg2:#F7F9FC;--border:#E2E8F0;
+  --accent:#6366F1;--accent-soft:#EEF2FF;--accent-dim:rgba(99,102,241,.12);
+  --success:#10B981;--danger:#EF4444;--warn:#F59E0B;
+  --text0:#1A202C;--text1:#4A5568;--text2:#718096;--text3:#A0AEC0;
+  --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.05);
+  --shadow-md:0 4px 12px rgba(0,0,0,.08),0 2px 4px rgba(0,0,0,.05);
+  --shadow-lg:0 12px 24px rgba(0,0,0,.1),0 4px 8px rgba(0,0,0,.06);
+  --r:12px;--r-sm:8px;--r-lg:20px;
 }
-[data-theme="dark"] {
-  --bg0: #0D1117; --bg1: #161B22; --bg2: #21262D; --bg3: #30363D;
-  --border: #30363D; --border-muted: #21262D;
-  --text0: #E6EDF3; --text1: #C9D1D9; --text2: #8B949E; --text3: #6E7681;
+[data-theme="dark"]{
+  --bg0:#0F172A;--bg1:#1E293B;--bg2:#172032;--border:#2D3748;
+  --accent:#818CF8;--accent-soft:#1e1b4b;--accent-dim:rgba(129,140,248,.14);
+  --success:#34D399;--danger:#F87171;--warn:#FBBF24;
+  --text0:#F1F5F9;--text1:#CBD5E1;--text2:#94A3B8;--text3:#64748B;
+  --shadow:0 1px 3px rgba(0,0,0,.35),0 1px 2px rgba(0,0,0,.2);
+  --shadow-md:0 4px 12px rgba(0,0,0,.3),0 2px 4px rgba(0,0,0,.2);
+  --shadow-lg:0 12px 28px rgba(0,0,0,.4),0 4px 8px rgba(0,0,0,.2);
 }
-[data-theme="light"] {
-  --bg0: #F6F8FA; --bg1: #FFFFFF; --bg2: #F6F8FA; --bg3: #E1E4E8;
-  --border: #D0D7DE; --border-muted: #E1E4E8;
-  --text0: #24292F; --text1: #57606A; --text2: #8C959F; --text3: #AFB8C1;
-}
-* { box-sizing:border-box; margin:0; padding:0; }
-html { scroll-behavior:smooth; }
-body {
-  font-family: -apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB',sans-serif;
-  background:var(--bg0); color:var(--text0);
-  font-size:14px; line-height:1.6;
-  min-height:100vh; overflow-x:hidden;
-}
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg0);color:var(--text1);font-size:15px;line-height:1.6;transition:background .25s,color .25s}
+a{color:var(--accent);text-decoration:none}
+button{cursor:pointer;border:none;background:none;font:inherit;color:inherit}
+textarea,input{font:inherit;color:inherit;background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:10px 14px;outline:none;width:100%;transition:border-color .2s}
+textarea:focus,input:focus{border-color:var(--accent)}
 
-/* ══════════════════════════════════════════
-   TOPBAR
-══════════════════════════════════════════ */
-.topbar {
-  height:52px; background:var(--bg1); border-bottom:1px solid var(--border);
-  display:flex; align-items:center; padding:0 16px; gap:12px;
-  position:sticky; top:0; z-index:200;
-}
-.logo { display:flex; align-items:center; gap:8px; font-weight:700; font-size:15px; color:var(--text0); text-decoration:none; flex-shrink:0; }
-.logo-badge { background:var(--accent); color:#fff; font-size:10px; font-weight:700; padding:1px 6px; border-radius:10px; }
-.topbar-nav { display:flex; gap:2px; flex:1; }
-.tb-btn {
-  padding:5px 12px; border-radius:var(--radius-sm); border:none; cursor:pointer;
-  font-size:13px; font-weight:500; background:transparent; color:var(--text2);
-  display:flex; align-items:center; gap:6px; transition:all .15s; white-space:nowrap;
-}
-.tb-btn:hover { background:var(--bg2); color:var(--text0); }
-.tb-btn.active { background:var(--bg2); color:var(--text0); }
-.topbar-right { display:flex; align-items:center; gap:8px; flex-shrink:0; }
-.icon-btn {
-  width:32px; height:32px; border-radius:var(--radius-sm); border:none; cursor:pointer;
-  background:transparent; color:var(--text2); display:flex; align-items:center; justify-content:center;
-  font-size:16px; transition:all .15s;
-}
-.icon-btn:hover { background:var(--bg2); color:var(--text0); }
-.new-btn {
-  padding:6px 14px; background:var(--accent); color:#fff; border:none; border-radius:var(--radius-sm);
-  font-size:13px; font-weight:600; cursor:pointer; display:flex; align-items:center; gap:6px; transition:all .15s;
-}
-.new-btn:hover { filter:brightness(1.1); transform:translateY(-1px); }
+/* ── Topbar ── */
+.topbar{position:sticky;top:0;z-index:100;background:var(--bg1);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;height:56px;gap:6px;box-shadow:var(--shadow)}
+.topbar-logo{font-weight:700;font-size:16px;color:var(--text0);display:flex;align-items:center;gap:8px;margin-right:20px;white-space:nowrap}
+.topbar-logo .logo-dot{width:28px;height:28px;background:linear-gradient(135deg,var(--accent),#a78bfa);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px}
+.topbar-nav{display:flex;gap:2px;flex:1}
+.topbar-nav button{padding:6px 14px;border-radius:var(--r-sm);color:var(--text2);font-size:14px;font-weight:500;transition:all .2s}
+.topbar-nav button:hover{background:var(--bg2);color:var(--text0)}
+.topbar-nav button.active{background:var(--accent-dim);color:var(--accent);font-weight:600}
+.topbar-actions{display:flex;align-items:center;gap:8px;margin-left:auto}
+.btn-icon{width:36px;height:36px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;font-size:18px;transition:background .2s;cursor:pointer}
+.btn-icon:hover{background:var(--bg2)}
 
-/* ══════════════════════════════════════════
-   SECTIONS
-══════════════════════════════════════════ */
-.section { display:none; }
-.section.active { display:flex; flex-direction:column; }
+/* ── Sections ── */
+.section{display:none;animation:fadeIn .25s ease}
+.section.active{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+.container{max-width:1100px;margin:0 auto;padding:28px 20px}
 
-/* ══════════════════════════════════════════
-   DASHBOARD
-══════════════════════════════════════════ */
-.dash { padding:24px; max-width:1100px; margin:0 auto; width:100%; }
-.dash-hero {
-  background:linear-gradient(135deg,#1F4068 0%,#162032 60%,var(--bg1) 100%);
-  border:1px solid var(--border); border-radius:var(--radius);
-  padding:32px; margin-bottom:24px; position:relative; overflow:hidden;
-}
-.dash-hero::before {
-  content:''; position:absolute; right:-60px; top:-60px;
-  width:240px; height:240px;
-  background:radial-gradient(circle,rgba(88,166,255,.15),transparent 70%);
-  border-radius:50%;
-}
-.dash-hero h1 { font-size:22px; font-weight:700; margin-bottom:6px; }
-.dash-hero p { color:var(--text2); font-size:14px; margin-bottom:20px; }
-.hero-btns { display:flex; gap:10px; flex-wrap:wrap; }
-.stat-row { display:grid; grid-template-columns:repeat(4,1fr); gap:12px; margin-bottom:24px; }
-.stat-box { background:var(--bg1); border:1px solid var(--border); border-radius:var(--radius); padding:16px; }
-.stat-num { font-size:28px; font-weight:700; color:var(--accent); }
-.stat-lbl { font-size:12px; color:var(--text2); margin-top:2px; }
-.section-title { font-size:15px; font-weight:600; color:var(--text0); margin-bottom:12px; display:flex; align-items:center; gap:8px; }
-.section-title .badge { background:var(--bg2); color:var(--text2); font-size:11px; padding:1px 8px; border-radius:10px; font-weight:500; }
-.meeting-grid { display:grid; grid-template-columns:repeat(auto-fill,minmax(300px,1fr)); gap:12px; }
-.meeting-card {
-  background:var(--bg1); border:1px solid var(--border); border-radius:var(--radius);
-  padding:16px; cursor:pointer; transition:all .15s; position:relative;
-}
-.meeting-card:hover { border-color:var(--accent); transform:translateY(-1px); box-shadow:var(--shadow-lg); }
-.meeting-card::before {
-  content:''; position:absolute; top:0; left:0; right:0; height:2px;
-  border-radius:var(--radius) var(--radius) 0 0;
-}
-.meeting-card.tpl-review::before { background:var(--accent); }
-.meeting-card.tpl-pair::before { background:var(--success); }
-.meeting-card.tpl-bug::before { background:var(--danger); }
-.meeting-card.tpl-design::before { background:var(--purple); }
-.meeting-card.tpl-sprint::before { background:var(--orange); }
-.meeting-card.tpl-incident::before { background:var(--warning); }
-.mc-head { display:flex; align-items:flex-start; justify-content:space-between; margin-bottom:8px; }
-.mc-title { font-size:14px; font-weight:600; color:var(--text0); }
-.mc-meta { font-size:12px; color:var(--text2); display:flex; gap:10px; flex-wrap:wrap; }
-.mc-meta span { display:flex; align-items:center; gap:4px; }
-.mc-actions { display:flex; gap:6px; margin-top:12px; }
+/* ── Buttons ── */
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--r-sm);font-size:14px;font-weight:600;transition:all .18s;cursor:pointer;border:none}
+.btn-primary{background:var(--accent);color:#fff}
+.btn-primary:hover{filter:brightness(1.1);transform:translateY(-1px);box-shadow:0 4px 12px rgba(99,102,241,.35)}
+.btn-secondary{background:var(--bg2);color:var(--text1);border:1.5px solid var(--border)}
+.btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
+.btn-danger{background:var(--danger);color:#fff}
+.btn-danger:hover{filter:brightness(1.1)}
+.btn-success{background:var(--success);color:#fff}
+.btn-sm{padding:6px 13px;font-size:13px}
+.btn-lg{padding:13px 28px;font-size:16px;border-radius:var(--r)}
 
-/* ══════════════════════════════════════════
-   PREPARE SECTION
-══════════════════════════════════════════ */
-.prepare { display:flex; gap:0; height:calc(100vh - 52px); overflow:hidden; }
-.prep-sidebar {
-  width:280px; flex-shrink:0; background:var(--bg1); border-right:1px solid var(--border);
-  padding:16px; overflow-y:auto;
-}
-.prep-sidebar h3 { font-size:13px; font-weight:600; color:var(--text2); text-transform:uppercase; letter-spacing:.06em; margin-bottom:10px; }
-.prep-main { flex:1; padding:24px; overflow-y:auto; }
-.template-card {
-  background:var(--bg2); border:1px solid var(--border); border-radius:var(--radius-sm);
-  padding:10px 12px; margin-bottom:8px; cursor:pointer; transition:all .15s;
-}
-.template-card:hover, .template-card.selected { border-color:var(--accent); background:var(--accent-dim); }
-.tpl-name { font-size:13px; font-weight:600; }
-.tpl-desc { font-size:11px; color:var(--text2); margin-top:2px; }
+/* ── Cards ── */
+.card{background:var(--bg1);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow);transition:box-shadow .2s,transform .2s}
+.card:hover{box-shadow:var(--shadow-md)}
+.card-body{padding:20px}
 
-/* ══════════════════════════════════════════
-   MEETING ROOM (3-PANEL)
-══════════════════════════════════════════ */
-.room { display:flex; height:calc(100vh - 52px); overflow:hidden; }
-/* Left panel */
-.room-left {
-  width:220px; flex-shrink:0; background:var(--bg1); border-right:1px solid var(--border);
-  display:flex; flex-direction:column; overflow:hidden;
-}
-.panel-header {
-  padding:10px 14px; border-bottom:1px solid var(--border);
-  display:flex; align-items:center; justify-content:space-between; flex-shrink:0;
-}
-.panel-header h3 { font-size:12px; font-weight:600; color:var(--text2); text-transform:uppercase; letter-spacing:.06em; }
-.panel-body { flex:1; overflow-y:auto; padding:10px; }
+/* ── Dashboard ── */
+.dash-hero{text-align:center;padding:48px 20px 36px;background:linear-gradient(160deg,var(--bg1) 0%,var(--bg0) 100%);border-radius:var(--r-lg);border:1px solid var(--border);margin-bottom:28px;position:relative;overflow:hidden}
+.dash-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,var(--accent-dim) 0%,transparent 60%),radial-gradient(ellipse at 70% 20%,rgba(167,139,250,.07) 0%,transparent 50%);pointer-events:none}
+.dash-hero h1{font-size:32px;font-weight:800;color:var(--text0);line-height:1.2;margin-bottom:10px}
+.dash-hero h1 span{background:linear-gradient(135deg,var(--accent),#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.dash-hero p{color:var(--text2);font-size:15px;margin-bottom:24px;max-width:420px;margin-left:auto;margin-right:auto}
+.hero-badges{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:28px}
+.hero-badge{padding:4px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:99px;font-size:12px;color:var(--text2)}
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px}
+.stat-card{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r);padding:18px 16px;text-align:center}
+.stat-card .val{font-size:28px;font-weight:800;color:var(--text0);line-height:1}
+.stat-card .lbl{font-size:12px;color:var(--text2);margin-top:4px}
+.stat-card .ico{font-size:20px;margin-bottom:8px}
+
+/* Templates grid */
+.tpl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:28px}
+.tpl-card{background:var(--bg1);border:1.5px solid var(--border);border-radius:var(--r);padding:16px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
+.tpl-card:hover{border-color:var(--accent);box-shadow:var(--shadow-md);transform:translateY(-2px)}
+.tpl-card.coding{display:none}
+.tpl-card .tpl-icon{font-size:24px;margin-bottom:8px}
+.tpl-card .tpl-name{font-weight:600;font-size:14px;color:var(--text0);margin-bottom:4px}
+.tpl-card .tpl-meta{font-size:12px;color:var(--text2)}
+.tpl-badge{position:absolute;top:10px;right:10px;font-size:10px;padding:2px 7px;border-radius:99px;background:var(--accent-soft);color:var(--accent);font-weight:600}
+.tpl-badge.code-badge{background:rgba(52,211,153,.12);color:var(--success)}
+
+/* Recent meetings */
+.section-title{font-size:17px;font-weight:700;color:var(--text0);margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
+.section-title .subtitle{font-size:13px;font-weight:400;color:var(--text2)}
+.meeting-list{display:flex;flex-direction:column;gap:10px}
+.meeting-item{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r);padding:14px 18px;display:flex;align-items:center;gap:14px;transition:all .2s;cursor:pointer}
+.meeting-item:hover{border-color:var(--accent);box-shadow:var(--shadow-md);transform:translateX(2px)}
+.meeting-item .m-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.meeting-item .m-info{flex:1;min-width:0}
+.meeting-item .m-title{font-weight:600;color:var(--text0);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.meeting-item .m-meta{font-size:12px;color:var(--text2);margin-top:2px}
+.meeting-item .m-dur{font-size:13px;color:var(--text2);white-space:nowrap}
+.empty-state{text-align:center;padding:48px 20px;color:var(--text3)}
+.empty-state .empty-ico{font-size:48px;margin-bottom:12px}
+.empty-state p{font-size:14px}
+
+/* ── Meeting Room ── */
+.room-layout{display:grid;grid-template-columns:200px 1fr 280px;gap:16px;min-height:calc(100vh - 200px)}
+.room-panel{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:12px}
+.panel-title{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);margin-bottom:4px}
+
 /* Timer */
-.timer-box { padding:12px; background:var(--bg2); border-radius:var(--radius-sm); margin-bottom:8px; text-align:center; }
-.timer-dsp { font-size:28px; font-weight:700; color:var(--accent); font-family:var(--font-code); letter-spacing:2px; }
-.timer-ctrl { display:flex; justify-content:center; gap:6px; margin-top:8px; }
+.timer-display{text-align:center;padding:14px 0}
+.timer-num{font-size:32px;font-weight:800;letter-spacing:2px;color:var(--text0);font-variant-numeric:tabular-nums}
+.timer-label{font-size:11px;color:var(--text2);margin-top:2px}
+.rec-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--danger);margin-right:5px;animation:blink 1.2s ease-in-out infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+
 /* Agenda */
-.agenda-item {
-  display:flex; align-items:flex-start; gap:8px;
-  padding:8px; border-radius:var(--radius-sm); margin-bottom:4px;
-  border:1px solid transparent; transition:all .15s;
-}
-.agenda-item.active-item { background:var(--accent-dim); border-color:var(--accent); }
-.agenda-item.done-item { opacity:.5; }
-.agenda-cb { width:16px; height:16px; accent-color:var(--accent); cursor:pointer; flex-shrink:0; margin-top:2px; }
-.agenda-info { flex:1; min-width:0; }
-.agenda-name { font-size:13px; font-weight:500; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
-.agenda-time-lbl { font-size:11px; color:var(--text2); }
-/* Center panel */
-.room-center { flex:1; display:flex; flex-direction:column; overflow:hidden; min-width:0; }
-.room-center-tabs {
-  display:flex; border-bottom:1px solid var(--border);
-  background:var(--bg1); flex-shrink:0; padding:0 4px;
-}
-.rc-tab {
-  padding:10px 14px; font-size:13px; font-weight:500; cursor:pointer;
-  color:var(--text2); border-bottom:2px solid transparent; transition:all .15s;
-  display:flex; align-items:center; gap:6px; background:none; border-top:none; border-left:none; border-right:none;
-}
-.rc-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
-.room-center-body { flex:1; overflow:hidden; display:flex; flex-direction:column; }
-/* Code Editor */
-.code-panel { flex:1; display:flex; flex-direction:column; overflow:hidden; }
-.code-toolbar {
-  display:flex; align-items:center; gap:8px; padding:8px 12px;
-  background:var(--bg1); border-bottom:1px solid var(--border); flex-shrink:0;
-}
-.code-toolbar select {
-  background:var(--bg2); color:var(--text0); border:1px solid var(--border);
-  border-radius:var(--radius-sm); padding:4px 8px; font-size:12px; cursor:pointer; outline:none;
-}
-.code-editor-wrap { flex:1; position:relative; overflow:hidden; }
-.code-editor {
-  width:100%; height:100%; padding:16px; resize:none; outline:none;
-  background:var(--bg0); color:#E6EDF3; border:none;
-  font-family:var(--font-code); font-size:13px; line-height:1.6; tab-size:2;
-  overflow:auto;
-}
-.code-editor::placeholder { color:var(--text3); }
-.line-nums {
-  position:absolute; left:0; top:0; bottom:0; width:48px;
-  background:var(--bg1); border-right:1px solid var(--border-muted);
-  padding:16px 8px; font-family:var(--font-code); font-size:13px; line-height:1.6;
-  color:var(--text3); text-align:right; pointer-events:none; overflow:hidden;
-}
-/* Notes panel */
-.notes-panel { flex:1; display:flex; flex-direction:column; overflow:hidden; }
-.notes-toolbar {
-  display:flex; align-items:center; gap:6px; padding:8px 12px;
-  background:var(--bg1); border-bottom:1px solid var(--border); flex-shrink:0; flex-wrap:wrap;
-}
-.notes-btn {
-  padding:4px 8px; background:var(--bg2); border:1px solid var(--border);
-  border-radius:var(--radius-sm); font-size:11px; color:var(--text1); cursor:pointer;
-  display:flex; align-items:center; gap:4px; transition:all .15s; white-space:nowrap;
-}
-.notes-btn:hover { background:var(--bg3); color:var(--text0); }
-.notes-area {
-  flex:1; padding:16px; resize:none; outline:none;
-  background:var(--bg0); color:var(--text0); border:none;
-  font-family:inherit; font-size:14px; line-height:1.8; overflow:auto;
-}
-.notes-area::placeholder { color:var(--text3); }
-/* Right panel */
-.room-right {
-  width:240px; flex-shrink:0; background:var(--bg1); border-left:1px solid var(--border);
-  display:flex; flex-direction:column; overflow:hidden;
-}
-.room-right-tabs { display:flex; border-bottom:1px solid var(--border); flex-shrink:0; }
-.rr-tab {
-  flex:1; padding:9px; font-size:12px; font-weight:500; cursor:pointer;
-  color:var(--text2); border-bottom:2px solid transparent; text-align:center;
-  background:none; border-top:none; border-left:none; border-right:none; transition:all .15s;
-}
-.rr-tab.active { color:var(--accent); border-bottom-color:var(--accent); }
-/* Action items */
-.action-item {
-  display:flex; align-items:flex-start; gap:8px;
-  padding:8px; border-radius:var(--radius-sm); margin-bottom:4px; border:1px solid var(--border-muted); background:var(--bg2);
-}
-.action-item.done { opacity:.5; }
-.action-cb { width:15px; height:15px; accent-color:var(--success); cursor:pointer; flex-shrink:0; margin-top:2px; }
-.action-content { flex:1; min-width:0; }
-.action-title { font-size:13px; font-weight:500; }
-.action-meta { display:flex; gap:6px; margin-top:4px; flex-wrap:wrap; }
-.action-del { color:var(--danger); cursor:pointer; font-size:13px; padding:2px; }
-/* Bottom quick bar */
-.quick-bar {
-  padding:8px 12px; background:var(--bg1); border-top:1px solid var(--border);
-  display:flex; align-items:center; gap:8px; flex-shrink:0; flex-wrap:wrap;
-}
-.end-btn {
-  margin-left:auto; padding:7px 16px; background:var(--danger); color:#fff;
-  border:none; border-radius:var(--radius-sm); font-size:13px; font-weight:600;
-  cursor:pointer; transition:all .15s;
-}
-.end-btn:hover { filter:brightness(1.1); }
+.agenda-list{list-style:none;display:flex;flex-direction:column;gap:4px}
+.agenda-item{font-size:13px;color:var(--text2);padding:5px 8px;border-radius:var(--r-sm);cursor:pointer;display:flex;align-items:center;gap:6px;transition:background .15s}
+.agenda-item:hover{background:var(--bg2)}
+.agenda-item.done{color:var(--text3);text-decoration:line-through}
+.agenda-item .agenda-num{width:18px;height:18px;border-radius:50%;background:var(--accent-dim);color:var(--accent);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
 
-/* ══════════════════════════════════════════
-   FOLLOW-UP
-══════════════════════════════════════════ */
-.followup { max-width:900px; margin:0 auto; padding:24px; width:100%; }
-.summary-card { background:var(--bg1); border:1px solid var(--border); border-radius:var(--radius); padding:20px; margin-bottom:16px; }
-.summary-card h3 { font-size:14px; font-weight:600; margin-bottom:12px; display:flex; align-items:center; gap:8px; }
-.md-preview { font-size:13px; line-height:1.8; color:var(--text1); white-space:pre-wrap; font-family:var(--font-code); background:var(--bg0); padding:12px; border-radius:var(--radius-sm); border:1px solid var(--border); max-height:320px; overflow-y:auto; }
-.export-row { display:flex; gap:8px; flex-wrap:wrap; margin-top:12px; }
+/* Notes editor */
+.notes-area{flex:1;resize:none;border-radius:var(--r-sm);padding:14px;font-size:14px;line-height:1.7;min-height:300px;background:var(--bg2)}
+.code-panel{display:none;flex-direction:column;gap:8px;border-top:1px solid var(--border);padding-top:12px;margin-top:4px}
+.code-panel.visible{display:flex}
+.code-editor-wrap{position:relative;border-radius:var(--r-sm);overflow:hidden;border:1.5px solid var(--border);background:#0d1117;transition:border-color .2s}
+.code-editor-wrap:focus-within{border-color:var(--accent)}
+.code-nums{position:absolute;left:0;top:0;bottom:0;width:36px;background:rgba(0,0,0,.2);padding:10px 0;text-align:center;color:#555;font-size:12px;font-family:monospace;line-height:1.6;pointer-events:none;user-select:none;overflow:hidden}
+.code-textarea{display:block;width:100%;padding:10px 12px 10px 46px;min-height:180px;background:transparent;border:none;outline:none;font-family:'JetBrains Mono','Fira Code','Courier New',monospace;font-size:13px;color:#c9d1d9;resize:vertical;line-height:1.6;tab-size:2}
+.code-toolbar{display:flex;gap:6px;flex-wrap:wrap}
 
-/* ══════════════════════════════════════════
-   SHARED COMPONENTS
-══════════════════════════════════════════ */
-/* Badges */
-.badge { display:inline-flex; align-items:center; padding:1px 7px; border-radius:10px; font-size:11px; font-weight:600; }
-.b-blue { background:var(--accent-dim); color:var(--accent); }
-.b-green { background:rgba(63,185,80,.15); color:var(--success); }
-.b-red { background:rgba(248,81,73,.15); color:var(--danger); }
-.b-yellow { background:rgba(210,153,34,.15); color:var(--warning); }
-.b-purple { background:rgba(188,140,255,.15); color:var(--purple); }
-.b-gray { background:var(--bg2); color:var(--text2); }
+/* Transcript panel */
+.transcript-feed{flex:1;overflow-y:auto;max-height:280px;display:flex;flex-direction:column;gap:6px}
+.tx-item{padding:8px 10px;border-radius:var(--r-sm);font-size:13px;line-height:1.5;border-left:3px solid transparent;transition:background .15s}
+.tx-item.final{background:var(--bg2);border-left-color:var(--accent)}
+.tx-item.interim{color:var(--text3);font-style:italic;background:var(--accent-dim)}
+.tx-item .tx-time{font-size:11px;color:var(--text3);margin-bottom:3px}
+.tx-interim-live{color:var(--text3);font-style:italic;font-size:13px;padding:6px 10px;border-radius:var(--r-sm)}
 
-/* Buttons */
-.btn {
-  display:inline-flex; align-items:center; gap:6px;
-  padding:6px 14px; border-radius:var(--radius-sm); border:1px solid var(--border);
-  font-size:13px; font-weight:500; cursor:pointer; transition:all .15s;
-  background:var(--bg2); color:var(--text1);
+.actions-list{display:flex;flex-direction:column;gap:5px;max-height:180px;overflow-y:auto}
+.action-item{display:flex;gap:8px;align-items:flex-start;padding:6px 8px;border-radius:var(--r-sm);background:var(--bg2);font-size:12.5px;color:var(--text1)}
+.action-item input[type=checkbox]{margin-top:2px;accent-color:var(--accent);cursor:pointer}
+.action-add{display:flex;gap:6px;margin-top:4px}
+.action-add input{font-size:13px;padding:6px 10px}
+.action-add button{flex-shrink:0;padding:6px 10px;background:var(--accent);color:#fff;border-radius:var(--r-sm);font-size:13px}
+
+.meeting-title-display{font-weight:700;color:var(--text0);font-size:15px;margin-bottom:2px}
+.meeting-tpl-tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:2px 8px;background:var(--accent-dim);color:var(--accent);border-radius:99px;font-weight:600}
+
+/* Room bottom bar */
+.room-bottom{display:flex;align-items:center;justify-content:center;gap:12px;padding:14px 0 6px;flex-wrap:wrap}
+.room-bottom .mic-btn{padding:11px 22px;border-radius:99px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:7px;transition:all .2s;border:none;cursor:pointer}
+.mic-btn.off{background:var(--bg2);border:1.5px solid var(--border);color:var(--text1)}
+.mic-btn.on{background:linear-gradient(135deg,var(--danger),#f97316);color:#fff;box-shadow:0 4px 14px rgba(239,68,68,.4)}
+.mic-btn.on .rec-dot{background:#fff}
+
+/* Floating ball */
+.float-ball{position:fixed;bottom:88px;right:20px;z-index:200;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#a78bfa);box-shadow:0 4px 16px rgba(99,102,241,.5);display:none;align-items:center;justify-content:center;cursor:pointer;font-size:20px;transition:transform .2s;border:2px solid rgba(255,255,255,.25)}
+.float-ball.active{display:flex}
+.float-ball:hover{transform:scale(1.08)}
+.float-ball .ball-inner{position:relative}
+.float-ball .ball-rec{position:absolute;top:-3px;right:-3px;width:10px;height:10px;border-radius:50%;background:var(--danger);border:1.5px solid white;animation:blink 1.2s infinite}
+.float-ball.muted{background:linear-gradient(135deg,#64748b,#475569)}
+
+/* ── Summary section ── */
+.summary-section{padding:0}
+.summary-header{background:linear-gradient(135deg,var(--accent),#a78bfa);border-radius:var(--r);padding:20px 24px;color:#fff;margin-bottom:20px}
+.summary-header h2{font-size:20px;font-weight:800;margin-bottom:4px}
+.summary-meta{font-size:13px;opacity:.8}
+.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
+.summary-block{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r);padding:16px}
+.summary-block h3{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-bottom:10px}
+.summary-block ul{list-style:none;display:flex;flex-direction:column;gap:6px}
+.summary-block ul li{font-size:14px;color:var(--text1);padding:6px 10px;background:var(--bg2);border-radius:var(--r-sm);display:flex;gap:6px}
+.summary-block ul li::before{content:'•';color:var(--accent);font-weight:700;flex-shrink:0}
+.summary-txt{font-size:14px;color:var(--text1);line-height:1.8;white-space:pre-wrap}
+
+/* ── History ── */
+.history-filters{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
+.filter-btn{padding:5px 14px;border-radius:99px;font-size:13px;border:1.5px solid var(--border);color:var(--text2);background:var(--bg1);cursor:pointer;transition:all .18s}
+.filter-btn.active,.filter-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+.history-search{flex:1;min-width:200px;max-width:320px;padding:6px 12px;font-size:13px;background:var(--bg1);border:1.5px solid var(--border);border-radius:99px}
+.history-item{cursor:pointer}
+.history-detail{display:none;padding:14px;border-top:1px solid var(--border);background:var(--bg2);border-radius:0 0 var(--r) var(--r)}
+.history-detail.open{display:block}
+
+/* ── Settings ── */
+.settings-section{max-width:640px}
+.setting-group{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r);margin-bottom:16px;overflow:hidden}
+.setting-group-title{padding:12px 18px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);border-bottom:1px solid var(--border);background:var(--bg2)}
+.setting-row{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;gap:12px;border-bottom:1px solid var(--border)}
+.setting-row:last-child{border-bottom:none}
+.setting-row .s-info .s-label{font-size:14px;font-weight:600;color:var(--text0)}
+.setting-row .s-info .s-desc{font-size:12px;color:var(--text2);margin-top:2px}
+
+/* Toggle switch */
+.toggle{position:relative;display:inline-block;width:46px;height:26px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.toggle-slider{position:absolute;inset:0;background:var(--border);border-radius:99px;cursor:pointer;transition:background .25s}
+.toggle-slider::before{content:'';position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform .25s;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.toggle input:checked+.toggle-slider{background:var(--accent)}
+.toggle input:checked+.toggle-slider::before{transform:translateX(20px)}
+
+/* Coding module highlight */
+.coding-toggle-card{border:2px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:12px;transition:border-color .25s,background .25s;cursor:pointer;display:flex;align-items:center;gap:14px}
+.coding-toggle-card.enabled{border-color:var(--success);background:rgba(52,211,153,.06)}
+.coding-toggle-card .ctc-icon{font-size:28px}
+.coding-toggle-card .ctc-info{flex:1}
+.coding-toggle-card .ctc-title{font-size:15px;font-weight:700;color:var(--text0);margin-bottom:3px}
+.coding-toggle-card .ctc-desc{font-size:12.5px;color:var(--text2)}
+
+/* ── Modal ── */
+.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+.modal-overlay.open{display:flex}
+.modal{background:var(--bg1);border-radius:var(--r-lg);padding:28px;max-width:560px;width:100%;box-shadow:var(--shadow-lg);animation:modalIn .2s ease}
+@keyframes modalIn{from{opacity:0;transform:scale(.95) translateY(8px)}to{opacity:1;transform:none}}
+.modal h2{font-size:20px;font-weight:800;color:var(--text0);margin-bottom:4px}
+.modal .modal-sub{font-size:14px;color:var(--text2);margin-bottom:22px}
+.modal-tpls{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:20px}
+.modal-tpl{padding:12px 10px;border:1.5px solid var(--border);border-radius:var(--r-sm);cursor:pointer;text-align:center;transition:all .18s;font-size:13px}
+.modal-tpl .mt-icon{font-size:20px;margin-bottom:4px}
+.modal-tpl .mt-name{font-weight:600;color:var(--text0);font-size:12.5px}
+.modal-tpl .mt-dur{font-size:11px;color:var(--text2)}
+.modal-tpl:hover,.modal-tpl.selected{border-color:var(--accent);background:var(--accent-dim)}
+.modal-tpl.coding-tpl{display:none}
+.modal-form{display:flex;flex-direction:column;gap:12px}
+.form-label{font-size:13px;font-weight:600;color:var(--text0);margin-bottom:5px}
+.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
+
+/* ── Speech not supported ── */
+.speech-unsupported{font-size:13px;color:var(--warn);padding:10px;background:rgba(245,158,11,.1);border-radius:var(--r-sm);text-align:center}
+
+/* ── Bottom nav (mobile) ── */
+.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg1);border-top:1px solid var(--border);z-index:150;padding:6px 0;padding-bottom:calc(6px + env(safe-area-inset-bottom))}
+.bottom-nav-inner{display:grid;grid-template-columns:repeat(4,1fr)}
+.bn-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:5px 0;cursor:pointer;transition:color .18s;color:var(--text3);font-size:11px;font-weight:500}
+.bn-btn .bn-icon{font-size:20px;line-height:1}
+.bn-btn.active{color:var(--accent)}
+
+/* ── Responsive ── */
+@media(max-width:900px){
+  .room-layout{grid-template-columns:1fr 240px}
+  .room-left{display:none}
 }
-.btn:hover { background:var(--bg3); color:var(--text0); }
-.btn-accent { background:var(--accent); color:#fff; border-color:var(--accent); }
-.btn-accent:hover { filter:brightness(1.1); background:var(--accent); }
-.btn-success { background:var(--success); color:#fff; border-color:var(--success); }
-.btn-success:hover { filter:brightness(1.1); background:var(--success); }
-.btn-danger { background:rgba(248,81,73,.1); color:var(--danger); border-color:rgba(248,81,73,.3); }
-.btn-danger:hover { background:rgba(248,81,73,.2); }
-.btn-sm { padding:4px 10px; font-size:12px; }
-.btn-lg { padding:9px 20px; font-size:14px; }
-
-/* Forms */
-.form-group { margin-bottom:14px; }
-.form-label { display:block; font-size:12px; font-weight:600; color:var(--text1); margin-bottom:5px; }
-.form-control {
-  width:100%; padding:8px 10px; border:1px solid var(--border);
-  border-radius:var(--radius-sm); font-size:13px; color:var(--text0);
-  background:var(--bg0); outline:none; transition:border .15s; font-family:inherit;
+@media(max-width:640px){
+  .topbar-nav{display:none}
+  .bottom-nav{display:block}
+  body{padding-bottom:72px}
+  .dash-hero h1{font-size:24px}
+  .stats-row{grid-template-columns:repeat(3,1fr);gap:8px}
+  .stat-card{padding:12px 8px}
+  .stat-card .val{font-size:22px}
+  .tpl-grid{grid-template-columns:repeat(2,1fr)}
+  .room-layout{grid-template-columns:1fr;grid-template-rows:auto 1fr auto}
+  .room-left{display:none}
+  .room-right{order:3}
+  .summary-grid{grid-template-columns:1fr}
+  .modal-tpls{grid-template-columns:repeat(2,1fr)}
+  .float-ball{bottom:82px}
 }
-.form-control:focus { border-color:var(--accent); box-shadow:0 0 0 3px rgba(88,166,255,.15); }
-textarea.form-control { resize:vertical; min-height:72px; }
-select.form-control { cursor:pointer; }
-.form-row { display:grid; grid-template-columns:1fr 1fr; gap:10px; }
-
-/* Modal */
-.modal-overlay { display:none; position:fixed; inset:0; background:rgba(0,0,0,.7); z-index:500; align-items:center; justify-content:center; padding:16px; backdrop-filter:blur(4px); }
-.modal-overlay.open { display:flex; }
-.modal { background:var(--bg1); border:1px solid var(--border); border-radius:var(--radius); width:100%; max-width:540px; max-height:88vh; overflow-y:auto; box-shadow:var(--shadow-lg); }
-.modal-header { padding:16px 20px 0; display:flex; align-items:center; justify-content:space-between; }
-.modal-title { font-size:16px; font-weight:700; }
-.modal-close { width:28px; height:28px; border-radius:var(--radius-sm); background:var(--bg2); border:1px solid var(--border); cursor:pointer; font-size:14px; display:flex; align-items:center; justify-content:center; color:var(--text2); }
-.modal-close:hover { background:var(--bg3); color:var(--text0); }
-.modal-body { padding:16px 20px 20px; }
-
-/* Toast */
-.toast-box { position:fixed; bottom:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:6px; }
-.toast { background:var(--bg2); border:1px solid var(--border); color:var(--text0); padding:10px 14px; border-radius:var(--radius-sm); font-size:13px; display:flex; align-items:center; gap:8px; box-shadow:var(--shadow-lg); animation:slideIn .2s ease; max-width:300px; }
-.toast.ok { border-left:3px solid var(--success); }
-.toast.err { border-left:3px solid var(--danger); }
-@keyframes slideIn { from { transform:translateX(60px); opacity:0; } to { transform:translateX(0); opacity:1; } }
-
-/* Bottom nav (mobile) */
-.bottom-nav { display:none; position:fixed; bottom:0; left:0; right:0; background:var(--bg1); border-top:1px solid var(--border); z-index:200; padding:6px 0 max(6px,env(safe-area-inset-bottom)); }
-.bn-inner { display:flex; }
-.bn-item { flex:1; display:flex; flex-direction:column; align-items:center; gap:2px; padding:5px 4px; cursor:pointer; border:none; background:transparent; color:var(--text2); font-size:10px; font-weight:500; transition:all .15s; }
-.bn-item .bni { font-size:18px; }
-.bn-item.active { color:var(--accent); }
-
-/* Progress */
-.progress { height:4px; background:var(--bg2); border-radius:99px; overflow:hidden; }
-.progress-fill { height:100%; background:var(--accent); border-radius:99px; transition:width .3s; }
-
-/* Divider */
-.divider { height:1px; background:var(--border); margin:12px 0; }
-
-/* Scrollbar */
-::-webkit-scrollbar { width:6px; height:6px; }
-::-webkit-scrollbar-track { background:transparent; }
-::-webkit-scrollbar-thumb { background:var(--bg3); border-radius:99px; }
-::-webkit-scrollbar-thumb:hover { background:var(--text3); }
-
-/* AI typing */
-.ai-dots { display:inline-flex; gap:4px; align-items:center; }
-.ai-dot { width:5px; height:5px; background:var(--accent); border-radius:50%; animation:dot .8s infinite; }
-.ai-dot:nth-child(2) { animation-delay:.15s; }
-.ai-dot:nth-child(3) { animation-delay:.3s; }
-@keyframes dot { 0%,80%,100%{ transform:scale(.7);opacity:.4; } 40%{ transform:scale(1.2);opacity:1; } }
-
-/* Kbd */
-kbd { background:var(--bg2); border:1px solid var(--border); border-radius:4px; padding:1px 6px; font-size:11px; font-family:var(--font-code); color:var(--text2); }
-
-/* Responsive */
-@media (max-width:900px) {
-  .room-left { display:none; }
-  .room-right { display:none; }
-  .stat-row { grid-template-columns:1fr 1fr; }
+@media(max-width:380px){
+  .tpl-grid{grid-template-columns:1fr}
+  .stats-row{grid-template-columns:repeat(3,1fr)}
 }
-@media (max-width:640px) {
-  .topbar-nav { display:none; }
-  .stat-row { grid-template-columns:1fr 1fr; }
-  .prepare { flex-direction:column; }
-  .prep-sidebar { width:100%; height:auto; border-right:none; border-bottom:1px solid var(--border); }
-  .bottom-nav { display:block; }
-  .followup, .dash { padding:12px; }
-  body { padding-bottom:72px; }
-  .room-center .quick-bar { display:none; }
-}
+
+/* ── Misc ── */
+.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:600}
+.chip-green{background:rgba(52,211,153,.12);color:var(--success)}
+.chip-blue{background:var(--accent-dim);color:var(--accent)}
+.chip-yellow{background:rgba(251,191,36,.12);color:var(--warn)}
+.divider{height:1px;background:var(--border);margin:6px 0}
+.room-center-tabs{display:flex;gap:2px;margin-bottom:10px}
+.room-center-tabs button{padding:5px 12px;border-radius:var(--r-sm);font-size:13px;font-weight:500;color:var(--text2);transition:all .18s}
+.room-center-tabs button.active{background:var(--accent-dim);color:var(--accent);font-weight:700}
+.center-tab-content{display:none;flex:1;flex-direction:column}
+.center-tab-content.active{display:flex}
 </style>
 </head>
 <body>
 
-<!-- ══════════ TOPBAR ══════════ -->
+<!-- ══ TOPBAR ══ -->
 <header class="topbar">
-  <a class="logo" href="#" onclick="showSection('dashboard');return false">
-    <span>⚡</span> MeetPilot
-    <span class="logo-badge">Vibe Coding</span>
-  </a>
+  <div class="topbar-logo">
+    <div class="logo-dot">🎯</div>
+    MeetPilot
+  </div>
   <nav class="topbar-nav">
-    <button class="tb-btn active" id="tnav-dashboard" onclick="showSection('dashboard')">📊 仪表盘</button>
-    <button class="tb-btn" id="tnav-prepare" onclick="showSection('prepare')">📋 会前准备</button>
-    <button class="tb-btn" id="tnav-room" onclick="showSection('room')">⚡ 会议室</button>
-    <button class="tb-btn" id="tnav-followup" onclick="showSection('followup')">✅ 会后跟进</button>
+    <button id="tnav-dashboard" class="active" onclick="showSection('dashboard')">首页</button>
+    <button id="tnav-room" onclick="showSection('room')">会议室</button>
+    <button id="tnav-history" onclick="showSection('history')">历史记录</button>
+    <button id="tnav-settings" onclick="showSection('settings')">设置</button>
   </nav>
-  <div class="topbar-right">
-    <button class="icon-btn" onclick="toggleTheme()" title="切换主题" id="theme-btn">🌙</button>
-    <button class="new-btn" onclick="openCreateModal()">+ 新建会议</button>
+  <div class="topbar-actions">
+    <div class="btn-icon" id="theme-toggle" onclick="toggleTheme()" title="切换主题">🌙</div>
   </div>
 </header>
 
-<!-- ══════════ SECTION: DASHBOARD ══════════ -->
-<section id="sec-dashboard" class="section active">
-  <div class="dash">
-    <div class="dash-hero">
-      <h1>⚡ Vibe Coding 会议助手</h1>
-      <p>代码协作 · 实时记录 · 任务闭环 · 一站式技术会议工具</p>
-      <div class="hero-btns">
-        <button class="btn btn-accent btn-lg" onclick="openCreateModal()">+ 新建会议</button>
-        <button class="btn btn-lg" onclick="showSection('room')">⚡ 快速进入会议室</button>
+<!-- ══ SECTIONS ══ -->
+
+<!-- DASHBOARD -->
+<div class="section active" id="sec-dashboard">
+<div class="container">
+  <div class="dash-hero">
+    <h1>开会，<span>更聪明一点</span></h1>
+    <p>实时语音转文字，AI 智能总结，全场景会议助手<br>无需注册，本地优先，隐私安全</p>
+    <div class="hero-badges">
+      <span class="hero-badge">🔒 本地存储</span>
+      <span class="hero-badge">🎙 实时转写</span>
+      <span class="hero-badge">🤖 AI 总结</span>
+      <span class="hero-badge">📤 多格式导出</span>
+      <span class="hero-badge">🌙 深色模式</span>
+    </div>
+    <button class="btn btn-primary btn-lg" onclick="openNewMeetingModal()">🚀 &nbsp;开始新会议</button>
+  </div>
+
+  <div class="stats-row">
+    <div class="stat-card">
+      <div class="ico">📅</div>
+      <div class="val" id="stat-total">0</div>
+      <div class="lbl">历史会议</div>
+    </div>
+    <div class="stat-card">
+      <div class="ico">⏱</div>
+      <div class="val" id="stat-hours">0h</div>
+      <div class="lbl">累计时长</div>
+    </div>
+    <div class="stat-card">
+      <div class="ico">✅</div>
+      <div class="val" id="stat-actions">0</div>
+      <div class="lbl">行动项</div>
+    </div>
+  </div>
+
+  <div class="section-title">选择会议模板 <span class="subtitle">点击快速创建</span></div>
+  <div class="tpl-grid" id="tpl-grid">
+    <div class="tpl-card" onclick="openNewMeetingModal('standup')">
+      <div class="tpl-icon">☀️</div>
+      <div class="tpl-name">日常例会</div>
+      <div class="tpl-meta">15 分钟 · 同步进展</div>
+      <div class="tpl-badge">通用</div>
+    </div>
+    <div class="tpl-card" onclick="openNewMeetingModal('business')">
+      <div class="tpl-icon">💼</div>
+      <div class="tpl-name">商务会谈</div>
+      <div class="tpl-meta">60 分钟 · 外部对接</div>
+      <div class="tpl-badge">通用</div>
+    </div>
+    <div class="tpl-card" onclick="openNewMeetingModal('brainstorm')">
+      <div class="tpl-icon">💡</div>
+      <div class="tpl-name">头脑风暴</div>
+      <div class="tpl-meta">45 分钟 · 创意发散</div>
+      <div class="tpl-badge">通用</div>
+    </div>
+    <div class="tpl-card" onclick="openNewMeetingModal('interview')">
+      <div class="tpl-icon">🤝</div>
+      <div class="tpl-name">访谈调研</div>
+      <div class="tpl-meta">45 分钟 · 用户洞察</div>
+      <div class="tpl-badge">通用</div>
+    </div>
+    <div class="tpl-card" onclick="openNewMeetingModal('training')">
+      <div class="tpl-icon">📚</div>
+      <div class="tpl-name">培训课程</div>
+      <div class="tpl-meta">90 分钟 · 知识记录</div>
+      <div class="tpl-badge">通用</div>
+    </div>
+    <div class="tpl-card" onclick="openNewMeetingModal('kickoff')">
+      <div class="tpl-icon">🚀</div>
+      <div class="tpl-name">项目启动</div>
+      <div class="tpl-meta">60 分钟 · 对齐目标</div>
+      <div class="tpl-badge">通用</div>
+    </div>
+    <!-- Coding module templates (hidden by default) -->
+    <div class="tpl-card coding" onclick="openNewMeetingModal('review')">
+      <div class="tpl-icon">🔍</div>
+      <div class="tpl-name">代码评审</div>
+      <div class="tpl-meta">60 分钟 · CR 专用</div>
+      <div class="tpl-badge code-badge">编码模块</div>
+    </div>
+    <div class="tpl-card coding" onclick="openNewMeetingModal('pair')">
+      <div class="tpl-icon">👥</div>
+      <div class="tpl-name">结对编程</div>
+      <div class="tpl-meta">90 分钟 · 协作开发</div>
+      <div class="tpl-badge code-badge">编码模块</div>
+    </div>
+    <div class="tpl-card coding" onclick="openNewMeetingModal('bugretro')">
+      <div class="tpl-icon">🐛</div>
+      <div class="tpl-name">Bug 复盘</div>
+      <div class="tpl-meta">45 分钟 · 技术复盘</div>
+      <div class="tpl-badge code-badge">编码模块</div>
+    </div>
+  </div>
+
+  <div class="section-title">近期会议 <span class="subtitle">点击查看详情</span></div>
+  <div id="recent-meetings-list">
+    <div class="empty-state">
+      <div class="empty-ico">🎙</div>
+      <p>还没有会议记录<br>开始你的第一次智能会议吧</p>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- MEETING ROOM -->
+<div class="section" id="sec-room">
+<div class="container" style="padding-bottom:0">
+  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
+    <div>
+      <div class="meeting-title-display" id="room-title">会议名称</div>
+      <div style="margin-top:4px;display:flex;align-items:center;gap:8px">
+        <span class="meeting-tpl-tag" id="room-tpl-tag">☀️ 日常例会</span>
+        <span class="chip chip-green" id="room-status-chip"><span class="rec-dot"></span> 进行中</span>
       </div>
     </div>
-    <div class="stat-row">
-      <div class="stat-box"><div class="stat-num" id="s-total">0</div><div class="stat-lbl">📅 总会议数</div></div>
-      <div class="stat-box"><div class="stat-num" id="s-actions">0</div><div class="stat-lbl">⚡ 行动项</div></div>
-      <div class="stat-box"><div class="stat-num" id="s-done">0</div><div class="stat-lbl">✅ 已完成</div></div>
-      <div class="stat-box"><div class="stat-num" id="s-code">0</div><div class="stat-lbl">💻 代码片段</div></div>
+    <div style="display:flex;gap:8px">
+      <button class="btn btn-secondary btn-sm" onclick="exportMeeting('markdown')">📥 导出</button>
+      <button class="btn btn-danger btn-sm" onclick="endMeeting()">⏹ 结束会议</button>
     </div>
-    <div class="section-title">最近会议 <span class="badge" id="meeting-count-badge">0</span></div>
-    <div class="meeting-grid" id="meeting-list-dash"></div>
   </div>
-</section>
-
-<!-- ══════════ SECTION: PREPARE ══════════ -->
-<section id="sec-prepare" class="section">
-  <div class="prepare">
-    <aside class="prep-sidebar">
-      <h3>技术会议模板</h3>
-      <div id="template-list"></div>
+  <div class="room-layout">
+    <!-- Left panel -->
+    <div class="room-panel room-left">
+      <div class="panel-title">计时</div>
+      <div class="timer-display">
+        <div class="timer-num" id="room-timer">00:00</div>
+        <div class="timer-label" id="room-timer-label">会议时长</div>
+      </div>
       <div class="divider"></div>
-      <h3>最近会议</h3>
-      <div id="recent-meetings-sidebar"></div>
-    </aside>
-    <div class="prep-main">
-      <div id="prepare-empty" style="text-align:center;padding:64px 20px;color:var(--text2)">
-        <div style="font-size:48px;margin-bottom:12px">📋</div>
-        <p style="font-size:15px;margin-bottom:16px">选择模板或创建新会议</p>
-        <button class="btn btn-accent" onclick="openCreateModal()">+ 新建会议</button>
-      </div>
-      <div id="prepare-content" style="display:none">
-        <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
-          <div>
-            <h2 style="font-size:18px;font-weight:700" id="prep-title">--</h2>
-            <div style="color:var(--text2);font-size:13px;margin-top:3px" id="prep-meta">--</div>
-          </div>
-          <button class="btn btn-success btn-lg" onclick="enterRoom()">⚡ 进入会议室 →</button>
-        </div>
-        <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-          <div>
-            <div class="summary-card">
-              <h3>👥 参会人员</h3>
-              <div id="prep-participants"></div>
-              <button class="btn btn-sm" style="margin-top:8px" onclick="addParticipant()">+ 添加成员</button>
-            </div>
-            <div class="summary-card">
-              <h3>💻 代码上下文</h3>
-              <div class="form-group">
-                <label class="form-label">粘贴代码 / GitHub 链接</label>
-                <textarea class="form-control" id="prep-code-ctx" placeholder="粘贴相关代码片段，或填写 GitHub 仓库/PR 链接..." style="font-family:var(--font-code);font-size:12px;min-height:100px"></textarea>
-              </div>
-              <div class="form-group">
-                <label class="form-label">语言</label>
-                <select class="form-control" id="prep-code-lang">
-                  <option>JavaScript</option><option>TypeScript</option><option>Python</option>
-                  <option>Java</option><option>Go</option><option>Rust</option>
-                  <option>C/C++</option><option>SQL</option><option>Shell</option><option>其他</option>
-                </select>
-              </div>
-            </div>
-          </div>
-          <div>
-            <div class="summary-card">
-              <h3>📋 会议议程</h3>
-              <div id="prep-agenda-list"></div>
-              <button class="btn btn-sm" style="margin-top:8px" onclick="addAgendaPrep()">+ 添加议程</button>
-            </div>
-            <div class="summary-card">
-              <h3>☑️ 会前检查</h3>
-              <div id="prep-checklist"></div>
-              <div class="progress" style="margin-top:10px"><div class="progress-fill" id="prep-checklist-bar" style="width:0%"></div></div>
-            </div>
-          </div>
-        </div>
-      </div>
+      <div class="panel-title">议程</div>
+      <ul class="agenda-list" id="room-agenda"></ul>
     </div>
-  </div>
-</section>
+    <!-- Center panel -->
+    <div class="room-panel" style="min-height:500px">
+      <div class="room-center-tabs" id="center-tabs">
+        <button class="active" onclick="switchCenterTab('notes',this)">📝 笔记</button>
+        <button class="coding-tab" style="display:none" onclick="switchCenterTab('code',this)">💻 代码</button>
+      </div>
+      <!-- Notes tab -->
+      <div class="center-tab-content active" id="ctab-notes">
+        <textarea class="notes-area" id="room-notes" placeholder="在这里记录会议笔记…
 
-<!-- ══════════ SECTION: ROOM ══════════ -->
-<section id="sec-room" class="section">
-  <div class="room">
-    <!-- Left: Timer + Agenda -->
-    <div class="room-left">
-      <div class="panel-header"><h3>⏱ 计时</h3></div>
-      <div class="panel-body">
-        <div class="timer-box">
-          <div class="timer-dsp" id="timer-dsp">00:00:00</div>
-          <div style="font-size:11px;color:var(--text2);margin-top:4px" id="timer-status">未开始</div>
-          <div class="timer-ctrl">
-            <button class="btn btn-sm btn-accent" id="timer-btn" onclick="toggleTimer()">▶ 开始</button>
-            <button class="btn btn-sm" onclick="resetTimer()">↺</button>
-          </div>
-        </div>
-        <div class="divider"></div>
-        <div class="panel-header" style="padding:0 0 8px;border:none"><h3>📋 议程</h3></div>
-        <div id="room-agenda-list"></div>
-        <div class="divider"></div>
-        <div class="panel-header" style="padding:0 0 8px;border:none"><h3>👥 参会人</h3></div>
-        <div id="room-participants" style="display:flex;flex-wrap:wrap;gap:4px"></div>
+Ctrl+Enter 快速插入分隔线
+支持 Markdown 格式"></textarea>
       </div>
-    </div>
-
-    <!-- Center: Code + Notes -->
-    <div class="room-center">
-      <div class="room-center-tabs">
-        <button class="rc-tab active" id="rctab-code" onclick="switchRoomTab('code')">💻 代码编辑器</button>
-        <button class="rc-tab" id="rctab-notes" onclick="switchRoomTab('notes')">📝 实时记录</button>
-      </div>
-      <div class="room-center-body">
-        <!-- Code -->
-        <div id="room-code" class="code-panel">
-          <div class="code-toolbar">
-            <select id="room-lang" onchange="saveMeetingCode()">
-              <option>JavaScript</option><option>TypeScript</option><option>Python</option>
-              <option>Java</option><option>Go</option><option>Rust</option>
-              <option>C/C++</option><option>SQL</option><option>Shell</option><option>其他</option>
-            </select>
-            <button class="btn btn-sm" onclick="copyCode()">📋 复制</button>
-            <button class="btn btn-sm" onclick="insertCodeToNotes()">→ 插入纪要</button>
-            <button class="btn btn-sm btn-accent" onclick="markCodeIssue()">🔴 标记问题</button>
-            <div style="margin-left:auto;font-size:11px;color:var(--text2)" id="code-lines">0 行</div>
-          </div>
-          <div class="code-editor-wrap">
-            <div class="line-nums" id="line-nums">1</div>
-            <textarea class="code-editor" id="code-editor" style="padding-left:60px"
-              placeholder="// 在这里粘贴或编写代码...&#10;// 支持代码标记、复制、插入纪要&#10;&#10;// 快捷键：&#10;// Ctrl+M  标记当前行问题&#10;// Ctrl+Shift+C  复制全部&#10;// Tab  缩进"
-              oninput="onCodeInput()" onkeydown="handleCodeKey(event)"></textarea>
-          </div>
-        </div>
-        <!-- Notes -->
-        <div id="room-notes" class="notes-panel" style="display:none">
-          <div class="notes-toolbar">
-            <button class="notes-btn" onclick="insertNoteTag('[📌 决策]')">📌 决策</button>
-            <button class="notes-btn" onclick="insertNoteTag('[🐛 Bug]')">🐛 Bug</button>
-            <button class="notes-btn" onclick="insertNoteTag('[⚡ 待办]')">⚡ 待办</button>
-            <button class="notes-btn" onclick="insertNoteTag('[💡 想法]')">💡 想法</button>
-            <button class="notes-btn" onclick="insertNoteTag('[⚠️ 风险]')">⚠️ 风险</button>
-            <button class="notes-btn" onclick="insertCodeBlock()">💻 代码块</button>
-            <div style="margin-left:auto;font-size:11px;color:var(--text2)" id="notes-count">0 字</div>
-          </div>
-          <textarea class="notes-area" id="notes-editor"
-            placeholder="在这里记录会议内容...&#10;&#10;📌 [决策] 记录重要决策&#10;🐛 [Bug] 记录发现的问题&#10;⚡ [待办] 记录待跟进事项&#10;💡 [想法] 记录灵感想法&#10;&#10;点击上方按钮快速插入标签"
-            oninput="onNotesInput()"></textarea>
-        </div>
-      </div>
-      <!-- Quick Bar -->
-      <div class="quick-bar">
-        <span style="font-size:12px;color:var(--text2)">快捷键：</span>
-        <kbd>Ctrl+M</kbd><span style="font-size:11px;color:var(--text2)">标记问题</span>
-        <kbd>Tab</kbd><span style="font-size:11px;color:var(--text2)">缩进</span>
-        <button class="btn btn-sm" onclick="switchRoomTab('notes')">→ 切换纪要</button>
-        <button class="end-btn" onclick="endMeeting()">🏁 结束会议</button>
-      </div>
-    </div>
-
-    <!-- Right: Actions + Participants -->
-    <div class="room-right">
-      <div class="room-right-tabs">
-        <button class="rr-tab active" id="rrtab-actions" onclick="switchRightTab('actions')">⚡ 行动项</button>
-        <button class="rr-tab" id="rrtab-issues" onclick="switchRightTab('issues')">🐛 问题</button>
-      </div>
-      <!-- Actions -->
-      <div id="rr-actions" style="display:flex;flex-direction:column;overflow:hidden;flex:1">
-        <div class="panel-body" style="flex:1">
-          <div id="actions-list-room"></div>
-        </div>
-        <div style="padding:10px;border-top:1px solid var(--border)">
-          <div id="add-action-inline" style="display:none;margin-bottom:8px">
-            <input class="form-control" id="new-act-title" placeholder="行动项内容" style="margin-bottom:6px">
-            <div class="form-row" style="margin-bottom:6px">
-              <input class="form-control" id="new-act-owner" placeholder="负责人">
-              <input class="form-control" type="date" id="new-act-due">
-            </div>
-            <div style="display:flex;gap:6px">
-              <select class="form-control" style="flex:none;width:90px" id="new-act-pri">
-                <option value="high">🔴 高</option>
-                <option value="mid" selected>🟡 中</option>
-                <option value="low">🟢 低</option>
-              </select>
-              <button class="btn btn-sm btn-success" onclick="saveActionInline()">保存</button>
-              <button class="btn btn-sm" onclick="hideAddAction()">取消</button>
-            </div>
-          </div>
-          <button class="btn btn-sm w-full" style="width:100%;justify-content:center" onclick="showAddAction()">+ 添加行动项</button>
-        </div>
-      </div>
-      <!-- Issues -->
-      <div id="rr-issues" style="display:none;flex:1;flex-direction:column;overflow:hidden">
-        <div class="panel-body" style="flex:1">
-          <div id="issues-list"></div>
-        </div>
-        <div style="padding:10px;border-top:1px solid var(--border)">
-          <button class="btn btn-sm w-full" style="width:100%;justify-content:center" onclick="addIssue()">+ 记录问题</button>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ══════════ SECTION: FOLLOW-UP ══════════ -->
-<section id="sec-followup" class="section">
-  <div class="followup">
-    <div id="followup-empty" style="text-align:center;padding:64px 20px;color:var(--text2)">
-      <div style="font-size:48px;margin-bottom:12px">📝</div>
-      <p style="font-size:15px;margin-bottom:16px">完成一次会议后，这里会显示会议总结</p>
-      <button class="btn btn-accent" onclick="showSection('room')">⚡ 进入会议室</button>
-    </div>
-    <div id="followup-content" style="display:none">
-      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px;flex-wrap:wrap;gap:10px">
-        <div>
-          <h2 style="font-size:18px;font-weight:700" id="fu-title">会议总结</h2>
-          <div style="font-size:13px;color:var(--text2)" id="fu-meta">--</div>
-        </div>
-        <div class="export-row">
-          <button class="btn btn-sm" onclick="exportMarkdown()">📄 导出 MD</button>
-          <button class="btn btn-sm btn-accent" onclick="exportGist()">🐙 推送 Gist</button>
-          <button class="btn btn-sm" onclick="copyFollowupEmail()">✉️ 复制邮件</button>
-        </div>
-      </div>
-      <div style="display:grid;grid-template-columns:1fr 1fr;gap:16px">
-        <div>
-          <div class="summary-card">
-            <h3><span class="ai-dots"><span class="ai-dot"></span><span class="ai-dot"></span><span class="ai-dot"></span></span> AI 会议总结</h3>
-            <div id="ai-summary" style="font-size:13px;line-height:1.8;color:var(--text1)"></div>
-          </div>
-          <div class="summary-card">
-            <h3>💻 会议代码片段</h3>
-            <div id="fu-code-preview" class="md-preview" style="max-height:200px"></div>
-          </div>
-        </div>
-        <div>
-          <div class="summary-card">
-            <h3>⚡ 行动项跟踪</h3>
-            <div id="fu-actions-list"></div>
-            <div class="divider"></div>
-            <div style="display:flex;justify-content:space-between;font-size:12px">
-              <span style="color:var(--text2)">完成率</span>
-              <span id="fu-rate" style="color:var(--success);font-weight:600">--</span>
-            </div>
-            <div class="progress" style="margin-top:6px"><div class="progress-fill" id="fu-rate-bar" style="width:0%;background:var(--success)"></div></div>
-          </div>
-          <div class="summary-card">
-            <h3>🐛 问题清单</h3>
-            <div id="fu-issues-list"></div>
-          </div>
-          <div class="summary-card">
-            <h3>📊 会议数据</h3>
-            <div id="fu-stats" style="display:grid;grid-template-columns:1fr 1fr;gap:8px"></div>
-          </div>
-        </div>
-      </div>
-    </div>
-  </div>
-</section>
-
-<!-- ══════════ MODAL: Create Meeting ══════════ -->
-<div class="modal-overlay" id="create-modal">
-  <div class="modal">
-    <div class="modal-header">
-      <div class="modal-title">⚡ 新建技术会议</div>
-      <button class="modal-close" onclick="closeCreateModal()">✕</button>
-    </div>
-    <div class="modal-body">
-      <div class="form-group">
-        <label class="form-label">会议名称 *</label>
-        <input class="form-control" id="m-title" placeholder="例：用户服务模块代码评审">
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">日期 *</label>
-          <input class="form-control" type="date" id="m-date">
-        </div>
-        <div class="form-group">
-          <label class="form-label">时间</label>
-          <input class="form-control" type="time" id="m-time">
-        </div>
-      </div>
-      <div class="form-row">
-        <div class="form-group">
-          <label class="form-label">时长（分钟）</label>
-          <input class="form-control" type="number" id="m-duration" value="60" min="5">
-        </div>
-        <div class="form-group">
-          <label class="form-label">会议模板</label>
-          <select class="form-control" id="m-template" onchange="applyTemplate()">
-            <option value="">自定义</option>
-            <option value="review">🔍 代码评审</option>
-            <option value="pair">👥 结对编程</option>
-            <option value="bug">🐛 Bug 复盘</option>
-            <option value="design">🏗️ 技术方案研讨</option>
-            <option value="sprint">🚀 Sprint 规划</option>
-            <option value="incident">⚡ 紧急事故</option>
+      <!-- Code tab (coding module) -->
+      <div class="center-tab-content" id="ctab-code">
+        <div class="code-toolbar">
+          <button class="btn btn-secondary btn-sm" onclick="insertCodeToNotes()">📋 插入笔记</button>
+          <button class="btn btn-secondary btn-sm" onclick="clearCode()">🗑 清空</button>
+          <select id="code-lang" style="padding:5px 10px;border-radius:var(--r-sm);border:1.5px solid var(--border);background:var(--bg2);color:var(--text1);font-size:13px">
+            <option>JavaScript</option><option>Python</option><option>Java</option><option>Go</option><option>TypeScript</option><option>Bash</option><option>SQL</option>
           </select>
         </div>
+        <div class="code-editor-wrap" style="flex:1">
+          <div class="code-nums" id="code-line-nums">1</div>
+          <textarea class="code-textarea" id="room-code" placeholder="// 粘贴或输入代码片段..." onkeydown="handleCodeKey(event)" oninput="updateLineNums()"></textarea>
+        </div>
       </div>
-      <div class="form-group">
-        <label class="form-label">技术目标</label>
-        <textarea class="form-control" id="m-goal" placeholder="本次会议要解决的技术问题或达成的目标..."></textarea>
+    </div>
+    <!-- Right panel -->
+    <div class="room-panel room-right">
+      <div class="panel-title">实时转录</div>
+      <div id="speech-status-bar" style="margin-bottom:6px"></div>
+      <div class="transcript-feed" id="transcript-feed">
+        <div class="tx-interim-live" id="tx-interim">等待开始录音...</div>
       </div>
-      <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px">
-        <button class="btn" onclick="closeCreateModal()">取消</button>
-        <button class="btn btn-accent" onclick="createMeeting()">创建 →</button>
+      <div class="divider"></div>
+      <div class="panel-title">行动项</div>
+      <div class="actions-list" id="actions-list"></div>
+      <div class="action-add">
+        <input type="text" id="action-input" placeholder="添加行动项..." onkeydown="if(event.key==='Enter')addAction()">
+        <button onclick="addAction()">+</button>
+      </div>
+    </div>
+  </div>
+  <div class="room-bottom">
+    <button class="mic-btn off" id="mic-btn" onclick="toggleMic()">🎙 开始录音</button>
+    <button class="btn btn-secondary" onclick="generateAISummary()">🤖 AI 总结</button>
+    <button class="btn btn-secondary" onclick="showSection('dashboard')">🏠 返回首页</button>
+  </div>
+</div>
+</div>
+
+<!-- SUMMARY -->
+<div class="section" id="sec-summary">
+<div class="container">
+  <div style="display:flex;gap:10px;margin-bottom:20px">
+    <button class="btn btn-secondary" onclick="showSection('history')">← 返回历史</button>
+    <button class="btn btn-primary" onclick="exportMeeting('markdown','summary')" id="export-btn-summary">📥 导出 Markdown</button>
+    <button class="btn btn-secondary" onclick="exportMeeting('txt','summary')">📄 导出 TXT</button>
+  </div>
+  <div class="summary-header" id="summary-header">
+    <h2 id="sum-title">会议总结</h2>
+    <div class="summary-meta" id="sum-meta"></div>
+  </div>
+  <div class="summary-grid" id="summary-grid">
+    <div class="summary-block">
+      <h3>📌 会议主旨</h3>
+      <p class="summary-txt" id="sum-gist">—</p>
+    </div>
+    <div class="summary-block">
+      <h3>✅ 主要决议</h3>
+      <ul id="sum-decisions"></ul>
+    </div>
+    <div class="summary-block">
+      <h3>📋 待办事项</h3>
+      <ul id="sum-todos"></ul>
+    </div>
+    <div class="summary-block">
+      <h3>💬 会议实录（摘要）</h3>
+      <p class="summary-txt" id="sum-transcript">—</p>
+    </div>
+  </div>
+  <div style="margin-top:20px" id="sum-notes-block">
+    <div class="summary-block">
+      <h3>📝 会议笔记</h3>
+      <p class="summary-txt" id="sum-notes">—</p>
+    </div>
+  </div>
+</div>
+</div>
+
+<!-- HISTORY -->
+<div class="section" id="sec-history">
+<div class="container">
+  <div class="section-title">历史会议</div>
+  <div class="history-filters">
+    <input type="text" class="history-search" id="history-search" placeholder="🔍 搜索会议..." oninput="renderHistory()">
+    <button class="filter-btn active" data-filter="all" onclick="setHistoryFilter('all',this)">全部</button>
+    <button class="filter-btn" data-filter="general" onclick="setHistoryFilter('general',this)">通用</button>
+    <button class="filter-btn coding-filter" style="display:none" data-filter="coding" onclick="setHistoryFilter('coding',this)">编码</button>
+  </div>
+  <div id="history-list"></div>
+</div>
+</div>
+
+<!-- SETTINGS -->
+<div class="section" id="sec-settings">
+<div class="container">
+  <div class="section-title">设置</div>
+  <div class="settings-section">
+
+    <!-- Coding module big toggle -->
+    <div class="coding-toggle-card" id="coding-card" onclick="toggleCodingModule()">
+      <div class="ctc-icon">💻</div>
+      <div class="ctc-info">
+        <div class="ctc-title">编码会议专项模块</div>
+        <div class="ctc-desc">开启后解锁：内嵌代码编辑器、技术会议模板、代码-笔记双向绑定、技术术语识别等专属能力。默认关闭，不影响通用会议使用。</div>
+      </div>
+      <label class="toggle" onclick="event.stopPropagation()">
+        <input type="checkbox" id="coding-module-toggle" onchange="toggleCodingModule()">
+        <span class="toggle-slider"></span>
+      </label>
+    </div>
+
+    <div class="setting-group">
+      <div class="setting-group-title">外观</div>
+      <div class="setting-row">
+        <div class="s-info">
+          <div class="s-label">深色主题</div>
+          <div class="s-desc">保护眼睛，适合夜间使用</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="theme-toggle-setting" onchange="toggleTheme()">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="setting-group">
+      <div class="setting-group-title">语音识别</div>
+      <div class="setting-row">
+        <div class="s-info">
+          <div class="s-label">识别语言</div>
+          <div class="s-desc">实时转写所用语言</div>
+        </div>
+        <select id="speech-lang-select" style="padding:6px 10px;border-radius:var(--r-sm);border:1.5px solid var(--border);background:var(--bg2);color:var(--text1);font-size:13px" onchange="saveSetting('speechLang',this.value)">
+          <option value="zh-CN">中文（普通话）</option>
+          <option value="zh-TW">中文（繁体）</option>
+          <option value="en-US">English (US)</option>
+          <option value="ja-JP">日本語</option>
+        </select>
+      </div>
+      <div class="setting-row">
+        <div class="s-info">
+          <div class="s-label">自动停止识别</div>
+          <div class="s-desc">静音超过 30 秒自动暂停</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="auto-stop-toggle" checked onchange="saveSetting('autoStop',this.checked)">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+    </div>
+
+    <div class="setting-group">
+      <div class="setting-group-title">隐私与数据</div>
+      <div class="setting-row">
+        <div class="s-info">
+          <div class="s-label">🔒 本地优先存储</div>
+          <div class="s-desc">所有会议记录仅保存在本地浏览器，不上传云端</div>
+        </div>
+        <span class="chip chip-green">已启用</span>
+      </div>
+      <div class="setting-row">
+        <div class="s-info">
+          <div class="s-label">音频原始数据</div>
+          <div class="s-desc">仅用于实时转写，不缓存，会议结束自动清空</div>
+        </div>
+        <span class="chip chip-green">安全</span>
+      </div>
+      <div class="setting-row">
+        <div class="s-info">
+          <div class="s-label">清空所有记录</div>
+          <div class="s-desc">删除本地全部会议历史，不可恢复</div>
+        </div>
+        <button class="btn btn-danger btn-sm" onclick="clearAllData()">清空数据</button>
+      </div>
+    </div>
+
+    <div class="setting-group">
+      <div class="setting-group-title">关于</div>
+      <div class="setting-row">
+        <div class="s-info">
+          <div class="s-label">MeetPilot</div>
+          <div class="s-desc">智能会议助手 · 本地优先 · 隐私安全</div>
+        </div>
+        <span class="chip chip-blue">v2.0</span>
       </div>
     </div>
   </div>
 </div>
+</div>
 
-<!-- ══════════ BOTTOM NAV ══════════ -->
+<!-- ══ FLOATING BALL ══ -->
+<div class="float-ball" id="float-ball" title="点击切换录音" onclick="toggleMic()">
+  <div class="ball-inner">🎙<div class="ball-rec" id="ball-rec" style="display:none"></div></div>
+</div>
+
+<!-- ══ BOTTOM NAV ══ -->
 <nav class="bottom-nav">
-  <div class="bn-inner">
-    <button class="bn-item active" id="bn-dashboard" onclick="showSection('dashboard')"><span class="bni">📊</span>仪表盘</button>
-    <button class="bn-item" id="bn-prepare" onclick="showSection('prepare')"><span class="bni">📋</span>会前</button>
-    <button class="bn-item" id="bn-room" onclick="showSection('room')"><span class="bni">⚡</span>会议室</button>
-    <button class="bn-item" id="bn-followup" onclick="showSection('followup')"><span class="bni">✅</span>跟进</button>
+  <div class="bottom-nav-inner">
+    <div class="bn-btn active" id="bn-dashboard" onclick="showSection('dashboard')">
+      <div class="bn-icon">🏠</div><span>首页</span>
+    </div>
+    <div class="bn-btn" id="bn-room" onclick="showSection('room')">
+      <div class="bn-icon">🎙</div><span>会议室</span>
+    </div>
+    <div class="bn-btn" id="bn-history" onclick="showSection('history')">
+      <div class="bn-icon">📋</div><span>历史</span>
+    </div>
+    <div class="bn-btn" id="bn-settings" onclick="showSection('settings')">
+      <div class="bn-icon">⚙️</div><span>设置</span>
+    </div>
   </div>
 </nav>
 
-<!-- ══════════ TOAST ══════════ -->
-<div class="toast-box" id="toast-box"></div>
+<!-- ══ NEW MEETING MODAL ══ -->
+<div class="modal-overlay" id="new-meeting-modal" onclick="if(event.target===this)closeModal()">
+  <div class="modal">
+    <h2>🚀 新建会议</h2>
+    <div class="modal-sub">选择模板，快速开始</div>
+    <div class="modal-tpls" id="modal-tpls">
+      <div class="modal-tpl selected" data-tpl="standup" onclick="selectTpl(this,'standup')">
+        <div class="mt-icon">☀️</div><div class="mt-name">日常例会</div><div class="mt-dur">15 分钟</div>
+      </div>
+      <div class="modal-tpl" data-tpl="business" onclick="selectTpl(this,'business')">
+        <div class="mt-icon">💼</div><div class="mt-name">商务会谈</div><div class="mt-dur">60 分钟</div>
+      </div>
+      <div class="modal-tpl" data-tpl="brainstorm" onclick="selectTpl(this,'brainstorm')">
+        <div class="mt-icon">💡</div><div class="mt-name">头脑风暴</div><div class="mt-dur">45 分钟</div>
+      </div>
+      <div class="modal-tpl" data-tpl="interview" onclick="selectTpl(this,'interview')">
+        <div class="mt-icon">🤝</div><div class="mt-name">访谈调研</div><div class="mt-dur">45 分钟</div>
+      </div>
+      <div class="modal-tpl" data-tpl="training" onclick="selectTpl(this,'training')">
+        <div class="mt-icon">📚</div><div class="mt-name">培训课程</div><div class="mt-dur">90 分钟</div>
+      </div>
+      <div class="modal-tpl" data-tpl="kickoff" onclick="selectTpl(this,'kickoff')">
+        <div class="mt-icon">🚀</div><div class="mt-name">项目启动</div><div class="mt-dur">60 分钟</div>
+      </div>
+      <!-- Coding templates -->
+      <div class="modal-tpl coding-tpl" data-tpl="review" onclick="selectTpl(this,'review')">
+        <div class="mt-icon">🔍</div><div class="mt-name">代码评审</div><div class="mt-dur">60 分钟</div>
+      </div>
+      <div class="modal-tpl coding-tpl" data-tpl="pair" onclick="selectTpl(this,'pair')">
+        <div class="mt-icon">👥</div><div class="mt-name">结对编程</div><div class="mt-dur">90 分钟</div>
+      </div>
+      <div class="modal-tpl coding-tpl" data-tpl="bugretro" onclick="selectTpl(this,'bugretro')">
+        <div class="mt-icon">🐛</div><div class="mt-name">Bug 复盘</div><div class="mt-dur">45 分钟</div>
+      </div>
+    </div>
+    <div class="modal-form">
+      <div>
+        <div class="form-label">会议主题</div>
+        <input type="text" id="modal-title" placeholder="例：2026 Q2 产品规划讨论" maxlength="80">
+      </div>
+      <div>
+        <div class="form-label">会议议程（每行一项，可选）</div>
+        <textarea id="modal-agenda" rows="3" placeholder="1. 上周进展回顾&#10;2. 本周目标确认&#10;3. 风险与问题" style="border-radius:var(--r-sm);padding:10px 14px;font-size:14px"></textarea>
+      </div>
+    </div>
+    <div class="modal-actions">
+      <button class="btn btn-secondary" onclick="closeModal()">取消</button>
+      <button class="btn btn-primary" onclick="startMeeting()">🚀 开始会议</button>
+    </div>
+  </div>
+</div>
 
 <script>
-// ═══════════════════════════════
+// ══════════════════════════════════════════════
 //  STATE
-// ═══════════════════════════════
-const S = {
-  meetings: JSON.parse(localStorage.getItem('mp_meetings') || '[]'),
-  currentId: localStorage.getItem('mp_current') || null,
-  timer: { interval: null, secs: 0, running: false },
+// ══════════════════════════════════════════════
+const state = {
+  section: 'dashboard',
+  theme: 'light',
+  codingModule: false,
+  meeting: null,      // active meeting
+  meetings: [],       // history
+  recognition: null,
+  micActive: false,
+  timerInterval: null,
+  settings: {
+    speechLang: 'zh-CN',
+    autoStop: true,
+  },
 };
 
 const TEMPLATES = {
-  review:   { name:'🔍 代码评审',  cls:'tpl-review',   dur:60, goal:'系统性评审代码变更，提升代码质量', agenda:['代码走读','问题讨论','优化建议','结论确认'], checklist:['准备好 Diff/PR 链接','邀请相关开发人员','明确评审范围'] },
-  pair:     { name:'👥 结对编程',  cls:'tpl-pair',     dur:90, goal:'两人协作完成特定功能开发', agenda:['明确任务目标','分工规划','编码协作','测试验收'], checklist:['准备开发环境','明确技术方案','同步代码分支'] },
-  bug:      { name:'🐛 Bug 复盘',  cls:'tpl-bug',      dur:45, goal:'定位根因，制定修复方案，避免同类问题', agenda:['Bug 现象描述','根因分析','修复方案','预防措施'], checklist:['准备复现步骤','收集日志/截图','准备相关代码'] },
-  design:   { name:'🏗️ 技术方案', cls:'tpl-design',   dur:90, goal:'评审技术方案，对齐架构决策', agenda:['方案背景','设计思路','技术选型','风险评估','结论'], checklist:['准备设计文档','明确技术约束','列出备选方案'] },
-  sprint:   { name:'🚀 Sprint 规划',cls:'tpl-sprint',  dur:60, goal:'规划迭代任务，评估技术工作量', agenda:['上期 Sprint 回顾','本期目标','任务分配','技术风险'], checklist:['准备 Backlog','评估技术债务','确认人力资源'] },
-  incident: { name:'⚡ 紧急事故', cls:'tpl-incident',  dur:30, goal:'快速响应，恢复服务，降低损失', agenda:['事故现象','影响范围','紧急处置','恢复确认'], checklist:['确认事故级别','通知相关人员','准备回滚预案'] },
+  standup:   {name:'日常例会',   icon:'☀️', dur:15,  type:'general', goal:'同步工作进展与阻碍', agenda:['昨日进展','今日计划','阻碍与风险']},
+  business:  {name:'商务会谈',   icon:'💼', dur:60,  type:'general', goal:'外部合作沟通与需求对齐', agenda:['背景介绍','需求确认','方案探讨','下一步']},
+  brainstorm:{name:'头脑风暴',   icon:'💡', dur:45,  type:'general', goal:'收集创意，发散思路', agenda:['问题定义','自由发散','聚合分析','输出结论']},
+  interview: {name:'访谈调研',   icon:'🤝', dur:45,  type:'general', goal:'用户洞察与需求挖掘', agenda:['自我介绍','背景了解','核心问题','开放提问']},
+  training:  {name:'培训课程',   icon:'📚', dur:90,  type:'general', goal:'知识传递与技能提升', agenda:['课程导入','核心内容','互动环节','总结复习']},
+  kickoff:   {name:'项目启动',   icon:'🚀', dur:60,  type:'general', goal:'对齐目标，建立共识', agenda:['项目背景','目标与范围','角色分工','里程碑']},
+  review:    {name:'代码评审',   icon:'🔍', dur:60,  type:'coding',  goal:'系统性审查代码，提升质量', agenda:['代码走读','问题讨论','优化建议','结论确认']},
+  pair:      {name:'结对编程',   icon:'👥', dur:90,  type:'coding',  goal:'协作开发，实时反馈', agenda:['需求分析','设计方案','编码实现','测试验证']},
+  bugretro:  {name:'Bug 复盘',   icon:'🐛', dur:45,  type:'coding',  goal:'根因分析，制定预防措施', agenda:['问题描述','根因分析','影响评估','改进方案']},
 };
 
-const CHECKLIST_DEF = ['确认会议链接可用','提前通知参会人','准备相关资料','测试屏幕共享'];
-const PRI = { high:{lbl:'高',cls:'b-red'}, mid:{lbl:'中',cls:'b-yellow'}, low:{lbl:'低',cls:'b-green'} };
+const SECTION_IDS = ['dashboard','room','summary','history','settings'];
 
-// ═══════════════════════════════
-//  PERSIST
-// ═══════════════════════════════
-function save() {
-  localStorage.setItem('mp_meetings', JSON.stringify(S.meetings));
-  localStorage.setItem('mp_current', S.currentId || '');
+// ══════════════════════════════════════════════
+//  INIT
+// ══════════════════════════════════════════════
+function init(){
+  const saved = JSON.parse(localStorage.getItem('meetpilot_data')||'{}');
+  if(saved.theme) state.theme = saved.theme;
+  if(saved.codingModule !== undefined) state.codingModule = saved.codingModule;
+  if(saved.meetings) state.meetings = saved.meetings;
+  if(saved.settings) Object.assign(state.settings, saved.settings);
+
+  applyTheme();
+  applyCodingModule();
   updateStats();
-}
-function genId() { return Date.now().toString(36) + Math.random().toString(36).slice(2,7); }
-function cur() { return S.currentId ? S.meetings.find(m=>m.id===S.currentId) : null; }
-function fmtTime(s) {
-  const h=Math.floor(s/3600).toString().padStart(2,'0');
-  const m=Math.floor((s%3600)/60).toString().padStart(2,'0');
-  const ss=(s%60).toString().padStart(2,'0');
-  return `${h}:${m}:${ss}`;
-}
-function fmtDate(d) { return d ? new Date(d).toLocaleDateString('zh-CN',{month:'long',day:'numeric'}) : '--'; }
+  renderRecentMeetings();
 
-// ═══════════════════════════════
+  // Apply settings UI
+  document.getElementById('speech-lang-select').value = state.settings.speechLang;
+  document.getElementById('auto-stop-toggle').checked = state.settings.autoStop !== false;
+}
+
+function saveData(){
+  localStorage.setItem('meetpilot_data', JSON.stringify({
+    theme: state.theme,
+    codingModule: state.codingModule,
+    meetings: state.meetings,
+    settings: state.settings,
+  }));
+}
+
+// ══════════════════════════════════════════════
 //  NAVIGATION
-// ═══════════════════════════════
-function showSection(name) {
-  ['dashboard','prepare','room','followup'].forEach(n => {
-    document.getElementById('sec-'+n).classList.toggle('active', n===name);
-    const t=document.getElementById('tnav-'+n); if(t) t.classList.toggle('active', n===name);
-    const b=document.getElementById('bn-'+n); if(b) b.classList.toggle('active', n===name);
+// ══════════════════════════════════════════════
+function showSection(name){
+  state.section = name;
+  SECTION_IDS.forEach(n => {
+    document.getElementById('sec-'+n)?.classList.toggle('active', n===name);
+    const t = document.getElementById('tnav-'+n);
+    if(t) t.classList.toggle('active', n===name);
+    const b = document.getElementById('bn-'+n);
+    if(b) b.classList.toggle('active', n===name);
   });
-  if(name==='dashboard') renderDashboard();
-  if(name==='prepare') renderPrepare();
-  if(name==='room') renderRoom();
-  if(name==='followup') renderFollowup();
+  if(name==='history') renderHistory();
+  if(name==='room' && state.meeting) document.getElementById('float-ball').classList.add('active');
+  else if(name!=='room') document.getElementById('float-ball').classList.remove('active');
 }
 
-// ═══════════════════════════════
+// ══════════════════════════════════════════════
 //  THEME
-// ═══════════════════════════════
-function toggleTheme() {
-  const isDark = document.documentElement.getAttribute('data-theme')==='dark';
-  document.documentElement.setAttribute('data-theme', isDark?'light':'dark');
-  document.getElementById('theme-btn').textContent = isDark?'🌙':'☀️';
-  localStorage.setItem('mp_theme', isDark?'light':'dark');
+// ══════════════════════════════════════════════
+function applyTheme(){
+  document.documentElement.setAttribute('data-theme', state.theme);
+  document.getElementById('theme-toggle').textContent = state.theme==='dark' ? '☀️' : '🌙';
+  document.getElementById('theme-toggle-setting').checked = state.theme==='dark';
 }
-(function initTheme(){
-  const t=localStorage.getItem('mp_theme')||'dark';
-  document.documentElement.setAttribute('data-theme',t);
-  document.getElementById('theme-btn').textContent = t==='dark'?'🌙':'☀️';
-})();
-
-// ═══════════════════════════════
-//  CREATE MEETING
-// ═══════════════════════════════
-function openCreateModal() {
-  const today=new Date().toISOString().split('T')[0];
-  const now=new Date().toTimeString().slice(0,5);
-  document.getElementById('m-date').value=today;
-  document.getElementById('m-time').value=now;
-  document.getElementById('m-title').value='';
-  document.getElementById('m-goal').value='';
-  document.getElementById('m-template').value='';
-  document.getElementById('create-modal').classList.add('open');
-}
-function closeCreateModal() { document.getElementById('create-modal').classList.remove('open'); }
-
-function applyTemplate() {
-  const tplKey = document.getElementById('m-template').value;
-  if(!tplKey) return;
-  const tpl = TEMPLATES[tplKey];
-  if(!tpl) return;
-  if(!document.getElementById('m-title').value) document.getElementById('m-title').value = tpl.name;
-  if(!document.getElementById('m-goal').value) document.getElementById('m-goal').value = tpl.goal;
-  document.getElementById('m-duration').value = tpl.dur;
+function toggleTheme(){
+  state.theme = state.theme==='dark' ? 'light' : 'dark';
+  applyTheme();
+  saveData();
 }
 
-function createMeeting() {
-  const title = document.getElementById('m-title').value.trim();
-  if(!title) { toast('请填写会议名称','err'); return; }
-  const tplKey = document.getElementById('m-template').value;
-  const tpl = TEMPLATES[tplKey] || {};
-  const checklist = (tpl.checklist || CHECKLIST_DEF).map((t,i)=>({id:'c'+i,text:t,done:false}));
-  const agenda = (tpl.agenda || []).map((t,i)=>({id:'a'+genId(),topic:t,duration:0,owner:'',done:false}));
-  const m = {
-    id: genId(), title, date: document.getElementById('m-date').value,
-    time: document.getElementById('m-time').value,
-    duration: parseInt(document.getElementById('m-duration').value)||60,
-    template: tplKey, goal: document.getElementById('m-goal').value.trim(),
-    status: 'pending', participants: [], agenda, checklist,
-    notes: '', code: '', codeLang: 'JavaScript',
-    actions: [], issues: [], decisions: [],
-    startedAt: null, endedAt: null, timerSecs: 0, createdAt: Date.now(),
+// ══════════════════════════════════════════════
+//  CODING MODULE
+// ══════════════════════════════════════════════
+function applyCodingModule(){
+  const on = state.codingModule;
+  document.getElementById('coding-module-toggle').checked = on;
+  document.getElementById('coding-card').classList.toggle('enabled', on);
+  // Show/hide coding templates
+  document.querySelectorAll('.tpl-card.coding').forEach(el => el.style.display = on ? '' : 'none');
+  document.querySelectorAll('.modal-tpl.coding-tpl').forEach(el => el.style.display = on ? '' : 'none');
+  document.querySelectorAll('.coding-filter').forEach(el => el.style.display = on ? '' : 'none');
+  // Show/hide coding tab in room
+  document.querySelectorAll('.coding-tab').forEach(el => el.style.display = on ? '' : 'none');
+}
+function toggleCodingModule(){
+  state.codingModule = document.getElementById('coding-module-toggle').checked;
+  applyCodingModule();
+  saveData();
+}
+
+// ══════════════════════════════════════════════
+//  SETTINGS
+// ══════════════════════════════════════════════
+function saveSetting(key, val){
+  state.settings[key] = val;
+  saveData();
+}
+
+// ══════════════════════════════════════════════
+//  NEW MEETING MODAL
+// ══════════════════════════════════════════════
+let selectedTpl = 'standup';
+function openNewMeetingModal(tpl){
+  selectedTpl = tpl || 'standup';
+  document.querySelectorAll('.modal-tpl').forEach(el => el.classList.toggle('selected', el.dataset.tpl===selectedTpl));
+  const t = TEMPLATES[selectedTpl];
+  document.getElementById('modal-title').value = t ? t.name : '';
+  document.getElementById('modal-agenda').value = t ? t.agenda.join('\n') : '';
+  document.getElementById('new-meeting-modal').classList.add('open');
+  setTimeout(()=>document.getElementById('modal-title').focus(), 100);
+}
+function closeModal(){
+  document.getElementById('new-meeting-modal').classList.remove('open');
+}
+function selectTpl(el, tpl){
+  selectedTpl = tpl;
+  document.querySelectorAll('.modal-tpl').forEach(e => e.classList.remove('selected'));
+  el.classList.add('selected');
+  const t = TEMPLATES[tpl];
+  if(t){
+    document.getElementById('modal-title').value = t.name;
+    document.getElementById('modal-agenda').value = t.agenda.join('\n');
+  }
+}
+
+// ══════════════════════════════════════════════
+//  START / END MEETING
+// ══════════════════════════════════════════════
+function startMeeting(){
+  const title = document.getElementById('modal-title').value.trim() || '未命名会议';
+  const agendaRaw = document.getElementById('modal-agenda').value.trim();
+  const agenda = agendaRaw ? agendaRaw.split('\n').filter(Boolean) : [];
+  const tpl = TEMPLATES[selectedTpl] || TEMPLATES['standup'];
+  closeModal();
+
+  state.meeting = {
+    id: Date.now(),
+    title,
+    tpl: selectedTpl,
+    tplName: tpl.name,
+    tplIcon: tpl.icon,
+    tplType: tpl.type,
+    startTime: Date.now(),
+    agenda,
+    transcript: [],
+    notes: '',
+    code: '',
+    actions: [],
+    summary: null,
   };
-  S.meetings.unshift(m);
-  S.currentId = m.id;
-  save();
-  closeCreateModal();
-  toast('✅ 会议已创建！', 'ok');
-  showSection('prepare');
+
+  // Update room UI
+  document.getElementById('room-title').textContent = title;
+  document.getElementById('room-tpl-tag').textContent = tpl.icon + ' ' + tpl.name;
+  document.getElementById('room-notes').value = '';
+  document.getElementById('room-code').value = '';
+  document.getElementById('transcript-feed').innerHTML = '<div class="tx-interim-live" id="tx-interim">🎙 点击"开始录音"启动实时转写...</div>';
+  document.getElementById('actions-list').innerHTML = '';
+
+  // Render agenda
+  const ul = document.getElementById('room-agenda');
+  ul.innerHTML = agenda.map((a,i) => `<li class="agenda-item" onclick="this.classList.toggle('done')"><span class="agenda-num">${i+1}</span>${a}</li>`).join('');
+
+  // Start timer
+  clearInterval(state.timerInterval);
+  state.timerInterval = setInterval(updateTimer, 1000);
+
+  // Floating ball
+  document.getElementById('float-ball').classList.add('active');
+
+  showSection('room');
+  checkSpeechSupport();
 }
 
-// ═══════════════════════════════
-//  DASHBOARD
-// ═══════════════════════════════
-function updateStats() {
-  document.getElementById('s-total').textContent = S.meetings.length;
-  const acts = S.meetings.flatMap(m=>m.actions||[]);
-  document.getElementById('s-actions').textContent = acts.length;
-  document.getElementById('s-done').textContent = acts.filter(a=>a.done).length;
-  const codeCount = S.meetings.filter(m=>m.code&&m.code.trim().length>10).length;
-  document.getElementById('s-code').textContent = codeCount;
+function updateTimer(){
+  if(!state.meeting) return;
+  const secs = Math.floor((Date.now() - state.meeting.startTime) / 1000);
+  const m = String(Math.floor(secs/60)).padStart(2,'0');
+  const s = String(secs%60).padStart(2,'0');
+  document.getElementById('room-timer').textContent = m + ':' + s;
 }
 
-function renderDashboard() {
-  updateStats();
-  const list = document.getElementById('meeting-list-dash');
-  document.getElementById('meeting-count-badge').textContent = S.meetings.length;
-  if(!S.meetings.length) {
-    list.innerHTML = `<div style="grid-column:1/-1;text-align:center;padding:48px;color:var(--text2)">
-      <div style="font-size:48px;margin-bottom:12px">🚀</div>
-      <p style="font-size:15px;margin-bottom:16px">还没有会议记录，开始第一次编码会议</p>
-      <button class="btn btn-accent btn-lg" onclick="openCreateModal()">+ 新建会议</button>
-    </div>`;
+function endMeeting(){
+  if(!confirm('确定要结束当前会议并生成总结吗？')) return;
+  clearInterval(state.timerInterval);
+  stopMic();
+
+  if(state.meeting){
+    state.meeting.endTime = Date.now();
+    state.meeting.notes = document.getElementById('room-notes').value;
+    state.meeting.code = document.getElementById('room-code').value;
+    state.meeting.actions = getActions();
+
+    // Generate summary
+    state.meeting.summary = buildSummary(state.meeting);
+
+    // Save to history
+    state.meetings.unshift(state.meeting);
+    if(state.meetings.length > 100) state.meetings.pop();
+    saveData();
+    updateStats();
+    renderRecentMeetings();
+
+    // Show summary
+    renderSummary(state.meeting);
+    showSection('summary');
+    document.getElementById('float-ball').classList.remove('active');
+  }
+}
+
+// ══════════════════════════════════════════════
+//  CENTER TAB SWITCH
+// ══════════════════════════════════════════════
+function switchCenterTab(tab, btn){
+  document.querySelectorAll('.center-tab-content').forEach(el=>el.classList.remove('active'));
+  document.querySelectorAll('.room-center-tabs button').forEach(el=>el.classList.remove('active'));
+  document.getElementById('ctab-'+tab).classList.add('active');
+  if(btn) btn.classList.add('active');
+}
+
+// ══════════════════════════════════════════════
+//  SPEECH RECOGNITION
+// ══════════════════════════════════════════════
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
+
+function checkSpeechSupport(){
+  const bar = document.getElementById('speech-status-bar');
+  if(!SR){
+    bar.innerHTML = '<div class="speech-unsupported">⚠️ 当前浏览器不支持语音识别，请使用 Chrome 或 Edge</div>';
+    document.getElementById('mic-btn').disabled = true;
+  } else {
+    bar.innerHTML = '';
+    document.getElementById('mic-btn').disabled = false;
+  }
+}
+
+function toggleMic(){
+  if(state.micActive) stopMic();
+  else startMic();
+}
+
+function startMic(){
+  if(!SR){ alert('您的浏览器不支持语音识别功能，请使用 Chrome 或 Edge'); return; }
+  if(state.recognition) state.recognition.abort();
+
+  const r = new SR();
+  r.lang = state.settings.speechLang || 'zh-CN';
+  r.continuous = true;
+  r.interimResults = true;
+  state.recognition = r;
+  state.micActive = true;
+
+  r.onresult = function(e){
+    let interim = '';
+    for(let i=e.resultIndex;i<e.results.length;i++){
+      const txt = e.results[i][0].transcript;
+      if(e.results[i].isFinal){
+        addTranscript(txt, true);
+        if(state.meeting) state.meeting.transcript.push({time:Date.now(), text:txt});
+      } else {
+        interim += txt;
+      }
+    }
+    const el = document.getElementById('tx-interim');
+    if(el) el.textContent = interim || '';
+  };
+
+  r.onerror = function(e){
+    if(e.error==='not-allowed'){
+      alert('麦克风权限被拒绝，请在浏览器设置中允许麦克风访问');
+      stopMic(); return;
+    }
+    if(e.error!=='aborted') console.warn('Speech error:', e.error);
+  };
+
+  r.onend = function(){
+    if(state.micActive){
+      // Auto-restart
+      try{ state.recognition.start(); }catch(err){}
+    }
+  };
+
+  try{
+    r.start();
+    updateMicUI(true);
+  }catch(err){
+    state.micActive = false;
+    alert('无法启动语音识别：' + err.message);
+  }
+}
+
+function stopMic(){
+  state.micActive = false;
+  if(state.recognition){ try{state.recognition.abort();}catch(e){} state.recognition=null; }
+  updateMicUI(false);
+}
+
+function updateMicUI(active){
+  const btn = document.getElementById('mic-btn');
+  const ball = document.getElementById('float-ball');
+  const rec = document.getElementById('ball-rec');
+  if(active){
+    btn.className = 'mic-btn on';
+    btn.innerHTML = '<span class="rec-dot"></span> 录音中…';
+    ball.classList.remove('muted');
+    rec.style.display = 'block';
+  } else {
+    btn.className = 'mic-btn off';
+    btn.innerHTML = '🎙 开始录音';
+    ball.classList.add('muted');
+    rec.style.display = 'none';
+  }
+}
+
+function addTranscript(text, isFinal){
+  const feed = document.getElementById('transcript-feed');
+  // Remove interim placeholder
+  const interim = document.getElementById('tx-interim');
+  if(interim && isFinal){ interim.textContent = ''; }
+
+  const now = new Date();
+  const timeStr = now.toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const el = document.createElement('div');
+  el.className = 'tx-item ' + (isFinal ? 'final' : 'interim');
+  el.innerHTML = `<div class="tx-time">${timeStr}</div>${text}`;
+  feed.insertBefore(el, feed.firstChild);
+
+  // Keep max 50 entries
+  while(feed.children.length > 52) feed.removeChild(feed.lastChild);
+}
+
+// ══════════════════════════════════════════════
+//  ACTION ITEMS
+// ══════════════════════════════════════════════
+function addAction(){
+  const inp = document.getElementById('action-input');
+  const text = inp.value.trim();
+  if(!text) return;
+  inp.value = '';
+  const list = document.getElementById('actions-list');
+  const item = document.createElement('div');
+  item.className = 'action-item';
+  item.innerHTML = `<input type="checkbox"><span style="flex:1">${text}</span>`;
+  list.appendChild(item);
+}
+
+function getActions(){
+  const items = [];
+  document.querySelectorAll('#actions-list .action-item').forEach(el => {
+    const cb = el.querySelector('input[type=checkbox]');
+    const txt = el.querySelector('span')?.textContent||'';
+    if(txt) items.push({text:txt, done: cb?.checked||false});
+  });
+  return items;
+}
+
+// ══════════════════════════════════════════════
+//  AI SUMMARY (heuristic)
+// ══════════════════════════════════════════════
+function generateAISummary(){
+  if(!state.meeting) return;
+  const summary = buildSummary(state.meeting, document.getElementById('room-notes').value, getActions());
+  state.meeting.summary = summary;
+
+  // Show a quick toast
+  const toast = document.createElement('div');
+  toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 20px;border-radius:99px;font-size:14px;z-index:999;animation:fadeIn .3s';
+  toast.textContent = '✅ AI 总结已生成，结束会议后可查看完整版';
+  document.body.appendChild(toast);
+  setTimeout(()=>toast.remove(), 2500);
+}
+
+function buildSummary(meeting, notesOverride, actionsOverride){
+  const transcript = meeting.transcript || [];
+  const notes = notesOverride !== undefined ? notesOverride : (meeting.notes || '');
+  const actions = actionsOverride || meeting.actions || [];
+  const tpl = TEMPLATES[meeting.tpl] || TEMPLATES['standup'];
+  const allText = transcript.map(t=>t.text).join(' ');
+
+  // Extract questions
+  const questions = allText.split(/[。！？\n]/).filter(s=>s.includes('？')||s.includes('?')).slice(0,5);
+  // Extract decisions (sentences with decision keywords)
+  const decisionKW = ['决定','确认','同意','通过','明确','计划','安排'];
+  const decisions = allText.split(/[。！？\n]/).filter(s=>decisionKW.some(k=>s.includes(k))).slice(0,5);
+  // Todos from action items
+  const todos = actions.map(a=>a.text);
+
+  // Build gist
+  const dur = meeting.endTime ? Math.round((meeting.endTime - meeting.startTime)/60000) : 0;
+  let gist = `本次「${tpl.name}」会议`;
+  if(dur) gist += `历时约 ${dur} 分钟`;
+  gist += `，围绕「${meeting.title}」展开讨论。`;
+  if(transcript.length > 0){
+    gist += `会议共产生 ${transcript.length} 条转录记录。`;
+  }
+  if(tpl.goal) gist += `\n\n会议目标：${tpl.goal}`;
+
+  return {
+    gist,
+    decisions: decisions.length > 0 ? decisions : ['（未识别到明确决议，请在笔记中补充）'],
+    todos: todos.length > 0 ? todos : ['（未添加行动项）'],
+    questions,
+    transcriptSummary: transcript.length > 0
+      ? transcript.slice(-5).map(t=>t.text).join('。')
+      : '（本次会议未启用语音转录）',
+    notes,
+  };
+}
+
+function renderSummary(meeting){
+  const s = meeting.summary;
+  if(!s) return;
+  const tpl = TEMPLATES[meeting.tpl] || {};
+  const dur = meeting.endTime ? Math.round((meeting.endTime - meeting.startTime)/60000) : '—';
+  const dateStr = new Date(meeting.startTime).toLocaleString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+
+  document.getElementById('sum-title').textContent = (tpl.icon||'📋') + ' ' + meeting.title;
+  document.getElementById('sum-meta').textContent = `${dateStr}  ·  时长 ${dur} 分钟  ·  ${tpl.name||'会议'}`;
+  document.getElementById('sum-gist').textContent = s.gist || '—';
+  document.getElementById('sum-transcript').textContent = s.transcriptSummary || '—';
+  document.getElementById('sum-notes').textContent = s.notes || '（无笔记）';
+
+  const decUl = document.getElementById('sum-decisions');
+  decUl.innerHTML = (s.decisions||[]).map(d=>`<li>${d}</li>`).join('');
+
+  const todoUl = document.getElementById('sum-todos');
+  todoUl.innerHTML = (s.todos||[]).map(t=>`<li>${t}</li>`).join('');
+}
+
+// ══════════════════════════════════════════════
+//  EXPORT
+// ══════════════════════════════════════════════
+function exportMeeting(fmt, source){
+  const meeting = source==='summary' && state.meetings.length>0 ? state.meetings[0] : state.meeting;
+  if(!meeting){ alert('没有可导出的会议数据'); return; }
+
+  const tpl = TEMPLATES[meeting.tpl] || {};
+  const dateStr = new Date(meeting.startTime).toLocaleString('zh-CN');
+  const dur = meeting.endTime ? Math.round((meeting.endTime - meeting.startTime)/60000) : '—';
+  const tx = (meeting.transcript||[]).map(t=>t.text).join('\n');
+  const actions = (meeting.actions||[]).map(a=>(a.done?'[x]':'[ ]')+' '+a.text).join('\n');
+
+  let content = '';
+  if(fmt==='markdown'){
+    content = `# ${tpl.icon||'📋'} ${meeting.title}\n\n`;
+    content += `**日期：** ${dateStr}  \n**时长：** ${dur} 分钟  \n**模板：** ${tpl.name||'会议'}\n\n`;
+    content += `---\n\n## 📌 会议目标\n${tpl.goal||'—'}\n\n`;
+    content += `## 📝 会议笔记\n${meeting.notes||'（无笔记）'}\n\n`;
+    content += `## ✅ 行动项\n${actions||'（无行动项）'}\n\n`;
+    content += `## 💬 会议实录\n${tx||'（未启用语音转录）'}\n`;
+    if(meeting.code) content += `\n## 💻 代码片段\n\`\`\`\n${meeting.code}\n\`\`\`\n`;
+  } else {
+    content = `会议：${meeting.title}\n日期：${dateStr}\n时长：${dur} 分钟\n模板：${tpl.name||'会议'}\n\n`;
+    content += `【会议笔记】\n${meeting.notes||'（无笔记）'}\n\n`;
+    content += `【行动项】\n${actions||'（无行动项）'}\n\n`;
+    content += `【会议实录】\n${tx||'（未启用语音转录）'}\n`;
+  }
+
+  const blob = new Blob([content], {type:'text/plain;charset=utf-8'});
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = `${meeting.title}_${new Date(meeting.startTime).toLocaleDateString('zh-CN').replace(/\//g,'-')}.${fmt==='markdown'?'md':'txt'}`;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
+// ══════════════════════════════════════════════
+//  CODE EDITOR
+// ══════════════════════════════════════════════
+function handleCodeKey(e){
+  if(e.key==='Tab'){
+    e.preventDefault();
+    const ta = e.target;
+    const s = ta.selectionStart, end = ta.selectionEnd;
+    ta.value = ta.value.substring(0,s) + '  ' + ta.value.substring(end);
+    ta.selectionStart = ta.selectionEnd = s+2;
+    updateLineNums();
+  }
+}
+function updateLineNums(){
+  const ta = document.getElementById('room-code');
+  const lines = (ta.value.match(/\n/g)||[]).length + 1;
+  document.getElementById('code-line-nums').textContent = Array.from({length:lines},(_,i)=>i+1).join('\n');
+}
+function insertCodeToNotes(){
+  const code = document.getElementById('room-code').value.trim();
+  if(!code) return;
+  const lang = document.getElementById('code-lang').value.toLowerCase();
+  const notes = document.getElementById('room-notes');
+  const insert = `\n\`\`\`${lang}\n${code}\n\`\`\`\n`;
+  notes.value += insert;
+  switchCenterTab('notes', document.querySelector('.room-center-tabs button'));
+}
+function clearCode(){
+  if(confirm('确定清空代码编辑器？')) {
+    document.getElementById('room-code').value = '';
+    updateLineNums();
+  }
+}
+
+// ══════════════════════════════════════════════
+//  STATS & RECENT MEETINGS
+// ══════════════════════════════════════════════
+function updateStats(){
+  const total = state.meetings.length;
+  const totalMins = state.meetings.reduce((s,m)=>s+(m.endTime?Math.round((m.endTime-m.startTime)/60000):0),0);
+  const totalActions = state.meetings.reduce((s,m)=>s+(m.actions||[]).length,0);
+  document.getElementById('stat-total').textContent = total;
+  document.getElementById('stat-hours').textContent = Math.round(totalMins/60*10)/10+'h';
+  document.getElementById('stat-actions').textContent = totalActions;
+}
+
+function renderRecentMeetings(){
+  const el = document.getElementById('recent-meetings-list');
+  const recent = state.meetings.slice(0,5);
+  if(!recent.length){
+    el.innerHTML = '<div class="empty-state"><div class="empty-ico">🎙</div><p>还没有会议记录<br>开始你的第一次智能会议吧</p></div>';
     return;
   }
-  list.innerHTML = S.meetings.map(m => {
-    const tpl = TEMPLATES[m.template]||{};
-    const cls = tpl.cls||'tpl-review';
-    const statusBadge = m.status==='done'?'<span class="badge b-green">已完成</span>':m.status==='inprogress'?'<span class="badge b-blue">进行中</span>':'<span class="badge b-gray">待开始</span>';
-    return `<div class="meeting-card ${cls}" onclick="selectMeeting('${m.id}')">
-      <div class="mc-head">
-        <div class="mc-title">${m.title}</div>
-        ${statusBadge}
+  el.innerHTML = '<div class="meeting-list">' + recent.map(m=>meetingItemHTML(m)).join('') + '</div>';
+}
+
+function meetingItemHTML(m){
+  const tpl = TEMPLATES[m.tpl] || {};
+  const dur = m.endTime ? Math.round((m.endTime-m.startTime)/60000) : null;
+  const dateStr = new Date(m.startTime).toLocaleDateString('zh-CN',{month:'2-digit',day:'2-digit'});
+  const colors = {general:'var(--accent-dim)',coding:'rgba(52,211,153,.12)'};
+  return `<div class="meeting-item" onclick="viewMeeting(${m.id})">
+    <div class="m-icon" style="background:${colors[tpl.type]||'var(--bg2)'};">${tpl.icon||'📋'}</div>
+    <div class="m-info">
+      <div class="m-title">${m.title}</div>
+      <div class="m-meta">${dateStr} · ${tpl.name||'会议'}${m.transcript?.length?' · '+m.transcript.length+'条转录':''}</div>
+    </div>
+    ${dur ? `<div class="m-dur">${dur}min</div>` : ''}
+  </div>`;
+}
+
+// ══════════════════════════════════════════════
+//  HISTORY
+// ══════════════════════════════════════════════
+let historyFilter = 'all';
+
+function setHistoryFilter(f, btn){
+  historyFilter = f;
+  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+  btn.classList.add('active');
+  renderHistory();
+}
+
+function renderHistory(){
+  const q = (document.getElementById('history-search')?.value||'').toLowerCase();
+  let list = state.meetings;
+  if(historyFilter==='general') list = list.filter(m=>(TEMPLATES[m.tpl]||{}).type==='general');
+  if(historyFilter==='coding') list = list.filter(m=>(TEMPLATES[m.tpl]||{}).type==='coding');
+  if(q) list = list.filter(m=>m.title.toLowerCase().includes(q));
+
+  const el = document.getElementById('history-list');
+  if(!list.length){
+    el.innerHTML = '<div class="empty-state"><div class="empty-ico">📋</div><p>没有找到匹配的会议记录</p></div>';
+    return;
+  }
+  el.innerHTML = '<div class="meeting-list">' + list.map(m=>{
+    const tpl = TEMPLATES[m.tpl]||{};
+    const dur = m.endTime ? Math.round((m.endTime-m.startTime)/60000) : null;
+    const dateStr = new Date(m.startTime).toLocaleString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+    const actions = (m.actions||[]).filter(a=>!a.done);
+    return `<div class="meeting-item history-item" onclick="viewMeeting(${m.id})">
+      <div class="m-icon" style="background:var(--accent-dim)">${tpl.icon||'📋'}</div>
+      <div class="m-info">
+        <div class="m-title">${m.title}</div>
+        <div class="m-meta">${dateStr} · ${tpl.name||'会议'} ${dur?'· '+dur+'分钟':''} ${actions.length?'· ⚡'+actions.length+'项待办':''}</div>
       </div>
-      <div class="mc-meta">
-        <span>📅 ${fmtDate(m.date)}</span>
-        <span>🕐 ${m.time||'--'}</span>
-        <span>⏱ ${m.duration}分钟</span>
-        ${tpl.name?`<span>${tpl.name}</span>`:''}
-      </div>
-      <div class="mc-actions">
-        <button class="btn btn-sm" onclick="event.stopPropagation();selectMeeting('${m.id}');showSection('prepare')">📋 准备</button>
-        ${m.status!=='done'?`<button class="btn btn-sm btn-accent" onclick="event.stopPropagation();selectMeeting('${m.id}');enterRoom()">⚡ 会议室</button>`:''}
-        ${m.status==='done'?`<button class="btn btn-sm btn-success" onclick="event.stopPropagation();selectMeeting('${m.id}');showSection('followup')">📝 总结</button>`:''}
-        <button class="btn btn-sm btn-danger" onclick="event.stopPropagation();deleteMeeting('${m.id}')">🗑</button>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();exportMeetingById(${m.id},'markdown')">📥</button>
+        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteMeeting(${m.id})">🗑</button>
       </div>
     </div>`;
-  }).join('');
+  }).join('') + '</div>';
 }
 
-function selectMeeting(id) { S.currentId=id; save(); }
-function deleteMeeting(id) {
-  if(!confirm('确定删除？')) return;
-  S.meetings = S.meetings.filter(m=>m.id!==id);
-  if(S.currentId===id) S.currentId = S.meetings[0]?.id||null;
-  save(); renderDashboard(); toast('已删除','ok');
-}
-
-// ═══════════════════════════════
-//  PREPARE
-// ═══════════════════════════════
-function renderPrepare() {
-  // Template list
-  document.getElementById('template-list').innerHTML = Object.entries(TEMPLATES).map(([k,t])=>
-    `<div class="template-card" onclick="createFromTemplate('${k}')">
-      <div class="tpl-name">${t.name}</div>
-      <div class="tpl-desc">${t.goal.slice(0,28)}...</div>
-    </div>`
-  ).join('');
-
-  // Recent meetings sidebar
-  const recent = S.meetings.slice(0,5);
-  document.getElementById('recent-meetings-sidebar').innerHTML = recent.map(m=>
-    `<div class="template-card ${m.id===S.currentId?'selected':''}" onclick="selectMeeting('${m.id}');renderPrepare()">
-      <div class="tpl-name" style="font-size:12px">${m.title}</div>
-      <div class="tpl-desc">${fmtDate(m.date)}</div>
-    </div>`
-  ).join('') || '<div style="color:var(--text2);font-size:12px;padding:8px">暂无会议</div>';
-
-  const m = cur();
-  document.getElementById('prepare-empty').style.display = m?'none':'block';
-  document.getElementById('prepare-content').style.display = m?'block':'none';
+function viewMeeting(id){
+  const m = state.meetings.find(x=>x.id===id);
   if(!m) return;
-
-  document.getElementById('prep-title').textContent = m.title;
-  document.getElementById('prep-meta').textContent = `${fmtDate(m.date)} ${m.time} · ${m.duration}分钟${TEMPLATES[m.template]?' · '+TEMPLATES[m.template].name:''}`;
-
-  // Participants
-  renderPrepParticipants(m);
-  // Agenda
-  renderPrepAgenda(m);
-  // Checklist
-  renderPrepChecklist(m);
-  // Code context
-  document.getElementById('prep-code-ctx').value = m.code||'';
-  document.getElementById('prep-code-lang').value = m.codeLang||'JavaScript';
+  if(!m.summary) m.summary = buildSummary(m);
+  renderSummary(m);
+  // Store ref for export
+  window._viewingMeeting = m;
+  document.getElementById('export-btn-summary').onclick = ()=>exportMeetingById(id,'markdown');
+  showSection('summary');
 }
 
-function createFromTemplate(key) {
-  const tpl = TEMPLATES[key];
-  document.getElementById('m-template').value = key;
-  document.getElementById('m-title').value = tpl.name;
-  document.getElementById('m-goal').value = tpl.goal;
-  document.getElementById('m-duration').value = tpl.dur;
-  openCreateModal();
-}
-
-function renderPrepParticipants(m) {
-  const el = document.getElementById('prep-participants');
-  if(!m.participants.length) { el.innerHTML='<div style="color:var(--text2);font-size:13px;padding:4px 0">还没有参会人员</div>'; return; }
-  el.innerHTML = m.participants.map((p,i)=>`
-    <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border-muted)">
-      <div style="width:28px;height:28px;border-radius:50%;background:var(--accent-dim);color:var(--accent);display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:700;flex-shrink:0">${p.name[0]}</div>
-      <div style="flex:1"><div style="font-size:13px;font-weight:500">${p.name}</div>${p.role?`<div style="font-size:11px;color:var(--text2)">${p.role}</div>`:''}</div>
-      <button class="btn btn-sm btn-danger" onclick="removeParticipant(${i})">✕</button>
-    </div>`).join('');
-}
-function addParticipant() {
-  const name = prompt('参会人姓名：'); if(!name) return;
-  const role = prompt('角色/职务（可选）：') || '';
-  const m = cur(); if(!m) return;
-  m.participants.push({name,role}); save(); renderPrepParticipants(m);
-}
-function removeParticipant(i) { const m=cur(); if(!m) return; m.participants.splice(i,1); save(); renderPrepParticipants(m); }
-
-function renderPrepAgenda(m) {
-  const el = document.getElementById('prep-agenda-list');
-  if(!m.agenda.length) { el.innerHTML='<div style="color:var(--text2);font-size:13px;padding:4px 0">还没有议程</div>'; return; }
-  el.innerHTML = m.agenda.map((a,i)=>`
-    <div style="display:flex;align-items:center;gap:8px;padding:7px;border-radius:var(--radius-sm);margin-bottom:4px;background:var(--bg2);border:1px solid var(--border-muted)">
-      <span style="color:var(--text3);font-size:16px;cursor:move">⋮⋮</span>
-      <div style="flex:1"><div style="font-size:13px;font-weight:500">${a.topic}</div>${a.duration||a.owner?`<div style="font-size:11px;color:var(--text2)">${a.duration?`⏱ ${a.duration}分钟`:''} ${a.owner?`· 👤 ${a.owner}`:''}</div>`:''}</div>
-      <button class="btn btn-sm btn-danger" onclick="removeAgendaPrep(${i})">✕</button>
-    </div>`).join('');
-}
-function addAgendaPrep() {
-  const topic = prompt('议题名称：'); if(!topic) return;
-  const dur = prompt('时长（分钟，可留空）：') || '0';
-  const owner = prompt('负责人（可留空）：') || '';
-  const m = cur(); if(!m) return;
-  m.agenda.push({id:'a'+genId(),topic,duration:parseInt(dur)||0,owner,done:false});
-  save(); renderPrepAgenda(m);
-}
-function removeAgendaPrep(i) { const m=cur(); if(!m) return; m.agenda.splice(i,1); save(); renderPrepAgenda(m); }
-
-function renderPrepChecklist(m) {
-  const el = document.getElementById('prep-checklist');
-  const done = m.checklist.filter(c=>c.done).length;
-  document.getElementById('prep-checklist-bar').style.width = m.checklist.length?`${done/m.checklist.length*100}%`:'0%';
-  el.innerHTML = m.checklist.map((c,i)=>`
-    <div style="display:flex;align-items:center;gap:8px;padding:6px 0;border-bottom:1px solid var(--border-muted)">
-      <input type="checkbox" ${c.done?'checked':''} onchange="toggleChecklist(${i})" style="width:15px;height:15px;accent-color:var(--success);cursor:pointer">
-      <span style="font-size:13px;${c.done?'text-decoration:line-through;color:var(--text2)':''}">${c.text}</span>
-    </div>`).join('');
-}
-function toggleChecklist(i) { const m=cur(); if(!m) return; m.checklist[i].done=!m.checklist[i].done; save(); renderPrepChecklist(m); }
-
-function enterRoom() {
-  const m = cur(); if(!m) { toast('请先选择或创建一个会议','err'); return; }
-  // Save code context from prepare
-  const codeCtx = document.getElementById('prep-code-ctx');
-  const codeLang = document.getElementById('prep-code-lang');
-  if(codeCtx && codeCtx.value) m.code = codeCtx.value;
-  if(codeLang) m.codeLang = codeLang.value;
-  m.status = 'inprogress';
-  m.startedAt = m.startedAt || Date.now();
-  save();
-  showSection('room');
-}
-
-// ═══════════════════════════════
-//  ROOM
-// ═══════════════════════════════
-function renderRoom() {
-  const m = cur();
+function exportMeetingById(id, fmt){
+  const m = state.meetings.find(x=>x.id===id);
   if(!m) return;
-  // Agenda
-  renderRoomAgenda(m);
-  // Timer
-  S.timer.secs = m.timerSecs || 0;
-  document.getElementById('timer-dsp').textContent = fmtTime(S.timer.secs);
-  // Code
-  const codeEl = document.getElementById('code-editor');
-  codeEl.value = m.code || '';
-  document.getElementById('room-lang').value = m.codeLang || 'JavaScript';
-  updateLineNums();
-  // Notes
-  document.getElementById('notes-editor').value = m.notes || '';
-  updateNotesCount();
-  // Participants
-  const pEl = document.getElementById('room-participants');
-  pEl.innerHTML = (m.participants.length?m.participants:[{name:'无参会人'}]).map(p=>
-    `<span style="background:var(--accent-dim);color:var(--accent);padding:2px 8px;border-radius:10px;font-size:11px;font-weight:500">${p.name}</span>`).join('');
-  // Actions
-  renderRoomActions(m);
-  renderIssuesList(m);
+  const orig = state.meeting;
+  state.meeting = m;
+  exportMeeting(fmt);
+  state.meeting = orig;
 }
 
-function renderRoomAgenda(m) {
-  const el = document.getElementById('room-agenda-list');
-  if(!m.agenda.length) { el.innerHTML='<div style="color:var(--text2);font-size:12px;padding:4px">暂无议程</div>'; return; }
-  el.innerHTML = m.agenda.map((a,i)=>`
-    <div class="agenda-item ${a.done?'done-item':''}">
-      <input type="checkbox" class="agenda-cb" ${a.done?'checked':''} onchange="toggleRoomAgenda(${i})">
-      <div class="agenda-info">
-        <div class="agenda-name" style="${a.done?'text-decoration:line-through':''}">${a.topic}</div>
-        ${a.duration?`<div class="agenda-time-lbl">⏱ ${a.duration}分钟</div>`:''}
-      </div>
-    </div>`).join('');
-}
-function toggleRoomAgenda(i) { const m=cur(); if(!m) return; m.agenda[i].done=!m.agenda[i].done; save(); renderRoomAgenda(m); }
-
-function switchRoomTab(tab) {
-  document.getElementById('room-code').style.display = tab==='code'?'flex':'none';
-  document.getElementById('room-notes').style.display = tab==='notes'?'flex':'none';
-  document.getElementById('rctab-code').classList.toggle('active',tab==='code');
-  document.getElementById('rctab-notes').classList.toggle('active',tab==='notes');
-}
-function switchRightTab(tab) {
-  document.getElementById('rr-actions').style.display = tab==='actions'?'flex':'none';
-  document.getElementById('rr-issues').style.display = tab==='issues'?'flex':'none';
-  document.getElementById('rrtab-actions').classList.toggle('active',tab==='actions');
-  document.getElementById('rrtab-issues').classList.toggle('active',tab==='issues');
-}
-
-// Code editor
-function onCodeInput() {
-  const m=cur(); if(!m) return;
-  m.code = document.getElementById('code-editor').value;
-  m.codeLang = document.getElementById('room-lang').value;
-  save(); updateLineNums();
-}
-function saveMeetingCode() { const m=cur(); if(!m) return; m.codeLang=document.getElementById('room-lang').value; save(); }
-function updateLineNums() {
-  const code = document.getElementById('code-editor').value;
-  const lines = code.split('\n').length;
-  document.getElementById('code-lines').textContent = `${lines} 行`;
-  document.getElementById('line-nums').textContent = Array.from({length:lines},(_,i)=>i+1).join('\n');
-}
-function handleCodeKey(e) {
-  if(e.key==='Tab') { e.preventDefault(); const s=e.target.selectionStart, end=e.target.selectionEnd; e.target.value=e.target.value.substring(0,s)+'  '+e.target.value.substring(end); e.target.selectionStart=e.target.selectionEnd=s+2; onCodeInput(); }
-  if(e.ctrlKey&&e.key==='m') { e.preventDefault(); markCodeIssue(); }
-}
-function copyCode() { navigator.clipboard.writeText(document.getElementById('code-editor').value).then(()=>toast('代码已复制','ok')); }
-function markCodeIssue() {
-  const ta=document.getElementById('code-editor');
-  const line=ta.value.substring(0,ta.selectionStart).split('\n').length;
-  const m=cur(); if(!m) return;
-  if(!m.issues) m.issues=[];
-  const text=prompt(`标记第 ${line} 行问题（描述）：`); if(!text) return;
-  m.issues.push({id:genId(),line,text,done:false}); save();
-  renderIssuesList(m);
-  toast(`🔴 第${line}行已标记`,'ok');
-}
-function insertCodeToNotes() {
-  const code = document.getElementById('code-editor').value.trim();
-  if(!code) return;
-  const lang = document.getElementById('room-lang').value.toLowerCase();
-  const notes = document.getElementById('notes-editor');
-  const insert = `\n\`\`\`${lang}\n${code}\n\`\`\`\n`;
-  const pos = notes.selectionStart;
-  notes.value = notes.value.substring(0,pos)+insert+notes.value.substring(pos);
-  onNotesInput(); switchRoomTab('notes'); toast('代码已插入纪要','ok');
-}
-
-// Notes editor
-function onNotesInput() {
-  const m=cur(); if(!m) return;
-  m.notes = document.getElementById('notes-editor').value;
-  save(); updateNotesCount();
-}
-function updateNotesCount() {
-  const v=document.getElementById('notes-editor').value;
-  document.getElementById('notes-count').textContent=`${v.length} 字`;
-}
-function insertNoteTag(tag) {
-  const ta=document.getElementById('notes-editor');
-  const pos=ta.selectionStart;
-  ta.value=ta.value.substring(0,pos)+tag+' '+ta.value.substring(pos);
-  ta.selectionStart=ta.selectionEnd=pos+tag.length+1;
-  ta.focus(); onNotesInput();
-}
-function insertCodeBlock() {
-  const lang=document.getElementById('room-lang').value.toLowerCase();
-  insertNoteTag(`\n\`\`\`${lang}\n\n\`\`\``);
-}
-
-// Actions
-function renderRoomActions(m) {
-  const el=document.getElementById('actions-list-room');
-  if(!m.actions.length) { el.innerHTML='<div style="color:var(--text2);font-size:12px;padding:8px;text-align:center">暂无行动项</div>'; return; }
-  el.innerHTML=m.actions.map((a,i)=>{
-    const p=PRI[a.priority]||PRI.mid;
-    return `<div class="action-item ${a.done?'done':''}">
-      <input type="checkbox" class="action-cb" ${a.done?'checked':''} onchange="toggleAction(${i})">
-      <div class="action-content">
-        <div class="action-title" style="${a.done?'text-decoration:line-through':''}">${a.title}</div>
-        <div class="action-meta">
-          ${a.owner?`<span class="badge b-blue">👤 ${a.owner}</span>`:''}
-          <span class="badge ${p.cls}">${p.lbl}</span>
-        </div>
-      </div>
-      <span class="action-del" onclick="deleteAction(${i})">🗑</span>
-    </div>`;}).join('');
-}
-function showAddAction() { document.getElementById('add-action-inline').style.display='block'; document.getElementById('new-act-title').focus(); }
-function hideAddAction() { document.getElementById('add-action-inline').style.display='none'; }
-function saveActionInline() {
-  const title=document.getElementById('new-act-title').value.trim();
-  if(!title){toast('请填写行动项','err');return;}
-  const m=cur(); if(!m) return;
-  m.actions.push({id:genId(),title,owner:document.getElementById('new-act-owner').value.trim(),deadline:document.getElementById('new-act-due').value,priority:document.getElementById('new-act-pri').value,done:false});
-  save(); hideAddAction(); renderRoomActions(m);
-  document.getElementById('new-act-title').value='';
-  document.getElementById('new-act-owner').value='';
-  toast('⚡ 行动项已记录','ok');
-}
-function toggleAction(i) { const m=cur(); if(!m) return; m.actions[i].done=!m.actions[i].done; save(); renderRoomActions(m); }
-function deleteAction(i) { const m=cur(); if(!m) return; m.actions.splice(i,1); save(); renderRoomActions(m); }
-
-// Issues
-function renderIssuesList(m) {
-  const el=document.getElementById('issues-list');
-  if(!m.issues||!m.issues.length) { el.innerHTML='<div style="color:var(--text2);font-size:12px;padding:8px;text-align:center">暂无代码问题</div>'; return; }
-  el.innerHTML=m.issues.map((iss,i)=>`
-    <div class="action-item">
-      <input type="checkbox" class="action-cb" ${iss.done?'checked':''} onchange="toggleIssue(${i})" style="accent-color:var(--danger)">
-      <div class="action-content">
-        <div class="action-title">${iss.text}</div>
-        ${iss.line?`<div style="font-size:11px;color:var(--text2)">第 ${iss.line} 行</div>`:''}
-      </div>
-      <span class="action-del" onclick="deleteIssue(${i})">🗑</span>
-    </div>`).join('');
-}
-function addIssue() {
-  const text=prompt('描述代码问题：'); if(!text) return;
-  const m=cur(); if(!m) return;
-  if(!m.issues) m.issues=[];
-  m.issues.push({id:genId(),text,done:false}); save(); renderIssuesList(m); toast('🐛 问题已记录','ok');
-}
-function toggleIssue(i) { const m=cur(); if(!m) return; m.issues[i].done=!m.issues[i].done; save(); renderIssuesList(m); }
-function deleteIssue(i) { const m=cur(); if(!m) return; m.issues.splice(i,1); save(); renderIssuesList(m); }
-
-// Timer
-function toggleTimer() {
-  if(S.timer.running) {
-    clearInterval(S.timer.interval); S.timer.running=false;
-    document.getElementById('timer-btn').textContent='▶ 继续';
-    document.getElementById('timer-status').textContent='已暂停';
-  } else {
-    S.timer.running=true;
-    document.getElementById('timer-btn').textContent='⏸ 暂停';
-    document.getElementById('timer-status').textContent='计时中...';
-    S.timer.interval=setInterval(()=>{
-      S.timer.secs++;
-      const m=cur(); if(m) m.timerSecs=S.timer.secs;
-      document.getElementById('timer-dsp').textContent=fmtTime(S.timer.secs);
-    },1000);
-  }
-}
-function resetTimer() {
-  clearInterval(S.timer.interval); S.timer.running=false; S.timer.secs=0;
-  const m=cur(); if(m) m.timerSecs=0;
-  save();
-  document.getElementById('timer-dsp').textContent='00:00:00';
-  document.getElementById('timer-btn').textContent='▶ 开始';
-  document.getElementById('timer-status').textContent='未开始';
-}
-
-function endMeeting() {
-  const m=cur(); if(!m) return;
-  if(!confirm(`确定结束「${m.title}」？`)) return;
-  clearInterval(S.timer.interval); S.timer.running=false;
-  m.status='done'; m.endedAt=Date.now();
-  m.notes=document.getElementById('notes-editor').value;
-  m.code=document.getElementById('code-editor').value;
-  m.codeLang=document.getElementById('room-lang').value;
-  save(); toast('🏁 会议已结束，生成总结中...','ok');
-  setTimeout(()=>showSection('followup'),400);
-}
-
-// ═══════════════════════════════
-//  FOLLOW-UP
-// ═══════════════════════════════
-function renderFollowup() {
-  const m = cur() || S.meetings.find(x=>x.status==='done');
-  document.getElementById('followup-empty').style.display = m?'none':'block';
-  document.getElementById('followup-content').style.display = m?'block':'none';
-  if(!m) return;
-
-  document.getElementById('fu-title').textContent = m.title;
-  document.getElementById('fu-meta').textContent = `${fmtDate(m.date)} ${m.time||''} · 实际用时 ${fmtTime(m.timerSecs||0)}`;
-
-  // Code preview
-  const codeEl = document.getElementById('fu-code-preview');
-  codeEl.textContent = m.code ? `// 语言: ${m.codeLang}\n\n${m.code}` : '（本次会议无代码记录）';
-
-  // Actions
-  renderFuActions(m);
-  // Issues
-  renderFuIssues(m);
-  // Stats
-  renderFuStats(m);
-  // AI Summary
-  generateSummary(m);
-}
-
-function renderFuActions(m) {
-  const el=document.getElementById('fu-actions-list');
-  if(!m.actions.length) { el.innerHTML='<div style="color:var(--text2);font-size:13px">暂无行动项</div>'; updateFuRate(m); return; }
-  el.innerHTML=m.actions.map((a,i)=>{
-    const p=PRI[a.priority]||PRI.mid;
-    return `<div class="action-item ${a.done?'done':''}">
-      <input type="checkbox" class="action-cb" ${a.done?'checked':''} onchange="toggleFuAction('${m.id}',${i})">
-      <div class="action-content">
-        <div class="action-title" style="${a.done?'text-decoration:line-through':''}">${a.title}</div>
-        <div class="action-meta">
-          ${a.owner?`<span class="badge b-blue">👤 ${a.owner}</span>`:''}
-          ${a.deadline?`<span class="badge b-gray">📅 ${a.deadline}</span>`:''}
-          <span class="badge ${p.cls}">${p.lbl}</span>
-        </div>
-      </div>
-    </div>`;}).join('');
-  updateFuRate(m);
-}
-function toggleFuAction(mid,i) {
-  const m=S.meetings.find(x=>x.id===mid); if(!m) return;
-  m.actions[i].done=!m.actions[i].done; save(); renderFuActions(m);
-}
-function updateFuRate(m) {
-  const total=m.actions.length, done=m.actions.filter(a=>a.done).length;
-  const rate=total?Math.round(done/total*100):0;
-  document.getElementById('fu-rate').textContent=total?`${done}/${total} (${rate}%)`:'--';
-  document.getElementById('fu-rate-bar').style.width=rate+'%';
-}
-
-function renderFuIssues(m) {
-  const el=document.getElementById('fu-issues-list');
-  if(!m.issues||!m.issues.length) { el.innerHTML='<div style="color:var(--text2);font-size:13px">本次会议无代码问题记录</div>'; return; }
-  el.innerHTML=m.issues.map(iss=>`
-    <div style="padding:7px;background:var(--bg0);border-radius:var(--radius-sm);margin-bottom:6px;border-left:3px solid ${iss.done?'var(--success)':'var(--danger)'}">
-      <div style="font-size:13px;${iss.done?'text-decoration:line-through;color:var(--text2)':''}">${iss.text}</div>
-      ${iss.line?`<div style="font-size:11px;color:var(--text2)">第 ${iss.line} 行</div>`:''}
-    </div>`).join('');
-}
-
-function renderFuStats(m) {
-  const grid=document.getElementById('fu-stats');
-  const agendaDone=m.agenda.filter(a=>a.done).length;
-  const issuesDone=(m.issues||[]).filter(i=>i.done).length;
-  grid.innerHTML=[
-    {v:m.participants.length+'人',l:'参会人数',c:'var(--accent)'},
-    {v:`${agendaDone}/${m.agenda.length}`,l:'议程完成',c:'var(--success)'},
-    {v:m.actions.length+'项',l:'行动项',c:'var(--warning)'},
-    {v:`${issuesDone}/${(m.issues||[]).length}`,l:'问题解决',c:'var(--danger)'},
-  ].map(s=>`<div style="padding:10px;background:var(--bg0);border-radius:var(--radius-sm);text-align:center">
-    <div style="font-size:20px;font-weight:700;color:${s.c}">${s.v}</div>
-    <div style="font-size:11px;color:var(--text2)">${s.l}</div>
-  </div>`).join('');
-}
-
-function generateSummary(m) {
-  const el=document.getElementById('ai-summary');
-  el.innerHTML=`<div style="display:flex;align-items:center;gap:8px;color:var(--text2);padding:8px 0"><div class="ai-dots"><div class="ai-dot"></div><div class="ai-dot"></div><div class="ai-dot"></div></div> AI 分析中...</div>`;
-  setTimeout(()=>{
-    const tpl=TEMPLATES[m.template]||{};
-    const agendaText=m.agenda.length?m.agenda.map(a=>`  ${a.done?'✅':'⬜'} ${a.topic}`).join('\n'):'  （无预设议程）';
-    const actText=m.actions.length?m.actions.map(a=>`  [${a.done?'x':' '}] ${a.title}${a.owner?' ('+a.owner+')':''}`).join('\n'):'  （无行动项）';
-    const issueText=(m.issues||[]).length?m.issues.map(i=>`  • ${i.text}${i.line?' [L'+i.line+']':''}`).join('\n'):'  （无代码问题）';
-    const summary=`**📋 ${m.title}**
-类型：${tpl.name||'自定义会议'}
-时间：${fmtDate(m.date)} ${m.time||''} · 用时 ${fmtTime(m.timerSecs||0)}
-参会：${m.participants.length?m.participants.map(p=>p.name).join('、'):'未记录'}
-
-**🎯 会议目标**
-${m.goal||'（未设定目标）'}
-
-**📋 议程完成情况**
-${agendaText}
-
-**💻 代码语言**
-${m.codeLang||'--'}${m.code?'（已有代码记录）':'（无代码记录）'}
-
-**🐛 代码问题**
-${issueText}
-
-**⚡ 行动项 (${m.actions.length})**
-${actText}
-
-**📊 总结**
-本次${tpl.name||''}会议${m.agenda.every(a=>a.done)?'✅ 完整完成全部议程':'📎 部分议程需后续跟进'}，发现 ${(m.issues||[]).length} 个代码问题，产出 ${m.actions.length} 个行动项，建议在 3 个工作日内推进。`;
-    el.innerHTML=`<pre style="white-space:pre-wrap;font-size:13px;line-height:1.8;color:var(--text1);font-family:inherit">${summary}</pre>`;
-  },1200);
-}
-
-// Export
-function exportMarkdown() {
-  const m=cur()||S.meetings.find(x=>x.status==='done'); if(!m) return;
-  const md=`# 会议纪要：${m.title}\n\n> ${fmtDate(m.date)} ${m.time||''} · 时长 ${fmtTime(m.timerSecs||0)}\n\n## 目标\n${m.goal||'--'}\n\n## 参会人员\n${m.participants.map(p=>`- ${p.name}${p.role?' ('+p.role+')':''}`).join('\n')||'无'}\n\n## 会议记录\n${m.notes||'（无）'}\n\n## 代码片段\n\`\`\`${(m.codeLang||'').toLowerCase()}\n${m.code||'// 无代码记录'}\n\`\`\`\n\n## 行动项\n${m.actions.map(a=>`- [${a.done?'x':' '}] ${a.title}${a.owner?' — '+a.owner:''}${a.deadline?' (截止: '+a.deadline+')':''}`).join('\n')||'无'}\n\n## 代码问题\n${(m.issues||[]).map(i=>`- ${i.text}${i.line?' [L'+i.line+']':''}`).join('\n')||'无'}\n\n---\n*由 MeetPilot 生成*`;
-  const blob=new Blob([md],{type:'text/markdown;charset=utf-8'});
-  const url=URL.createObjectURL(blob);
-  const a=document.createElement('a'); a.href=url; a.download=`会议纪要_${m.title}_${m.date||'draft'}.md`; a.click();
-  URL.revokeObjectURL(url); toast('📄 已导出 Markdown','ok');
-}
-
-function copyFollowupEmail() {
-  const m=cur()||S.meetings.find(x=>x.status==='done'); if(!m) return;
-  const text=`【会议纪要】${m.title}\n\n时间：${fmtDate(m.date)} ${m.time||''}\n参会：${m.participants.map(p=>p.name).join('、')||'--'}\n\n行动项：\n${m.actions.map(a=>`• ${a.title}${a.owner?' ('+a.owner+')':''}`).join('\n')||'无'}\n\n由 MeetPilot 生成`;
-  navigator.clipboard.writeText(text).then(()=>toast('✉️ 已复制邮件内容','ok'));
-}
-
-async function exportGist() {
-  const m=cur()||S.meetings.find(x=>x.status==='done'); if(!m) return;
-  const token=prompt('请输入 GitHub Personal Access Token（需要 gist 权限）：'); if(!token) return;
-  const content=`# ${m.title}\n\n## 会议记录\n${m.notes||'无'}\n\n## 代码\n\`\`\`${(m.codeLang||'').toLowerCase()}\n${m.code||'// 无'}\n\`\`\`\n\n## 行动项\n${m.actions.map(a=>`- [ ] ${a.title}`).join('\n')||'无'}`;
-  try {
-    const res=await fetch('https://api.github.com/gists',{method:'POST',headers:{'Authorization':'Bearer '+token,'Accept':'application/vnd.github+json','Content-Type':'application/json'},body:JSON.stringify({description:m.title,public:true,files:{'meeting-notes.md':{content}}})});
-    const d=await res.json();
-    if(d.html_url) { navigator.clipboard.writeText(d.html_url); toast('🐙 Gist 已创建：'+d.html_url,'ok'); window.open(d.html_url,'_blank'); }
-    else toast('❌ 创建失败：'+d.message,'err');
-  } catch(e) { toast('❌ 网络错误','err'); }
-}
-
-// ═══════════════════════════════
-//  UTILS
-// ═══════════════════════════════
-function toast(msg,type='default') {
-  const el=document.createElement('div');
-  el.className=`toast ${type}`;
-  el.textContent=msg;
-  document.getElementById('toast-box').appendChild(el);
-  setTimeout(()=>{ el.style.opacity='0'; el.style.transform='translateX(60px)'; el.style.transition='all .3s'; setTimeout(()=>el.remove(),300); },3000);
-}
-
-// ═══════════════════════════════
-//  INIT
-// ═══════════════════════════════
-(function init(){
+function deleteMeeting(id){
+  if(!confirm('确定删除这条会议记录？')) return;
+  state.meetings = state.meetings.filter(m=>m.id!==id);
+  saveData();
   updateStats();
-  renderDashboard();
-  // 渲染模板列表（仪表盘用）
-  if(!S.meetings.length) {
-    // 示例会议
-    const demo={
-      id:genId(), title:'用户认证模块代码评审', date:new Date().toISOString().split('T')[0],
-      time:'14:00', duration:60, template:'review', goal:'评审新的 JWT 认证实现，确保安全性和代码质量',
-      status:'pending', participants:[{name:'张三',role:'后端'},{name:'李四',role:'安全'},{name:'王五',role:'架构'}],
-      agenda:[{id:'a1',topic:'JWT 实现走读',duration:20,owner:'张三',done:false},{id:'a2',topic:'安全漏洞排查',duration:25,owner:'李四',done:false},{id:'a3',topic:'优化建议',duration:15,owner:'',done:false}],
-      checklist:TEMPLATES.review.checklist.map((t,i)=>({id:'c'+i,text:t,done:false})),
-      notes:'', code:'// JWT 验证中间件\nconst verifyToken = (req, res, next) => {\n  const token = req.headers[\'authorization\']?.split(\' \')[1];\n  if (!token) return res.status(401).json({ error: \'No token\' });\n  \n  try {\n    const decoded = jwt.verify(token, process.env.JWT_SECRET);\n    req.user = decoded;\n    next();\n  } catch (err) {\n    res.status(403).json({ error: \'Invalid token\' });\n  }\n};',
-      codeLang:'JavaScript', actions:[], issues:[], decisions:[],
-      startedAt:null, endedAt:null, timerSecs:0, createdAt:Date.now(),
-    };
-    S.meetings.push(demo); S.currentId=demo.id; save(); renderDashboard();
+  renderHistory();
+  renderRecentMeetings();
+}
+
+function clearAllData(){
+  if(!confirm('确定要清空所有会议记录？此操作不可恢复。')) return;
+  state.meetings = [];
+  saveData();
+  updateStats();
+  renderRecentMeetings();
+  alert('已清空所有数据');
+}
+
+// ══════════════════════════════════════════════
+//  KEYBOARD SHORTCUTS
+// ══════════════════════════════════════════════
+document.addEventListener('keydown', e => {
+  if(e.ctrlKey && e.key==='Enter' && state.section==='room'){
+    const notes = document.getElementById('room-notes');
+    if(document.activeElement===notes){
+      notes.value += '\n\n---\n\n';
+      notes.selectionStart = notes.selectionEnd = notes.value.length;
+    }
   }
-})();
+});
+
+// ══════════════════════════════════════════════
+//  BOOT
+// ══════════════════════════════════════════════
+init();
 </script>
 </body>
 </html>
