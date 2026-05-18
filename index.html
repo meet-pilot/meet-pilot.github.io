@@ -114,7 +114,7 @@ select{cursor:pointer}
 .room-header-left .room-meta{display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap}
 .room-header-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 
-.room-grid{display:grid;grid-template-columns:190px 1fr 268px;gap:14px}
+.room-grid{display:grid;grid-template-columns:190px 1fr 1fr;gap:14px}
 
 /* Side panels */
 .rpanel{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px}
@@ -152,20 +152,21 @@ select{cursor:pointer}
 .code-tbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 
 /* Right panel: transcript */
-.tx-feed{flex:1;overflow-y:auto;max-height:260px;display:flex;flex-direction:column;gap:5px}
-.tx-item{padding:7px 10px 7px 10px;border-radius:var(--r-sm);font-size:13px;line-height:1.5;position:relative;cursor:text;transition:background .15s;display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto;gap:2px 6px}
+.tx-feed{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px;min-height:0}
+.tx-item{padding:7px 10px;border-radius:var(--r-sm);font-size:13px;line-height:1.5;transition:background .15s;display:flex;flex-direction:column;gap:3px}
 .tx-item.final{background:var(--bg2);border-left:3px solid var(--accent)}
 .tx-item.final:hover{background:var(--accent-dim)}
-.tx-time{font-size:11px;color:var(--text3);grid-column:1;grid-row:1;display:flex;align-items:center;gap:5px}
+.tx-item-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
+.tx-time{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px;flex-shrink:0}
 .tx-spk{font-size:11px;font-weight:700;padding:1px 7px;border-radius:99px;letter-spacing:.02em}
 .tx-spk-0{background:rgba(99,102,241,.13);color:#6366f1}
 .tx-spk-1{background:rgba(16,185,129,.13);color:#10b981}
 .tx-spk-2{background:rgba(245,158,11,.13);color:#f59e0b}
 .tx-spk-3{background:rgba(239,68,68,.13);color:#ef4444}
 .tx-spk-4{background:rgba(139,92,246,.13);color:#8b5cf6}
-.tx-body{grid-column:1;grid-row:2;word-break:break-all;user-select:text;cursor:text}
-.tx-insert-btn{grid-column:2;grid-row:1/3;align-self:center;padding:6px 13px;background:var(--accent);color:#fff;border-radius:var(--r-sm);font-size:12px;font-weight:700;white-space:nowrap;cursor:pointer;border:none;transition:all .18s;flex-shrink:0;box-shadow:0 2px 6px rgba(99,102,241,.3)}
-.tx-insert-btn:hover{opacity:.85;transform:translateY(-1px);box-shadow:0 4px 10px rgba(99,102,241,.4)}
+.tx-body{font-size:13px;line-height:1.5;word-break:break-all;user-select:text;cursor:text}
+.tx-insert-btn{flex-shrink:0;padding:5px 12px;background:var(--accent);color:#fff;border-radius:var(--r-sm);font-size:12px;font-weight:700;white-space:nowrap;cursor:pointer;border:none;transition:all .18s;box-shadow:0 2px 6px rgba(99,102,241,.3)}
+.tx-insert-btn:hover{opacity:.85;transform:translateY(-1px)}
 .tx-item.selected-for-note{background:rgba(99,102,241,.18);border-left-color:var(--accent)}
 .tx-live{font-size:13px;color:var(--text3);font-style:italic;padding:6px 10px;animation:fadeUp .3s}
 .auto-badge{font-size:11px;padding:1px 7px;border-radius:99px;background:rgba(245,158,11,.12);color:var(--warn);font-weight:600;margin-left:6px}
@@ -668,19 +669,35 @@ select{cursor:pointer}
       <div class="sr" style="flex-direction:column;align-items:flex-start;gap:10px">
         <div class="sr-info" style="width:100%">
           <div class="sr-label">☁️ 录音文件转写 API Key</div>
-          <div class="sr-desc">上传本地录音时使用云端 API 转写，速度快且无需下载模型。兼容 OpenAI Whisper API 格式（OpenAI / Groq / 其他兼容服务均可）</div>
+          <div class="sr-desc">上传本地录音时使用云端 API 转写，速度快且无需下载模型。兼容 OpenAI Whisper API 格式</div>
+        </div>
+        <!-- Setup guide -->
+        <div style="width:100%;background:var(--accent-soft);border:1px solid var(--accent-dim);border-radius:var(--r-sm);padding:12px;font-size:12.5px;line-height:1.8">
+          <div style="font-weight:700;color:var(--accent);margin-bottom:6px">📋 配置步骤（二选一）</div>
+          <div style="color:var(--text1)">
+            <b>方案 A · SiliconFlow（国内可访问，有免费额度）</b><br>
+            1. 访问 <code style="background:var(--bg2);padding:1px 5px;border-radius:3px">siliconflow.cn</code> → 注册账号（手机号）<br>
+            2. 进入控制台 → <b>API 密钥</b> → 新建，复制 <code style="background:var(--bg2);padding:1px 5px;border-radius:3px">sk-...</code><br>
+            3. 下方填入 Key，端点填：<code style="background:var(--bg2);padding:1px 5px;border-radius:3px;user-select:all">https://api.siliconflow.cn/v1/audio/transcriptions</code>
+          </div>
+          <div style="color:var(--text1);margin-top:8px">
+            <b>方案 B · OpenAI（全球通用）</b><br>
+            1. 访问 <code style="background:var(--bg2);padding:1px 5px;border-radius:3px">platform.openai.com</code> → API Keys → Create<br>
+            2. 填入 <code style="background:var(--bg2);padding:1px 5px;border-radius:3px">sk-...</code>，端点留空即可
+          </div>
+          <div style="color:var(--text3);margin-top:8px;font-size:11.5px">💡 Key 仅保存在本地浏览器，不会上传任何服务器</div>
         </div>
         <div style="width:100%;display:flex;flex-direction:column;gap:8px">
           <div>
             <div class="mlabel">API Key</div>
-            <input type="password" id="speech-api-key-input" placeholder="sk-... 或 gsk_..." style="font-size:13px" oninput="saveSpeechApiKey()">
+            <input type="password" id="speech-api-key-input" placeholder="sk-..." style="font-size:13px" oninput="saveSpeechApiKey()">
           </div>
           <div>
-            <div class="mlabel">API 端点（默认 OpenAI，可替换为 Groq 等）</div>
-            <input type="text" id="speech-api-endpoint-input" placeholder="https://api.openai.com/v1/audio/transcriptions" style="font-size:13px" oninput="saveSpeechApiEndpoint()">
+            <div class="mlabel">API 端点（OpenAI 留空，SiliconFlow 需填写）</div>
+            <input type="text" id="speech-api-endpoint-input" placeholder="https://api.siliconflow.cn/v1/audio/transcriptions" style="font-size:13px" oninput="saveSpeechApiEndpoint()">
           </div>
           <div id="speech-api-status" style="font-size:12px;color:var(--text3)">
-            未配置 · 未配置时将使用本地 Whisper 模型（首次加载约 74MB）
+            未配置 · 未配置时将在浏览器本地运行模型（首次需下载约 74MB，较慢）
           </div>
         </div>
       </div>
@@ -828,7 +845,7 @@ function init() {
       const safeText = item.text.replace(/</g,'&lt;').replace(/>/g,'&gt;');
       const el = document.createElement('div');
       el.className = 'tx-item final';
-      el.innerHTML = `<div class="tx-time">${time}</div><span class="tx-body">${safeText}</span><span class="tx-insert-btn" onclick="insertTxToNotes(this)">插入笔记 ↗</span>`;
+      el.innerHTML = `<div class="tx-item-row"><div class="tx-time">${time}</div><span class="tx-insert-btn" onclick="insertTxToNotes(this)">插入笔记 ↗</span></div><span class="tx-body">${safeText}</span>`;
       feed.insertBefore(el, feed.firstChild);
     });
     // Restore timer
@@ -1212,7 +1229,7 @@ function addTx(text, final) {
   el.className = 'tx-item final';
   // Escape text to prevent XSS
   const safeText = text.replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  el.innerHTML = `<div class="tx-time">${now}</div><span class="tx-body">${safeText}</span><span class="tx-insert-btn" onclick="insertTxToNotes(this)">插入笔记 ↗</span>`;
+  el.innerHTML = `<div class="tx-item-row"><div class="tx-time">${now}</div><span class="tx-insert-btn" onclick="insertTxToNotes(this)">插入笔记 ↗</span></div><span class="tx-body">${safeText}</span>`;
   feed.insertBefore(el, feed.firstChild);
   while (feed.children.length > 60) feed.removeChild(feed.lastChild);
 }
@@ -1901,13 +1918,17 @@ function addTxToFeed(text, feedId, liveId, spkId) {
   if (live) live.textContent = '';
   const now = new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
   const safeText = text.replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  const spkIdx = (spkId != null) ? (parseInt(spkId) % 5) : null;
-  const spkHtml = (spkIdx != null)
-    ? `<span class="tx-spk tx-spk-${spkIdx}">说话人${parseInt(spkId)+1}</span>`
+  // Speaker: use API-provided spk_id, or auto-assign index by tracking unique speakers
+  let spkIdx = null;
+  if (spkId != null) {
+    spkIdx = parseInt(spkId) % 5;
+  }
+  const spkHtml = spkIdx != null
+    ? `<span class="tx-spk tx-spk-${spkIdx}">说话人${spkIdx+1}</span>`
     : '';
   const el = document.createElement('div');
   el.className = 'tx-item final';
-  el.innerHTML = `<div class="tx-time">${spkHtml}${now}</div><span class="tx-body">${safeText}</span><span class="tx-insert-btn" onclick="insertTxToNotes(this)">插入笔记 ↗</span>`;
+  el.innerHTML = `<div class="tx-item-row"><div class="tx-time">${spkHtml}${now}</div><span class="tx-insert-btn" onclick="insertTxToNotes(this)">插入笔记 ↗</span></div><span class="tx-body">${safeText}</span>`;
   feed.insertBefore(el, live ? live.nextSibling : feed.firstChild);
   while (feed.children.length > 60) feed.removeChild(feed.lastChild);
   addTx(text, true);
@@ -1965,75 +1986,78 @@ function notesInsertTime() {
 }
 
 function smartNotes() {
-  const tx = S.meeting?.transcript || [];
-  if (!tx.length) { toast('暂无转录内容，请先开始录音或上传录音'); return; }
+  // Read from current in-memory meeting transcript (updated by both mic and upload)
+  const tx = (S.meeting?.transcript || []).filter(t => t.text?.trim().length > 1);
+  if (!tx.length) {
+    toast('暂无转录内容，请先录音或上传录音后再整理');
+    return;
+  }
 
   const btn = document.getElementById('smart-notes-btn');
   btn.disabled = true;
   btn.textContent = '⏳ 整理中...';
 
-  const texts = tx.map(t => t.text);
+  const texts = tx.map(t => t.text.trim());
   const fullText = texts.join('。');
 
-  // ── 1. 按说话人 / 时间段分段 ──
+  // ── 1. 按说话人 / 时间分段（SenseVoice 无 spk_id 时按每 60s 自动分段）──
+  const hasSpeaker = tx.some(t => t.spkId != null);
   const segments = [];
-  let cur = { spk: tx[0].spkId ?? null, items: [tx[0].text] };
-  for (let i = 1; i < tx.length; i++) {
-    const spk = tx[i].spkId ?? null;
-    if (spk !== null && spk !== cur.spk) {
-      segments.push(cur);
-      cur = { spk, items: [tx[i].text] };
-    } else {
-      cur.items.push(tx[i].text);
+  if (hasSpeaker) {
+    let cur = { spk: tx[0].spkId, items: [tx[0].text] };
+    for (let i = 1; i < tx.length; i++) {
+      if (tx[i].spkId !== cur.spk) {
+        segments.push(cur);
+        cur = { spk: tx[i].spkId, items: [tx[i].text] };
+      } else {
+        cur.items.push(tx[i].text);
+      }
+    }
+    segments.push(cur);
+  } else {
+    // 无说话人信息：每 5 条转录合为一段，模拟段落结构
+    for (let i = 0; i < tx.length; i += 5) {
+      segments.push({ spk: null, items: tx.slice(i, i + 5).map(t => t.text) });
     }
   }
-  segments.push(cur);
 
-  // ── 2. 关键词提取：决议 / 待办 / 问题 ──
-  const decKW  = ['决定','确认','同意','通过','明确','共识','达成'];
-  const todoKW = ['需要','记得','跟进','确认','负责','安排','下一步','TODO','待办','计划'];
-  const qKW    = ['问题','疑问','不确定','待定','需要讨论'];
+  // ── 2. 关键词提取 ──
+  const decKW  = ['决定','确认','同意','通过','明确','共识','达成','结论'];
+  const todoKW = ['需要','记得','跟进','负责','安排','下一步','TODO','待办','计划','会去','去做'];
+  const qKW    = ['问题','疑问','不确定','待定','需要讨论','怎么','为什么'];
 
-  const allSents = fullText.split(/[。！？\n]/).filter(s => s.trim().length > 4);
+  const allSents = fullText.split(/[。！？\n，,]/).map(s => s.trim()).filter(s => s.length > 4);
   const decisions = [...new Set(allSents.filter(s => decKW.some(k => s.includes(k))))].slice(0, 6);
   const todos     = [...new Set(allSents.filter(s => todoKW.some(k => s.includes(k))))].slice(0, 8);
   const questions = [...new Set(allSents.filter(s => qKW.some(k => s.includes(k))))].slice(0, 4);
 
-  // ── 3. 拼装笔记 ──
-  const now = new Date().toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
-  let note = `# ${S.meeting?.title || '会议笔记'}\n_智能整理于 ${now}_\n\n`;
+  // ── 3. 拼装结构化笔记 ──
+  const nowStr = new Date().toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+  let note = `# ${S.meeting?.title || '会议笔记'}\n_智能整理于 ${nowStr} · 共 ${tx.length} 条转录_\n\n`;
 
-  if (segments.length > 1) {
-    note += `## 💬 讨论内容（按说话人分段）\n`;
-    segments.forEach(seg => {
-      const label = seg.spk != null ? `**说话人 ${parseInt(seg.spk)+1}**` : '**发言**';
-      note += `\n${label}：${seg.items.join('；')}\n`;
-    });
-    note += '\n';
-  } else {
-    // 单人或无分段，按每5条分一段
-    note += `## 💬 讨论内容\n`;
-    for (let i = 0; i < texts.length; i += 5) {
-      note += '\n' + texts.slice(i, i + 5).join('。') + '\n';
-    }
-    note += '\n';
-  }
+  note += hasSpeaker ? `## 💬 讨论内容（按说话人分段）\n` : `## 💬 讨论内容\n`;
+  segments.forEach((seg, idx) => {
+    const label = seg.spk != null
+      ? `**说话人 ${parseInt(seg.spk) + 1}**`
+      : (segments.length > 1 ? `**段落 ${idx + 1}**` : '');
+    const content = seg.items.join('；');
+    note += label ? `\n${label}：${content}\n` : `\n${content}\n`;
+  });
+  note += '\n';
 
   if (decisions.length) {
     note += `## ✅ 决议事项\n`;
-    decisions.forEach(d => { note += `- ${d.trim()}\n`; });
+    decisions.forEach(d => { note += `- ${d}\n`; });
     note += '\n';
   }
-
   if (todos.length) {
     note += `## 📌 待办 / 行动项\n`;
-    todos.forEach(t => { note += `- [ ] ${t.trim()}\n`; });
+    todos.forEach(t => { note += `- [ ] ${t}\n`; });
     note += '\n';
   }
-
   if (questions.length) {
     note += `## ❓ 待确认问题\n`;
-    questions.forEach(q => { note += `- ${q.trim()}\n`; });
+    questions.forEach(q => { note += `- ${q}\n`; });
     note += '\n';
   }
 
@@ -2045,7 +2069,7 @@ function smartNotes() {
 
   btn.disabled = false;
   btn.textContent = '✨ 智能整理笔记';
-  toast(`✅ 智能笔记已生成：${segments.length} 个段落，${decisions.length} 条决议，${todos.length} 条待办`);
+  toast(`✅ 已生成：${segments.length} 段 · ${decisions.length} 条决议 · ${todos.length} 条待办`);
 }
 
 // ══════════════════════════════════════════════════
