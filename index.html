@@ -172,6 +172,8 @@ select{cursor:pointer}
 .tx-insert-btn{opacity:0;pointer-events:none;flex-shrink:0;padding:3px 9px;background:var(--accent);color:#fff;border-radius:var(--r-sm);font-size:11px;font-weight:700;white-space:nowrap;cursor:pointer;border:none;transition:opacity .15s;box-shadow:0 1px 4px rgba(99,102,241,.3)}
 .tx-item:hover .tx-insert-btn{opacity:1;pointer-events:auto}
 .tx-item.selected-for-note{background:rgba(99,102,241,.18);border-left-color:var(--accent)}
+.tx-item.tx-selected{background:rgba(99,102,241,.15)!important;border-left-color:var(--accent)!important}
+.tx-item.tx-selected .tx-check{accent-color:var(--accent)}
 .tx-live{font-size:13px;color:var(--text3);font-style:italic;padding:6px 10px;animation:fadeUp .3s}
 .auto-badge{font-size:11px;padding:1px 7px;border-radius:99px;background:rgba(245,158,11,.12);color:var(--warn);font-weight:600;margin-left:6px}
 /* Drag-over for whole room panel */
@@ -243,8 +245,19 @@ select{cursor:pointer}
 .chip-green{background:rgba(52,211,153,.12);color:var(--success)}
 .chip-blue{background:var(--accent-dim);color:var(--accent)}
 
-/* Sync status */
-.sync-status{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text2)}
+/* Right panel transcript area fills remaining space */
+#tx-live-panel{display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden}
+#tx-upload-panel{display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden}
+#tx-upload-panel .audio-dropzone{flex-shrink:0}
+#tx-upload-panel #audio-player-wrap{flex-shrink:0}
+/* Batch insert toolbar */
+.tx-batch-bar{flex-shrink:0;display:none;align-items:center;gap:8px;padding:5px 8px;background:var(--accent-dim);border-radius:var(--r-sm);margin-bottom:6px;border:1px solid rgba(99,102,241,.25)}
+.tx-batch-bar.show{display:flex}
+.tx-batch-count{font-size:12px;font-weight:700;color:var(--accent);flex:1}
+.tx-batch-insert{padding:4px 12px;background:var(--accent);color:#fff;border-radius:var(--r-sm);font-size:12px;font-weight:700;border:none;cursor:pointer;white-space:nowrap}
+.tx-batch-clear{padding:4px 8px;background:transparent;color:var(--text2);border-radius:var(--r-sm);font-size:12px;border:none;cursor:pointer}
+/* Checkbox on each tx-item */
+.tx-check{width:15px;height:15px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;margin-top:1px}
 .sync-dot{width:8px;height:8px;border-radius:50%;background:var(--text3);flex-shrink:0}
 .sync-dot.synced{background:var(--success)}
 .sync-dot.syncing{background:var(--warn);animation:blink 1s infinite}
@@ -446,16 +459,23 @@ select{cursor:pointer}
     </div>
 
     <!-- Right: transcript + actions -->
-    <div class="rpanel room-right-panel">
+    <div class="rpanel room-right-panel" style="overflow:hidden">
       <!-- Transcript mode tabs -->
-      <div style="display:flex;gap:2px;margin-bottom:4px">
+      <div style="display:flex;gap:2px;margin-bottom:4px;flex-shrink:0">
         <button class="txmode-btn active" id="txmode-live" onclick="switchTxMode('live',this)" style="padding:4px 10px;border-radius:var(--r-sm);font-size:12px;font-weight:600;color:var(--text2);transition:all .18s">🎙 实时录音</button>
         <button class="txmode-btn" id="txmode-upload" onclick="switchTxMode('upload',this)" style="padding:4px 10px;border-radius:var(--r-sm);font-size:12px;font-weight:600;color:var(--text2);transition:all .18s">📁 上传录音</button>
       </div>
 
+      <!-- Batch insert bar (shared for both panels) -->
+      <div class="tx-batch-bar" id="tx-batch-bar">
+        <span class="tx-batch-count" id="tx-batch-count">已选 0 段</span>
+        <button class="tx-batch-clear" onclick="txClearSelect()">✕ 取消</button>
+        <button class="tx-batch-insert" onclick="txBatchInsert()">批量插入笔记 ↗</button>
+      </div>
+
       <!-- Live mic panel -->
       <div id="tx-live-panel">
-        <div id="speech-warn"></div>
+        <div id="speech-warn" style="flex-shrink:0"></div>
         <div class="tx-feed" id="tx-feed">
           <div class="tx-live" id="tx-live">🎙 点击下方按钮开始录音...</div>
         </div>
@@ -503,13 +523,13 @@ select{cursor:pointer}
         </div>
       </div>
 
-      <div class="divider"></div>
-      <div style="display:flex;align-items:center;gap:6px">
+      <div class="divider" style="flex-shrink:0"></div>
+      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
         <div class="rpanel-title" style="flex:1">行动项</div>
         <span id="auto-detected-count" style="font-size:11px;color:var(--warn);display:none">🤖 自动识别</span>
       </div>
       <div class="actions-wrap" id="actions-wrap"></div>
-      <div class="ac-add">
+      <div class="ac-add" style="flex-shrink:0">
         <input type="text" id="ac-input" placeholder="手动添加待办..." onkeydown="if(event.key==='Enter')addAction()">
         <button onclick="addAction()">+</button>
       </div>
@@ -849,7 +869,7 @@ function init() {
       const safeText = item.text.replace(/</g,'&lt;').replace(/>/g,'&gt;');
       const el = document.createElement('div');
       el.className = 'tx-item final';
-      el.innerHTML = `<div class="tx-item-row"><div class="tx-time">${time}</div><span class="tx-insert-btn" onclick="insertTxToNotes(this)">插入笔记 ↗</span></div><span class="tx-body">${safeText}</span>`;
+      el.innerHTML = `<div class="tx-item-row"><input type="checkbox" class="tx-check" onchange="txToggleSelect(this)"><div class="tx-time">${time}</div><span class="tx-insert-btn" onclick="insertTxToNotes(this)">插入笔记 ↗</span></div><span class="tx-body" onclick="txBodyClick(event,this)">${safeText}</span>`;
       feed.insertBefore(el, feed.firstChild);
     });
     // Restore timer
@@ -1233,7 +1253,7 @@ function addTx(text, final) {
   el.className = 'tx-item final';
   // Escape text to prevent XSS
   const safeText = text.replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  el.innerHTML = `<div class="tx-item-row"><div class="tx-time">${now}</div><span class="tx-insert-btn" onclick="insertTxToNotes(this)">插入笔记 ↗</span></div><span class="tx-body">${safeText}</span>`;
+  el.innerHTML = `<div class="tx-item-row"><input type="checkbox" class="tx-check" onchange="txToggleSelect(this)"><div class="tx-time">${now}</div><span class="tx-insert-btn" onclick="insertTxToNotes(this)">插入笔记 ↗</span></div><span class="tx-body" onclick="txBodyClick(event,this)">${safeText}</span>`;
   feed.insertBefore(el, feed.firstChild);
   while (feed.children.length > 60) feed.removeChild(feed.lastChild);
 }
@@ -1730,7 +1750,7 @@ function resumeMeeting(id) {
       const spkHtml = spkIdx != null ? `<span class="tx-spk tx-spk-${spkIdx}">说话人${spkIdx+1}</span>` : '';
       const el = document.createElement('div');
       el.className = 'tx-item final';
-      el.innerHTML = `<div class="tx-item-row"><div class="tx-time">${spkHtml}${t}</div><span class="tx-insert-btn" onclick="insertTxToNotes(this)">插入笔记 ↗</span></div><span class="tx-body">${safeText}</span>`;
+      el.innerHTML = `<div class="tx-item-row"><input type="checkbox" class="tx-check" onchange="txToggleSelect(this)"><div class="tx-time">${spkHtml}${t}</div><span class="tx-insert-btn" onclick="insertTxToNotes(this)">插入笔记 ↗</span></div><span class="tx-body" onclick="txBodyClick(event,this)">${safeText}</span>`;
       feed.insertBefore(el, feed.firstChild);
     });
   }
@@ -1749,7 +1769,7 @@ function resumeMeeting(id) {
         const spkHtml = spkIdx != null ? `<span class="tx-spk tx-spk-${spkIdx}">说话人${spkIdx+1}</span>` : '';
         const el = document.createElement('div');
         el.className = 'tx-item final';
-        el.innerHTML = `<div class="tx-item-row"><div class="tx-time">${spkHtml}${t}</div><span class="tx-insert-btn" onclick="insertTxToNotes(this)">插入笔记 ↗</span></div><span class="tx-body">${safeText}</span>`;
+        el.innerHTML = `<div class="tx-item-row"><input type="checkbox" class="tx-check" onchange="txToggleSelect(this)"><div class="tx-time">${spkHtml}${t}</div><span class="tx-insert-btn" onclick="insertTxToNotes(this)">插入笔记 ↗</span></div><span class="tx-body" onclick="txBodyClick(event,this)">${safeText}</span>`;
         uploadFeed.appendChild(el);
       });
     } else {
@@ -2048,7 +2068,7 @@ function addTxToFeed(text, feedId, liveId, spkId) {
     : '';
   const el = document.createElement('div');
   el.className = 'tx-item final';
-  el.innerHTML = `<div class="tx-item-row"><div class="tx-time">${spkHtml}${now}</div><span class="tx-insert-btn" onclick="insertTxToNotes(this)">插入笔记 ↗</span></div><span class="tx-body">${safeText}</span>`;
+  el.innerHTML = `<div class="tx-item-row"><input type="checkbox" class="tx-check" onchange="txToggleSelect(this)"><div class="tx-time">${spkHtml}${now}</div><span class="tx-insert-btn" onclick="insertTxToNotes(this)">插入笔记 ↗</span></div><span class="tx-body" onclick="txBodyClick(event,this)">${safeText}</span>`;
   feed.insertBefore(el, live ? live.nextSibling : feed.firstChild);
   while (feed.children.length > 60) feed.removeChild(feed.lastChild);
   addTx(text, true);
@@ -2205,6 +2225,73 @@ function smartNotes() {
 // ══════════════════════════════════════════════════
 //  TRANSCRIPT → NOTES (click-to-insert)
 // ══════════════════════════════════════════════════
+// ══════════════════════════════════════════════════
+//  TRANSCRIPT MULTI-SELECT & BATCH INSERT
+// ══════════════════════════════════════════════════
+function txToggleSelect(cb) {
+  const item = cb.closest('.tx-item');
+  item.classList.toggle('tx-selected', cb.checked);
+  txUpdateBatchBar();
+}
+
+function txBodyClick(e, bodyEl) {
+  // Clicking the text body toggles selection (unless user is selecting text)
+  if (window.getSelection().toString().trim()) return;
+  const item = bodyEl.closest('.tx-item');
+  const cb = item.querySelector('.tx-check');
+  cb.checked = !cb.checked;
+  item.classList.toggle('tx-selected', cb.checked);
+  txUpdateBatchBar();
+}
+
+function txUpdateBatchBar() {
+  const count = document.querySelectorAll('.tx-item.tx-selected').length;
+  const bar = document.getElementById('tx-batch-bar');
+  const countEl = document.getElementById('tx-batch-count');
+  if (count > 0) {
+    bar.classList.add('show');
+    countEl.textContent = `已选 ${count} 段`;
+  } else {
+    bar.classList.remove('show');
+  }
+}
+
+function txClearSelect() {
+  document.querySelectorAll('.tx-item.tx-selected').forEach(item => {
+    item.classList.remove('tx-selected');
+    const cb = item.querySelector('.tx-check');
+    if (cb) cb.checked = false;
+  });
+  txUpdateBatchBar();
+}
+
+function txBatchInsert() {
+  const items = document.querySelectorAll('.tx-item.tx-selected');
+  if (!items.length) return;
+  const notes = document.getElementById('room-notes');
+  let inserts = [];
+  items.forEach(item => {
+    const bodyEl = item.querySelector('.tx-body');
+    const timeEl = item.querySelector('.tx-time');
+    const spkEl  = item.querySelector('.tx-spk');
+    if (!bodyEl) return;
+    const text = bodyEl.textContent.trim();
+    const time = timeEl ? [...timeEl.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim() : '';
+    const spk  = spkEl ? spkEl.textContent.trim() : '';
+    const label = [spk, time].filter(Boolean).join(' ');
+    inserts.push(`> [${label}] ${text}`);
+  });
+  const block = '\n' + inserts.join('\n') + '\n';
+  const cursor = notes.selectionStart;
+  notes.value = notes.value.slice(0, cursor) + block + notes.value.slice(cursor);
+  notes.selectionStart = notes.selectionEnd = cursor + block.length;
+  notes.focus();
+  // Switch to notes tab
+  switchTab('notes', document.querySelector('.center-tabs button'));
+  toast(`已将 ${items.length} 段插入笔记`);
+  txClearSelect();
+}
+
 function insertTxToNotes(btn) {
   const item = btn.closest('.tx-item');
   const bodyEl = item?.querySelector('.tx-body');
