@@ -145,11 +145,19 @@ select{cursor:pointer}
 
 /* Right panel: transcript */
 .tx-feed{flex:1;overflow-y:auto;max-height:260px;display:flex;flex-direction:column;gap:5px}
-.tx-item{padding:7px 10px;border-radius:var(--r-sm);font-size:13px;line-height:1.5}
+.tx-item{padding:7px 10px;border-radius:var(--r-sm);font-size:13px;line-height:1.5;position:relative;cursor:pointer;transition:background .15s}
 .tx-item.final{background:var(--bg2);border-left:3px solid var(--accent)}
+.tx-item.final:hover{background:var(--accent-dim);border-left-color:var(--accent)}
+.tx-item .tx-insert-btn{display:none;position:absolute;right:6px;top:50%;transform:translateY(-50%);padding:2px 8px;background:var(--accent);color:#fff;border-radius:99px;font-size:11px;font-weight:600;white-space:nowrap;cursor:pointer;z-index:2}
+.tx-item:hover .tx-insert-btn{display:block}
+.tx-item.selected-for-note{background:rgba(99,102,241,.18);border-left-color:var(--accent)}
 .tx-live{font-size:13px;color:var(--text3);font-style:italic;padding:6px 10px;animation:fadeUp .3s}
 .tx-time{font-size:11px;color:var(--text3);margin-bottom:2px}
 .auto-badge{font-size:11px;padding:1px 7px;border-radius:99px;background:rgba(245,158,11,.12);color:var(--warn);font-weight:600;margin-left:6px}
+/* Drag-over for whole room panel */
+.room-drop-overlay{display:none;position:fixed;inset:0;z-index:500;background:rgba(99,102,241,.08);border:3px dashed var(--accent);border-radius:var(--r-lg);pointer-events:none;align-items:center;justify-content:center;flex-direction:column;gap:10px}
+.room-drop-overlay.active{display:flex}
+.room-drop-overlay .drop-hint{font-size:22px;font-weight:800;color:var(--accent);background:var(--bg1);padding:16px 28px;border-radius:var(--r-lg);box-shadow:var(--shadow-lg)}
 
 /* Action items */
 .actions-wrap{max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
@@ -663,6 +671,13 @@ select{cursor:pointer}
 </div>
 </div>
 
+<!-- ══ ROOM-WIDE DRAG OVERLAY ══ -->
+<div class="room-drop-overlay" id="room-drop-overlay">
+  <div style="font-size:48px">🎵</div>
+  <div class="drop-hint">松开鼠标上传录音文件</div>
+  <div style="font-size:13px;color:var(--text2)">支持 MP3 · WAV · M4A · OGG · WebM</div>
+</div>
+
 <!-- ══ BOTTOM NAV ══ -->
 <nav class="bnav">
   <div class="bnav-inner">
@@ -896,6 +911,12 @@ function startMeeting() {
 
   checkSpeech();
   nav('room');
+  // Auto-start mic after a short delay (allow DOM to settle)
+  if (SR) {
+    setTimeout(() => {
+      if (S.meeting && !S.micActive) startMic();
+    }, 600);
+  }
 }
 
 function endMeeting() {
@@ -1034,7 +1055,9 @@ function addTx(text, final) {
   const now = new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
   const el = document.createElement('div');
   el.className = 'tx-item final';
-  el.innerHTML = `<div class="tx-time">${now}</div>${text}`;
+  // Escape text to prevent XSS
+  const safeText = text.replace(/</g,'&lt;').replace(/>/g,'&gt;');
+  el.innerHTML = `<div class="tx-time">${now}</div><span class="tx-body">${safeText}</span><span class="tx-insert-btn" onclick="insertTxToNotes(this)">插入笔记 ↗</span>`;
   feed.insertBefore(el, feed.firstChild);
   while (feed.children.length > 60) feed.removeChild(feed.lastChild);
 }
@@ -1633,14 +1656,83 @@ function addTxToFeed(text, feedId, liveId) {
   if (!feed) return;
   if (live) live.textContent = '';
   const now = new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const safeText = text.replace(/</g,'&lt;').replace(/>/g,'&gt;');
   const el = document.createElement('div');
   el.className = 'tx-item final';
-  el.innerHTML = `<div class="tx-time">${now}</div>${text}`;
+  el.innerHTML = `<div class="tx-time">${now}</div><span class="tx-body">${safeText}</span><span class="tx-insert-btn" onclick="insertTxToNotes(this)">插入笔记 ↗</span>`;
   feed.insertBefore(el, live ? live.nextSibling : feed.firstChild);
   while (feed.children.length > 60) feed.removeChild(feed.lastChild);
   // Also mirror to live transcript feed
   addTx(text, true);
 }
+
+// ══════════════════════════════════════════════════
+//  TRANSCRIPT → NOTES (click-to-insert)
+// ══════════════════════════════════════════════════
+function insertTxToNotes(btn) {
+  const item = btn.closest('.tx-item');
+  const bodyEl = item?.querySelector('.tx-body');
+  const timeEl = item?.querySelector('.tx-time');
+  if (!bodyEl) return;
+  const text = bodyEl.textContent.trim();
+  const time = timeEl?.textContent || '';
+  const notes = document.getElementById('room-notes');
+  const cursor = notes.selectionStart;
+  const before = notes.value.substring(0, cursor);
+  const after  = notes.value.substring(cursor);
+  const insert = `\n> [${time}] ${text}\n`;
+  notes.value = before + insert + after;
+  notes.selectionStart = notes.selectionEnd = cursor + insert.length;
+  notes.focus();
+  // Visual feedback
+  item.classList.add('selected-for-note');
+  btn.textContent = '已插入 ✓';
+  btn.style.background = 'var(--success)';
+  setTimeout(() => {
+    item.classList.remove('selected-for-note');
+    btn.textContent = '插入笔记 ↗';
+    btn.style.background = '';
+  }, 1800);
+  toast('转录内容已插入笔记');
+}
+
+// ══════════════════════════════════════════════════
+//  GLOBAL DRAG-AND-DROP (anywhere in room section)
+// ══════════════════════════════════════════════════
+let dragEnterCount = 0;
+document.addEventListener('dragenter', (e) => {
+  if (S.section !== 'room') return;
+  const hasAudio = [...(e.dataTransfer?.items||[])].some(i => i.type.startsWith('audio/') || i.type === '');
+  if (!hasAudio && e.dataTransfer?.items?.length > 0) return;
+  dragEnterCount++;
+  document.getElementById('room-drop-overlay').classList.add('active');
+});
+document.addEventListener('dragleave', (e) => {
+  if (S.section !== 'room') return;
+  dragEnterCount = Math.max(0, dragEnterCount - 1);
+  if (dragEnterCount === 0) document.getElementById('room-drop-overlay').classList.remove('active');
+});
+document.addEventListener('dragover', (e) => {
+  if (S.section !== 'room') return;
+  e.preventDefault();
+});
+document.addEventListener('drop', (e) => {
+  if (S.section !== 'room') return;
+  e.preventDefault();
+  dragEnterCount = 0;
+  document.getElementById('room-drop-overlay').classList.remove('active');
+  const file = e.dataTransfer?.files[0];
+  if (!file) return;
+  if (!file.type.startsWith('audio/')) {
+    toast('请拖入音频文件（MP3/WAV/M4A 等）');
+    return;
+  }
+  // Switch to upload tab and load file
+  const uploadBtn = document.getElementById('txmode-upload');
+  switchTxMode('upload', uploadBtn);
+  handleAudioFile(file);
+  toast('🎵 录音文件已加载，点击"播放并转写"开始');
+});
 
 // ══════════════════════════════════════════════════
 //  KEYBOARD
