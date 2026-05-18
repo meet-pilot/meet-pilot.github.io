@@ -646,6 +646,26 @@ select{cursor:pointer}
           <span class="tslider"></span>
         </label>
       </div>
+      <!-- Cloud speech API -->
+      <div class="sr" style="flex-direction:column;align-items:flex-start;gap:10px">
+        <div class="sr-info" style="width:100%">
+          <div class="sr-label">☁️ 录音文件转写 API Key</div>
+          <div class="sr-desc">上传本地录音时使用云端 API 转写，速度快且无需下载模型。兼容 OpenAI Whisper API 格式（OpenAI / Groq / 其他兼容服务均可）</div>
+        </div>
+        <div style="width:100%;display:flex;flex-direction:column;gap:8px">
+          <div>
+            <div class="mlabel">API Key</div>
+            <input type="password" id="speech-api-key-input" placeholder="sk-... 或 gsk_..." style="font-size:13px" oninput="saveSpeechApiKey()">
+          </div>
+          <div>
+            <div class="mlabel">API 端点（默认 OpenAI，可替换为 Groq 等）</div>
+            <input type="text" id="speech-api-endpoint-input" placeholder="https://api.openai.com/v1/audio/transcriptions" style="font-size:13px" oninput="saveSpeechApiEndpoint()">
+          </div>
+          <div id="speech-api-status" style="font-size:12px;color:var(--text3)">
+            未配置 · 未配置时将使用本地 Whisper 模型（首次加载约 74MB）
+          </div>
+        </div>
+      </div>
     </div>
 
     <!-- 编码模块 -->
@@ -909,6 +929,46 @@ function loadSettingsUI() {
   if (ls) ls.value = S.settings.lang || 'zh-CN';
   const aa = document.getElementById('auto-action-toggle');
   if (aa) aa.checked = S.settings.autoAction !== false;
+  // Load speech API config
+  const savedKey = localStorage.getItem('mp3_speech_api_key');
+  const savedEndpoint = localStorage.getItem('mp3_speech_api_endpoint');
+  const keyInput = document.getElementById('speech-api-key-input');
+  const epInput = document.getElementById('speech-api-endpoint-input');
+  if (keyInput && savedKey) keyInput.value = '••••••••••••••••••••';
+  if (epInput && savedEndpoint) epInput.value = savedEndpoint;
+  updateSpeechApiStatus();
+}
+
+function saveSpeechApiKey() {
+  const v = document.getElementById('speech-api-key-input')?.value.trim();
+  if (v && !v.startsWith('•')) {
+    localStorage.setItem('mp3_speech_api_key', v);
+    document.getElementById('speech-api-key-input').value = '••••••••••••••••••••';
+  } else if (!v) {
+    localStorage.removeItem('mp3_speech_api_key');
+  }
+  updateSpeechApiStatus();
+}
+
+function saveSpeechApiEndpoint() {
+  const v = document.getElementById('speech-api-endpoint-input')?.value.trim();
+  if (v) localStorage.setItem('mp3_speech_api_endpoint', v);
+  else localStorage.removeItem('mp3_speech_api_endpoint');
+}
+
+function updateSpeechApiStatus() {
+  const el = document.getElementById('speech-api-status');
+  if (!el) return;
+  const hasKey = !!localStorage.getItem('mp3_speech_api_key');
+  const endpoint = localStorage.getItem('mp3_speech_api_endpoint') || 'https://api.openai.com/v1/audio/transcriptions';
+  if (hasKey) {
+    const host = new URL(endpoint).hostname;
+    el.style.color = 'var(--success)';
+    el.textContent = `✅ 已配置 · 使用 ${host}`;
+  } else {
+    el.style.color = 'var(--text3)';
+    el.textContent = '未配置 · 将使用本地 Whisper 模型（首次加载约 74MB）';
+  }
 }
 
 // ══════════════════════════════════════════════════
@@ -1647,6 +1707,73 @@ function handleAudioFile(file) {
 }
 
 async function startWhisperTranscribe(file) {
+  const apiKey = localStorage.getItem('mp3_speech_api_key');
+  if (apiKey) {
+    await startCloudTranscribe(file, apiKey);
+  } else {
+    await startLocalWhisper(file);
+  }
+}
+
+async function startCloudTranscribe(file, apiKey) {
+  const setStatus = (msg) => {
+    const el = document.getElementById('whisper-status');
+    if (el) el.textContent = msg;
+  };
+  document.getElementById('retranscribe-btn').style.display = 'none';
+  document.getElementById('whisper-progress-wrap').style.display = 'none';
+  const liveEl = document.getElementById('tx-upload-live');
+  if (liveEl) liveEl.textContent = '';
+
+  const endpoint = localStorage.getItem('mp3_speech_api_endpoint')
+    || 'https://api.openai.com/v1/audio/transcriptions';
+  const langMap = { 'zh-CN': 'zh', 'zh-TW': 'zh', 'en-US': 'en', 'ja-JP': 'ja' };
+
+  try {
+    setStatus('☁️ 上传音频中，请稍候...');
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+    formData.append('model', 'whisper-1');
+    formData.append('language', langMap[S.settings.lang] || 'zh');
+    formData.append('response_format', 'verbose_json');
+    formData.append('timestamp_granularities[]', 'segment');
+
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + apiKey },
+      body: formData
+    });
+
+    if (!res.ok) {
+      const errData = await res.json().catch(() => ({}));
+      throw new Error(errData.error?.message || `HTTP ${res.status}`);
+    }
+
+    setStatus('🔍 解析结果...');
+    const result = await res.json();
+    const segments = result.segments?.length ? result.segments : (result.text ? [{ text: result.text }] : []);
+
+    if (segments.length > 0) {
+      segments.forEach(seg => {
+        const text = seg.text.trim();
+        if (text.length < 2) return;
+        addTxToFeed(text, 'tx-upload-feed', null);
+        if (S.meeting) S.meeting.transcript.push({ time: Date.now(), text });
+        if (S.settings.autoAction !== false) autoDetect(text);
+      });
+      setStatus(`✅ 云端转写完成，共 ${segments.length} 段`);
+      if (S.meeting) saveData();
+    } else {
+      setStatus('⚠️ 未识别到内容，请检查音频文件是否含有语音');
+    }
+  } catch (err) {
+    console.error('Cloud transcribe error:', err);
+    setStatus('❌ 转写失败：' + err.message);
+  }
+  document.getElementById('retranscribe-btn').style.display = '';
+}
+
+async function startLocalWhisper(file) {
   const setStatus = (msg) => {
     const el = document.getElementById('whisper-status');
     if (el) el.textContent = msg;
@@ -1665,7 +1792,7 @@ async function startWhisperTranscribe(file) {
 
   try {
     if (!window._whisperPipe) {
-      setStatus('⏳ 首次使用，正在加载语音识别模型（约 74MB，加载后自动缓存）...');
+      setStatus('⏳ 首次使用，正在加载本地模型（约 74MB，加载后自动缓存）...\n💡 建议在设置中配置云端 API Key，速度更快');
       setProgress(0, '准备下载...');
       const { pipeline, env } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2');
       env.allowLocalModels = false;
@@ -1694,7 +1821,7 @@ async function startWhisperTranscribe(file) {
     audioCtx.close();
     const audio = decoded.getChannelData(0);
 
-    setStatus('🤖 AI 转写中，请稍候...');
+    setStatus('🤖 本地 AI 转写中，请稍候...');
     const langMap = { 'zh-CN': 'chinese', 'zh-TW': 'chinese', 'en-US': 'english', 'ja-JP': 'japanese' };
     const result = await window._whisperPipe(audio, {
       language: langMap[S.settings.lang] || 'chinese',
@@ -1713,7 +1840,6 @@ async function startWhisperTranscribe(file) {
         if (S.settings.autoAction !== false) autoDetect(text);
       });
       setStatus(`✅ 转写完成，共识别 ${chunks.length} 段文字`);
-      // Auto-save transcript to localStorage so refresh won't lose data
       if (S.meeting) saveData();
     } else {
       setStatus('⚠️ 未识别到内容，请检查音频文件是否含有语音');
@@ -1723,6 +1849,7 @@ async function startWhisperTranscribe(file) {
     setStatus('❌ 转写失败：' + err.message);
   }
   document.getElementById('retranscribe-btn').style.display = '';
+}
 }
 
 function retranscribe() {
