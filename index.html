@@ -117,7 +117,7 @@ select{cursor:pointer}
 .room-header-left .room-meta{display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap}
 .room-header-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 
-.room-grid{display:grid;grid-template-columns:190px 1fr 1fr;gap:14px;flex:1;min-height:0;align-items:stretch;overflow:hidden}
+.room-grid{display:grid;grid-template-columns:190px 1fr 260px;gap:14px;flex:1;min-height:0;align-items:stretch;overflow:hidden}
 
 /* Side panels */
 .rpanel{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px;overflow:hidden;min-height:0}
@@ -154,41 +154,25 @@ select{cursor:pointer}
 .code-ta{display:block;width:100%;padding:10px 12px 10px 44px;min-height:300px;background:transparent;border:none;outline:none;font-family:'JetBrains Mono','Fira Code',monospace;font-size:13px;color:#c9d1d9;resize:vertical;line-height:1.6;tab-size:2}
 .code-tbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 
-/* Right panel: transcript */
-.tx-feed{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:3px;min-height:0}
-.tx-item{padding:6px 10px;border-radius:var(--r-sm);font-size:13px;line-height:1.5;transition:background .15s;position:relative}
-.tx-item.final{background:var(--bg2);border-left:3px solid transparent}
-.tx-item.final:hover{background:var(--accent-dim);border-left-color:var(--accent)}
-.tx-item-row{display:flex;align-items:center;gap:6px;margin-bottom:2px}
-.tx-time{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px;flex-shrink:0;flex:1}
-.tx-spk{font-size:11px;font-weight:700;padding:1px 7px;border-radius:99px;letter-spacing:.02em}
-.tx-spk-0{background:rgba(99,102,241,.13);color:#6366f1}
-.tx-spk-1{background:rgba(16,185,129,.13);color:#10b981}
-.tx-spk-2{background:rgba(245,158,11,.13);color:#f59e0b}
-.tx-spk-3{background:rgba(239,68,68,.13);color:#ef4444}
-.tx-spk-4{background:rgba(139,92,246,.13);color:#8b5cf6}
-.tx-body{font-size:13px;line-height:1.6;word-break:break-all;user-select:text;cursor:text;color:var(--text0)}
-/* Insert button: hidden by default, appears on item hover */
-.tx-insert-btn{opacity:0;pointer-events:none;flex-shrink:0;padding:3px 9px;background:var(--accent);color:#fff;border-radius:var(--r-sm);font-size:11px;font-weight:700;white-space:nowrap;cursor:pointer;border:none;transition:opacity .15s;box-shadow:0 1px 4px rgba(99,102,241,.3)}
-.tx-item:hover .tx-insert-btn{opacity:1;pointer-events:auto}
-.tx-item.selected-for-note{background:rgba(99,102,241,.18);border-left-color:var(--accent)}
-.tx-item.tx-selected{background:rgba(99,102,241,.15)!important;border-left-color:var(--accent)!important}
-.tx-item.tx-selected .tx-check{accent-color:var(--accent)}
-.tx-live{font-size:13px;color:var(--text3);font-style:italic;padding:6px 10px;animation:fadeUp .3s}
-.auto-badge{font-size:11px;padding:1px 7px;border-radius:99px;background:rgba(245,158,11,.12);color:var(--warn);font-weight:600;margin-left:6px}
-/* Drag-over for whole room panel */
+/* Right panel: actions only */
 .room-drop-overlay{display:none;position:fixed;inset:0;z-index:500;background:rgba(99,102,241,.12);border:4px dashed var(--accent);pointer-events:none;align-items:center;justify-content:center;flex-direction:column;gap:12px}
 .room-drop-overlay.active{display:flex}
 .room-drop-overlay .drop-hint{font-size:20px;font-weight:800;color:var(--accent);background:var(--bg1);padding:18px 32px;border-radius:var(--r-lg);box-shadow:var(--shadow-lg);text-align:center}
+/* Upload area inside right panel */
+.upload-compact{display:flex;flex-direction:column;gap:8px;flex-shrink:0}
+.upload-dropzone-sm{border:2px dashed var(--border);border-radius:var(--r-sm);padding:12px;text-align:center;cursor:pointer;transition:all .18s;background:var(--bg2)}
+.upload-dropzone-sm:hover,.upload-dropzone-sm.drag-over{border-color:var(--accent);background:var(--accent-dim)}
+.upload-status{font-size:12px;color:var(--text2);line-height:1.5;min-height:18px}
+.upload-progress-wrap{display:none;margin-top:4px}
 
 /* Action items */
-.actions-wrap{flex:1;min-height:0;max-height:180px;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
+.actions-wrap{flex:1;min-height:0;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
 .ac-item{display:flex;gap:7px;align-items:flex-start;padding:6px 8px;border-radius:var(--r-sm);background:var(--bg2);font-size:12.5px;color:var(--text1);animation:fadeUp .3s}
 .ac-item input[type=checkbox]{margin-top:2px;accent-color:var(--accent);cursor:pointer;flex-shrink:0}
 .ac-item .ac-text{flex:1}
 .ac-item .ac-del{color:var(--text3);font-size:14px;cursor:pointer;flex-shrink:0;line-height:1;padding:1px 3px;border-radius:3px;transition:color .15s}
 .ac-item .ac-del:hover{color:var(--danger)}
-.ac-add{display:flex;gap:6px;margin-top:4px}
+.ac-add{display:flex;gap:6px;margin-top:4px;flex-shrink:0}
 .ac-add input{font-size:13px;padding:6px 10px}
 .ac-add button{flex-shrink:0;padding:6px 12px;background:var(--accent);color:#fff;border-radius:var(--r-sm);font-size:13px;font-weight:600}
 
@@ -246,18 +230,7 @@ select{cursor:pointer}
 .chip-blue{background:var(--accent-dim);color:var(--accent)}
 
 /* Right panel transcript area fills remaining space */
-#tx-live-panel{display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden}
-#tx-upload-panel{display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden}
-#tx-upload-panel .audio-dropzone{flex-shrink:0}
-#tx-upload-panel #audio-player-wrap{flex-shrink:0}
-/* Batch insert toolbar */
-.tx-batch-bar{flex-shrink:0;display:none;align-items:center;gap:8px;padding:5px 8px;background:var(--accent-dim);border-radius:var(--r-sm);margin-bottom:6px;border:1px solid rgba(99,102,241,.25)}
-.tx-batch-bar.show{display:flex}
-.tx-batch-count{font-size:12px;font-weight:700;color:var(--accent);flex:1}
-.tx-batch-insert{padding:4px 12px;background:var(--accent);color:#fff;border-radius:var(--r-sm);font-size:12px;font-weight:700;border:none;cursor:pointer;white-space:nowrap}
-.tx-batch-clear{padding:4px 8px;background:transparent;color:var(--text2);border-radius:var(--r-sm);font-size:12px;border:none;cursor:pointer}
-/* Checkbox on each tx-item */
-.tx-check{width:15px;height:15px;accent-color:var(--accent);cursor:pointer;flex-shrink:0;margin-top:1px}
+/* Right panel upload compact styles already defined above */
 .sync-dot{width:8px;height:8px;border-radius:50%;background:var(--text3);flex-shrink:0}
 .sync-dot.synced{background:var(--success)}
 .sync-dot.syncing{background:var(--warn);animation:blink 1s infinite}
@@ -458,69 +431,39 @@ select{cursor:pointer}
       </div>
     </div>
 
-    <!-- Right: transcript + actions -->
-    <div class="rpanel room-right-panel" style="overflow:hidden">
-      <!-- Transcript mode tabs -->
-      <div style="display:flex;gap:2px;margin-bottom:4px;flex-shrink:0">
-        <button class="txmode-btn active" id="txmode-live" onclick="switchTxMode('live',this)" style="padding:4px 10px;border-radius:var(--r-sm);font-size:12px;font-weight:600;color:var(--text2);transition:all .18s">🎙 实时录音</button>
-        <button class="txmode-btn" id="txmode-upload" onclick="switchTxMode('upload',this)" style="padding:4px 10px;border-radius:var(--r-sm);font-size:12px;font-weight:600;color:var(--text2);transition:all .18s">📁 上传录音</button>
-      </div>
-
-      <!-- Batch insert bar (shared for both panels) -->
-      <div class="tx-batch-bar" id="tx-batch-bar">
-        <span class="tx-batch-count" id="tx-batch-count">已选 0 段</span>
-        <button class="tx-batch-clear" onclick="txClearSelect()">✕ 取消</button>
-        <button class="tx-batch-insert" onclick="txBatchInsert()">批量插入笔记 ↗</button>
-      </div>
-
-      <!-- Live mic panel -->
-      <div id="tx-live-panel" style="display:flex;flex-direction:column;flex:1;min-height:0;overflow:hidden">
-        <div id="speech-warn" style="flex-shrink:0"></div>
-        <div class="tx-feed" id="tx-feed" style="flex:1;min-height:120px">
-          <div class="tx-live" id="tx-live">🎙 点击下方按钮开始录音...</div>
-        </div>
-      </div>
-
-      <!-- Audio upload panel -->
-      <div id="tx-upload-panel" style="display:none;flex-direction:column;flex:1;min-height:0;overflow:hidden">
-        <div class="audio-dropzone" id="audio-dropzone"
+    <!-- Right: upload + actions -->
+    <div class="rpanel room-right-panel">
+      <!-- Compact upload area -->
+      <div class="rpanel-title" style="flex-shrink:0">上传录音</div>
+      <div class="upload-compact" id="upload-compact">
+        <!-- Dropzone -->
+        <div class="upload-dropzone-sm" id="audio-dropzone"
           onclick="document.getElementById('audio-file-input').click()"
           ondragover="event.preventDefault();this.classList.add('drag-over')"
           ondragleave="this.classList.remove('drag-over')"
           ondrop="handleAudioDrop(event)">
-          <div style="font-size:32px;margin-bottom:8px">🎵</div>
-          <div style="font-size:13px;font-weight:700;color:var(--text0)">点击选择文件</div>
-          <div style="font-size:12px;color:var(--accent);margin-top:4px;font-weight:600">或将录音文件拖拽至此处</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:4px">MP3 · WAV · M4A · OGG · WebM</div>
+          <div style="font-size:20px;margin-bottom:4px">🎵</div>
+          <div style="font-size:12px;font-weight:700;color:var(--text0)">点击或拖入录音文件</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:2px">MP3 · WAV · M4A · OGG</div>
         </div>
         <input type="file" id="audio-file-input" accept="audio/*" style="display:none" onchange="handleAudioFile(this.files[0])">
-
-        <!-- Audio player (shown after upload) -->
-        <div id="audio-player-wrap" style="display:none;margin-top:8px">
-          <div style="font-size:12px;font-weight:600;color:var(--text0);margin-bottom:6px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis" id="audio-filename">文件名</div>
-          <audio id="audio-player" controls style="width:100%;border-radius:var(--r-sm);height:36px" preload="metadata"></audio>
-
-          <!-- Whisper status + progress -->
-          <div id="whisper-status-wrap" style="margin-top:10px">
-            <div id="whisper-status" style="font-size:12.5px;color:var(--text2);line-height:1.5"></div>
-            <div id="whisper-progress-wrap" style="display:none;margin-top:6px">
-              <div style="background:var(--border);border-radius:99px;height:5px;overflow:hidden">
-                <div id="whisper-bar" style="height:100%;background:linear-gradient(90deg,var(--accent),#a78bfa);width:0%;transition:width .4s;border-radius:99px"></div>
-              </div>
-              <div id="whisper-progress-label" style="font-size:11px;color:var(--text3);margin-top:3px"></div>
+        <!-- After upload: player + status -->
+        <div id="audio-player-wrap" style="display:none">
+          <div style="font-size:11px;font-weight:600;color:var(--text0);margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="audio-filename"></div>
+          <audio id="audio-player" controls style="width:100%;height:32px;border-radius:var(--r-sm)" preload="metadata"></audio>
+          <div class="upload-status" id="whisper-status"></div>
+          <div class="upload-progress-wrap" id="whisper-progress-wrap">
+            <div style="background:var(--border);border-radius:99px;height:4px;overflow:hidden;margin-top:4px">
+              <div id="whisper-bar" style="height:100%;background:linear-gradient(90deg,var(--accent),#a78bfa);width:0%;transition:width .4s;border-radius:99px"></div>
             </div>
+            <div id="whisper-progress-label" style="font-size:10px;color:var(--text3);margin-top:2px"></div>
           </div>
-
-          <div style="display:flex;gap:6px;margin-top:10px;flex-wrap:wrap">
-            <button class="btn btn-secondary btn-sm" id="retranscribe-btn" style="display:none" onclick="retranscribe()">🔄 重新转写</button>
-            <button class="btn btn-secondary btn-sm" onclick="resetAudioUpload()">🗑 重新上传</button>
+          <div style="display:flex;gap:5px;margin-top:6px;flex-wrap:wrap">
+            <button class="btn btn-secondary btn-sm" id="retranscribe-btn" style="display:none;font-size:11px;padding:4px 8px" onclick="retranscribe()">🔄 重新转写</button>
+            <button class="btn btn-secondary btn-sm" style="font-size:11px;padding:4px 8px" onclick="resetAudioUpload()">🗑 重新上传</button>
           </div>
         </div>
-
-        <!-- Upload transcript feed -->
-        <div class="tx-feed" id="tx-upload-feed" style="flex:1;min-height:120px;margin-top:8px;display:none">
-          <div class="tx-live" id="tx-upload-live"></div>
-        </div>
+        <div id="speech-warn"></div>
       </div>
 
       <div class="divider" style="flex-shrink:0"></div>
@@ -529,7 +472,7 @@ select{cursor:pointer}
         <span id="auto-detected-count" style="font-size:11px;color:var(--warn);display:none">🤖 自动识别</span>
       </div>
       <div class="actions-wrap" id="actions-wrap"></div>
-      <div class="ac-add" style="flex-shrink:0">
+      <div class="ac-add">
         <input type="text" id="ac-input" placeholder="手动添加待办..." onkeydown="if(event.key==='Enter')addAction()">
         <button onclick="addAction()">+</button>
       </div>
@@ -1243,19 +1186,16 @@ function updateMicUI(on) {
   }
 }
 
-function addTx(text, final) {
-  const feed = document.getElementById('tx-feed');
-  const live = document.getElementById('tx-live');
-  if (live && final) live.textContent = '';
-
-  const now = new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  const el = document.createElement('div');
-  el.className = 'tx-item final';
-  // Escape text to prevent XSS
-  const safeText = text.replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  el.innerHTML = `<div class="tx-item-row"><input type="checkbox" class="tx-check" onchange="txToggleSelect(this)"><div class="tx-time">${now}</div><span class="tx-insert-btn" onclick="insertTxToNotes(this)">插入笔记 ↗</span></div><span class="tx-body" onclick="txBodyClick(event,this)">${safeText}</span>`;
-  feed.insertBefore(el, feed.firstChild);
-  while (feed.children.length > 60) feed.removeChild(feed.lastChild);
+// Write live mic transcript line directly into notes
+function addTx(text, final, spkId) {
+  if (!final || !text?.trim()) return;
+  const notes = document.getElementById('room-notes');
+  if (!notes) return;
+  const spkLabel = spkId != null ? `[说话人${parseInt(spkId)+1}] ` : '';
+  notes.value += (notes.value && !notes.value.endsWith('\n') ? '\n' : '') + spkLabel + text.trim() + '\n';
+  notes.scrollTop = notes.scrollHeight;
+  // Save to meeting transcript in order
+  if (S.meeting) S.meeting.transcript.push({ time: Date.now(), text: text.trim(), spkId: spkId ?? null });
 }
 
 // ══════════════════════════════════════════════════
@@ -1833,21 +1773,7 @@ function toast(msg) {
 // ══════════════════════════════════════════════════
 let audioObjectURL = null;
 
-function switchTxMode(mode, btn) {
-  document.querySelectorAll('.txmode-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  const livePanel   = document.getElementById('tx-live-panel');
-  const uploadPanel = document.getElementById('tx-upload-panel');
-  if (mode === 'live') {
-    livePanel.style.display   = 'flex';
-    uploadPanel.style.display = 'none';
-    const w = document.getElementById('speech-warn');
-    livePanel.insertBefore(w, livePanel.firstChild);
-  } else {
-    livePanel.style.display   = 'none';
-    uploadPanel.style.display = 'flex';
-  }
-}
+function switchTxMode() { /* transcript panel removed — no-op */ }
 
 function handleAudioDrop(e) {
   e.preventDefault();
@@ -1870,8 +1796,15 @@ function handleAudioFile(file) {
   document.getElementById('audio-filename').textContent = file.name;
   document.getElementById('audio-dropzone').style.display = 'none';
   document.getElementById('audio-player-wrap').style.display = '';
-  document.getElementById('tx-upload-feed').style.display = 'flex';
   document.getElementById('retranscribe-btn').style.display = 'none';
+  // Write file header into notes
+  const notes = document.getElementById('room-notes');
+  if (notes) {
+    const now = new Date().toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+    if (notes.value && !notes.value.endsWith('\n')) notes.value += '\n';
+    notes.value += `\n--- 📁 ${file.name} (${now}) ---\n`;
+    notes.scrollTop = notes.scrollHeight;
+  }
   // Auto-start Whisper transcription immediately
   startWhisperTranscribe(file);
 }
@@ -2048,39 +1981,19 @@ function retranscribe() {
 }
 
 function resetAudioUpload() {
-  stopMic();
   const player = document.getElementById('audio-player');
-  player.pause();
-  player.src = '';
+  player.pause(); player.src = '';
   if (audioObjectURL) { URL.revokeObjectURL(audioObjectURL); audioObjectURL = null; }
   document.getElementById('audio-file-input').value = '';
   document.getElementById('audio-dropzone').style.display = '';
   document.getElementById('audio-player-wrap').style.display = 'none';
-  document.getElementById('tx-upload-feed').style.display = 'none';
+  document.getElementById('whisper-status').textContent = '';
 }
 
 
+// Stub kept for call-sites; routes to addTx which writes to notes
 function addTxToFeed(text, feedId, liveId, spkId) {
-  const feed = document.getElementById(feedId);
-  const live = liveId ? document.getElementById(liveId) : null;
-  if (!feed) return;
-  if (live) live.textContent = '';
-  const now = new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-  const safeText = text.replace(/</g,'&lt;').replace(/>/g,'&gt;');
-  // Speaker: use API-provided spk_id, or auto-assign index by tracking unique speakers
-  let spkIdx = null;
-  if (spkId != null) {
-    spkIdx = parseInt(spkId) % 5;
-  }
-  const spkHtml = spkIdx != null
-    ? `<span class="tx-spk tx-spk-${spkIdx}">说话人${spkIdx+1}</span>`
-    : '';
-  const el = document.createElement('div');
-  el.className = 'tx-item final';
-  el.innerHTML = `<div class="tx-item-row"><input type="checkbox" class="tx-check" onchange="txToggleSelect(this)"><div class="tx-time">${spkHtml}${now}</div><span class="tx-insert-btn" onclick="insertTxToNotes(this)">插入笔记 ↗</span></div><span class="tx-body" onclick="txBodyClick(event,this)">${safeText}</span>`;
-  feed.insertBefore(el, live ? live.nextSibling : feed.firstChild);
-  while (feed.children.length > 60) feed.removeChild(feed.lastChild);
-  addTx(text, true);
+  addTx(text, true, spkId ?? null);
 }
 
 // ══════════════════════════════════════════════════
@@ -2135,16 +2048,14 @@ function notesInsertTime() {
 }
 
 function smartNotes() {
-  // Primary: read from in-memory meeting transcript
+  // Read from in-memory meeting transcript (always chronological)
   let tx = (S.meeting?.transcript || []).filter(t => t.text?.trim().length > 1);
 
-  // Fallback: scrape from upload feed DOM (in case transcript wasn't saved to S.meeting)
+  // Fallback: read notes textarea directly and split by lines
   if (!tx.length) {
-    const feedItems = document.querySelectorAll('#tx-upload-feed .tx-body, #tx-feed .tx-body');
-    if (feedItems.length) {
-      tx = [...feedItems].map(el => ({ text: el.textContent.trim(), spkId: null }))
-                         .filter(t => t.text.length > 1);
-    }
+    const ta = document.getElementById('room-notes');
+    const lines = (ta?.value || '').split('\n').map(l => l.trim()).filter(l => l.length > 3 && !l.startsWith('---') && !l.startsWith('#'));
+    if (lines.length) tx = lines.map(text => ({ text, spkId: null }));
   }
 
   if (!tx.length) {
@@ -2222,8 +2133,10 @@ function smartNotes() {
 
   const ta = document.getElementById('room-notes');
   notesSnapshot();
-  ta.value = note;
-  ta.scrollTop = 0;
+  // Append smart summary AFTER existing notes, don't overwrite
+  const sep = '\n\n--- ✨ 智能整理 ---\n';
+  ta.value = ta.value.trimEnd() + sep + note.trimStart();
+  ta.scrollTop = ta.scrollHeight;
   ta.focus();
 
   btn.disabled = false;
@@ -2302,18 +2215,15 @@ function txBatchInsert() {
 }
 
 // Auto-append transcription result to notes after upload transcription
+// Called after upload transcription finishes — adds a trailing separator & switches to notes tab
 function appendTranscriptToNotes(texts) {
-  if (!texts || !texts.length) return;
   const notes = document.getElementById('room-notes');
   if (!notes) return;
-  const now = new Date().toLocaleString('zh-CN', {month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
-  const filename = document.getElementById('audio-filename')?.textContent?.trim() || '录音文件';
-  const header = `\n\n--- 📁 ${filename} (${now}) ---\n`;
-  const body = texts.map(t => t.trim()).filter(Boolean).join('\n');
-  notes.value = (notes.value.trimEnd()) + header + body + '\n';
-  // Switch to notes tab so user sees the result
+  // Add end-of-file marker (content was already streamed in by addTx per-segment)
+  if (!notes.value.endsWith('\n')) notes.value += '\n';
+  toast(`✅ 转写完成，共 ${texts.length} 段，已写入笔记`);
   switchTab('notes', document.querySelector('.center-tabs button'));
-  toast(`✅ 转写内容已写入笔记（${texts.length} 段）`);
+  notes.scrollTop = notes.scrollHeight;
 }
 
 function insertTxToNotes(btn) {
