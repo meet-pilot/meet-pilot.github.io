@@ -146,19 +146,20 @@ select{cursor:pointer}
 
 /* Right panel: transcript */
 .tx-feed{flex:1;overflow-y:auto;max-height:260px;display:flex;flex-direction:column;gap:5px}
-.tx-item{padding:7px 10px;border-radius:var(--r-sm);font-size:13px;line-height:1.5;position:relative;cursor:pointer;transition:background .15s}
+.tx-item{padding:7px 10px 7px 10px;border-radius:var(--r-sm);font-size:13px;line-height:1.5;position:relative;cursor:pointer;transition:background .15s;display:grid;grid-template-columns:1fr auto;grid-template-rows:auto auto;gap:2px 6px}
 .tx-item.final{background:var(--bg2);border-left:3px solid var(--accent)}
-.tx-item.final:hover{background:var(--accent-dim);border-left-color:var(--accent)}
-.tx-item .tx-insert-btn{display:none;position:absolute;right:6px;top:50%;transform:translateY(-50%);padding:2px 8px;background:var(--accent);color:#fff;border-radius:99px;font-size:11px;font-weight:600;white-space:nowrap;cursor:pointer;z-index:2}
-.tx-item:hover .tx-insert-btn{display:block}
+.tx-item.final:hover{background:var(--accent-dim)}
+.tx-time{font-size:11px;color:var(--text3);grid-column:1;grid-row:1}
+.tx-body{grid-column:1;grid-row:2;word-break:break-all}
+.tx-insert-btn{grid-column:2;grid-row:1/3;align-self:center;padding:3px 9px;background:var(--accent-dim);color:var(--accent);border-radius:99px;font-size:11px;font-weight:700;white-space:nowrap;cursor:pointer;border:1px solid var(--accent);transition:all .18s;flex-shrink:0}
+.tx-insert-btn:hover{background:var(--accent);color:#fff}
 .tx-item.selected-for-note{background:rgba(99,102,241,.18);border-left-color:var(--accent)}
 .tx-live{font-size:13px;color:var(--text3);font-style:italic;padding:6px 10px;animation:fadeUp .3s}
-.tx-time{font-size:11px;color:var(--text3);margin-bottom:2px}
 .auto-badge{font-size:11px;padding:1px 7px;border-radius:99px;background:rgba(245,158,11,.12);color:var(--warn);font-weight:600;margin-left:6px}
 /* Drag-over for whole room panel */
-.room-drop-overlay{display:none;position:fixed;inset:0;z-index:500;background:rgba(99,102,241,.08);border:3px dashed var(--accent);border-radius:var(--r-lg);pointer-events:none;align-items:center;justify-content:center;flex-direction:column;gap:10px}
+.room-drop-overlay{display:none;position:fixed;inset:0;z-index:500;background:rgba(99,102,241,.12);border:4px dashed var(--accent);pointer-events:none;align-items:center;justify-content:center;flex-direction:column;gap:12px}
 .room-drop-overlay.active{display:flex}
-.room-drop-overlay .drop-hint{font-size:22px;font-weight:800;color:var(--accent);background:var(--bg1);padding:16px 28px;border-radius:var(--r-lg);box-shadow:var(--shadow-lg)}
+.room-drop-overlay .drop-hint{font-size:20px;font-weight:800;color:var(--accent);background:var(--bg1);padding:18px 32px;border-radius:var(--r-lg);box-shadow:var(--shadow-lg);text-align:center}
 
 /* Action items */
 .actions-wrap{max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
@@ -439,10 +440,15 @@ select{cursor:pointer}
 
       <!-- Audio upload panel -->
       <div id="tx-upload-panel" style="display:none">
-        <div class="audio-dropzone" id="audio-dropzone" onclick="document.getElementById('audio-file-input').click()" ondragover="event.preventDefault();this.classList.add('drag-over')" ondragleave="this.classList.remove('drag-over')" ondrop="handleAudioDrop(event)">
-          <div style="font-size:28px;margin-bottom:6px">🎵</div>
-          <div style="font-size:13px;font-weight:600;color:var(--text0)">点击上传录音文件</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:3px">支持 MP3、WAV、M4A、OGG、WebM</div>
+        <div class="audio-dropzone" id="audio-dropzone"
+          onclick="document.getElementById('audio-file-input').click()"
+          ondragover="event.preventDefault();this.classList.add('drag-over')"
+          ondragleave="this.classList.remove('drag-over')"
+          ondrop="handleAudioDrop(event)">
+          <div style="font-size:32px;margin-bottom:8px">🎵</div>
+          <div style="font-size:13px;font-weight:700;color:var(--text0)">点击选择文件</div>
+          <div style="font-size:12px;color:var(--accent);margin-top:4px;font-weight:600">或将录音文件拖拽至此处</div>
+          <div style="font-size:11px;color:var(--text3);margin-top:4px">MP3 · WAV · M4A · OGG · WebM</div>
         </div>
         <input type="file" id="audio-file-input" accept="audio/*" style="display:none" onchange="handleAudioFile(this.files[0])">
 
@@ -914,9 +920,11 @@ function startMeeting() {
   nav('room');
   // Auto-start mic after a short delay (allow DOM to settle)
   if (SR) {
+    const liveEl = document.getElementById('tx-live');
+    if (liveEl) liveEl.textContent = '⏳ 正在请求麦克风权限，请在弹窗中点击"允许"...';
     setTimeout(() => {
       if (S.meeting && !S.micActive) startMic();
-    }, 600);
+    }, 700);
   }
 }
 
@@ -1007,8 +1015,11 @@ function startMic() {
 
   r.onerror = (e) => {
     if (e.error === 'not-allowed') {
-      alert('麦克风权限被拒绝，请在浏览器设置中允许麦克风访问');
-      stopMic(); return;
+      stopMic();
+      // Show inline retry prompt instead of blocking alert
+      const liveEl = document.getElementById('tx-live');
+      if (liveEl) liveEl.innerHTML = '🚫 麦克风权限被拒绝<br><span style="color:var(--accent);cursor:pointer;font-size:12px;text-decoration:underline" onclick="startMic()">点击这里重试 →</span><br><span style="font-size:11px;color:var(--text3)">（需在浏览器地址栏旁的🔒图标中允许麦克风）</span>';
+      return;
     }
     if (e.error !== 'aborted') console.warn('Speech:', e.error);
   };
@@ -1701,17 +1712,23 @@ function insertTxToNotes(btn) {
 //  GLOBAL DRAG-AND-DROP (anywhere in room section)
 // ══════════════════════════════════════════════════
 let dragEnterCount = 0;
+const overlay = () => document.getElementById('room-drop-overlay');
+
 document.addEventListener('dragenter', (e) => {
   if (S.section !== 'room') return;
-  const hasAudio = [...(e.dataTransfer?.items||[])].some(i => i.type.startsWith('audio/') || i.type === '');
-  if (!hasAudio && e.dataTransfer?.items?.length > 0) return;
   dragEnterCount++;
-  document.getElementById('room-drop-overlay').classList.add('active');
+  overlay()?.classList.add('active');
 });
 document.addEventListener('dragleave', (e) => {
   if (S.section !== 'room') return;
-  dragEnterCount = Math.max(0, dragEnterCount - 1);
-  if (dragEnterCount === 0) document.getElementById('room-drop-overlay').classList.remove('active');
+  // Only decrement when leaving to outside the window
+  if (e.relatedTarget === null) {
+    dragEnterCount = 0;
+    overlay()?.classList.remove('active');
+  } else {
+    dragEnterCount = Math.max(0, dragEnterCount - 1);
+    if (dragEnterCount === 0) overlay()?.classList.remove('active');
+  }
 });
 document.addEventListener('dragover', (e) => {
   if (S.section !== 'room') return;
@@ -1721,16 +1738,15 @@ document.addEventListener('drop', (e) => {
   if (S.section !== 'room') return;
   e.preventDefault();
   dragEnterCount = 0;
-  document.getElementById('room-drop-overlay').classList.remove('active');
+  overlay()?.classList.remove('active');
   const file = e.dataTransfer?.files[0];
   if (!file) return;
   if (!file.type.startsWith('audio/')) {
-    toast('请拖入音频文件（MP3/WAV/M4A 等）');
+    toast('请拖入音频文件（MP3 / WAV / M4A 等）');
     return;
   }
   // Switch to upload tab and load file
-  const uploadBtn = document.getElementById('txmode-upload');
-  switchTxMode('upload', uploadBtn);
+  switchTxMode('upload', document.getElementById('txmode-upload'));
   handleAudioFile(file);
   toast('🎵 录音文件已加载，点击"播放并转写"开始');
 });
