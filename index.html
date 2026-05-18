@@ -26,7 +26,7 @@
   --shadow-lg:0 12px 32px rgba(0,0,0,.4);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg0);color:var(--text1);font-size:15px;line-height:1.6;transition:background .25s,color .25s}
+html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg0);color:var(--text1);font-size:15px;line-height:1.6;transition:background .25s,color .25s}
 button{cursor:pointer;border:none;background:none;font:inherit;color:inherit}
 textarea,input,select{font:inherit;color:inherit;background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:9px 13px;outline:none;width:100%;transition:border-color .2s,box-shadow .2s}
 textarea:focus,input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
@@ -45,8 +45,9 @@ select{cursor:pointer}
 .icon-btn:hover{background:var(--bg2)}
 
 /* ── Section ── */
-.section{display:none;animation:fadeUp .22s ease}
+.section{display:none;height:calc(100vh - 56px);overflow-y:auto;animation:fadeUp .22s ease}
 .section.active{display:block}
+.section.active.room-section{display:flex;flex-direction:column;overflow:hidden}
 @keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
 .container{max-width:1080px;margin:0 auto;padding:28px 20px}
 .page-title{font-size:18px;font-weight:800;color:var(--text0);margin-bottom:20px}
@@ -108,22 +109,24 @@ select{cursor:pointer}
 .empty .empty-ico{font-size:44px;margin-bottom:12px}
 .empty p{font-size:14px}
 
-/* ── Meeting Room ── */
-.room-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+/* ── Meeting Room layout: fills viewport, no outer scroll ── */
+#sec-room{padding:0}
+.room-inner{display:flex;flex-direction:column;height:100%;padding:14px 20px 10px;max-width:1080px;margin:0 auto;min-height:0}
+.room-header{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px}
 .room-header-left .room-title{font-size:18px;font-weight:800;color:var(--text0)}
 .room-header-left .room-meta{display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap}
 .room-header-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 
-.room-grid{display:grid;grid-template-columns:190px 1fr 1fr;gap:14px;align-items:stretch}
+.room-grid{display:grid;grid-template-columns:190px 1fr 1fr;gap:14px;flex:1;min-height:0;align-items:stretch;overflow:hidden}
 
 /* Side panels */
-.rpanel{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px}
+.rpanel{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px;overflow:hidden;min-height:0}
 .rpanel-title{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text3)}
 
 .timer-wrap{text-align:center;padding:12px 0}
 .timer-val{font-size:30px;font-weight:900;color:var(--text0);letter-spacing:2px;font-variant-numeric:tabular-nums}
 .timer-sub{font-size:11px;color:var(--text2);margin-top:3px}
-.agenda-list{list-style:none;display:flex;flex-direction:column;gap:3px}
+.agenda-list{list-style:none;display:flex;flex-direction:column;gap:3px;overflow-y:auto;flex:1}
 .agenda-item{font-size:13px;color:var(--text2);padding:5px 8px;border-radius:var(--r-sm);cursor:pointer;display:flex;align-items:flex-start;gap:7px;transition:background .15s}
 .agenda-item:hover{background:var(--bg2)}
 .agenda-item.done{color:var(--text3);text-decoration:line-through}
@@ -152,21 +155,22 @@ select{cursor:pointer}
 .code-tbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 
 /* Right panel: transcript */
-.tx-feed{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:4px;min-height:0}
-.tx-item{padding:7px 10px;border-radius:var(--r-sm);font-size:13px;line-height:1.5;transition:background .15s;display:flex;flex-direction:column;gap:3px}
-.tx-item.final{background:var(--bg2);border-left:3px solid var(--accent)}
-.tx-item.final:hover{background:var(--accent-dim)}
-.tx-item-row{display:flex;align-items:center;justify-content:space-between;gap:8px}
-.tx-time{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px;flex-shrink:0}
+.tx-feed{flex:1;overflow-y:auto;display:flex;flex-direction:column;gap:3px;min-height:0}
+.tx-item{padding:6px 10px;border-radius:var(--r-sm);font-size:13px;line-height:1.5;transition:background .15s;position:relative}
+.tx-item.final{background:var(--bg2);border-left:3px solid transparent}
+.tx-item.final:hover{background:var(--accent-dim);border-left-color:var(--accent)}
+.tx-item-row{display:flex;align-items:center;gap:6px;margin-bottom:2px}
+.tx-time{font-size:11px;color:var(--text3);display:flex;align-items:center;gap:5px;flex-shrink:0;flex:1}
 .tx-spk{font-size:11px;font-weight:700;padding:1px 7px;border-radius:99px;letter-spacing:.02em}
 .tx-spk-0{background:rgba(99,102,241,.13);color:#6366f1}
 .tx-spk-1{background:rgba(16,185,129,.13);color:#10b981}
 .tx-spk-2{background:rgba(245,158,11,.13);color:#f59e0b}
 .tx-spk-3{background:rgba(239,68,68,.13);color:#ef4444}
 .tx-spk-4{background:rgba(139,92,246,.13);color:#8b5cf6}
-.tx-body{font-size:13px;line-height:1.5;word-break:break-all;user-select:text;cursor:text}
-.tx-insert-btn{flex-shrink:0;padding:5px 12px;background:var(--accent);color:#fff;border-radius:var(--r-sm);font-size:12px;font-weight:700;white-space:nowrap;cursor:pointer;border:none;transition:all .18s;box-shadow:0 2px 6px rgba(99,102,241,.3)}
-.tx-insert-btn:hover{opacity:.85;transform:translateY(-1px)}
+.tx-body{font-size:13px;line-height:1.6;word-break:break-all;user-select:text;cursor:text;color:var(--text0)}
+/* Insert button: hidden by default, appears on item hover */
+.tx-insert-btn{opacity:0;pointer-events:none;flex-shrink:0;padding:3px 9px;background:var(--accent);color:#fff;border-radius:var(--r-sm);font-size:11px;font-weight:700;white-space:nowrap;cursor:pointer;border:none;transition:opacity .15s;box-shadow:0 1px 4px rgba(99,102,241,.3)}
+.tx-item:hover .tx-insert-btn{opacity:1;pointer-events:auto}
 .tx-item.selected-for-note{background:rgba(99,102,241,.18);border-left-color:var(--accent)}
 .tx-live{font-size:13px;color:var(--text3);font-style:italic;padding:6px 10px;animation:fadeUp .3s}
 .auto-badge{font-size:11px;padding:1px 7px;border-radius:99px;background:rgba(245,158,11,.12);color:var(--warn);font-weight:600;margin-left:6px}
@@ -176,7 +180,7 @@ select{cursor:pointer}
 .room-drop-overlay .drop-hint{font-size:20px;font-weight:800;color:var(--accent);background:var(--bg1);padding:18px 32px;border-radius:var(--r-lg);box-shadow:var(--shadow-lg);text-align:center}
 
 /* Action items */
-.actions-wrap{max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
+.actions-wrap{flex:1;min-height:0;max-height:180px;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
 .ac-item{display:flex;gap:7px;align-items:flex-start;padding:6px 8px;border-radius:var(--r-sm);background:var(--bg2);font-size:12.5px;color:var(--text1);animation:fadeUp .3s}
 .ac-item input[type=checkbox]{margin-top:2px;accent-color:var(--accent);cursor:pointer;flex-shrink:0}
 .ac-item .ac-text{flex:1}
@@ -187,7 +191,7 @@ select{cursor:pointer}
 .ac-add button{flex-shrink:0;padding:6px 12px;background:var(--accent);color:#fff;border-radius:var(--r-sm);font-size:13px;font-weight:600}
 
 /* ── BIG MIC BUTTON ── */
-.room-mic-bar{padding:16px 0 8px;display:flex;flex-direction:column;align-items:center;gap:12px}
+.room-mic-bar{flex-shrink:0;padding:10px 0 4px;display:flex;flex-direction:column;align-items:center;gap:8px}
 .big-mic-btn{width:100%;max-width:420px;height:64px;border-radius:99px;font-size:17px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;border:none;transition:all .22s;position:relative;overflow:hidden}
 .big-mic-btn.off{background:var(--bg1);border:2px solid var(--border);color:var(--text1)}
 .big-mic-btn.off:hover{border-color:var(--accent);color:var(--accent);box-shadow:var(--shadow-md);transform:translateY(-1px)}
@@ -369,8 +373,8 @@ select{cursor:pointer}
 </div>
 
 <!-- ══ MEETING ROOM ══ -->
-<div class="section" id="sec-room">
-<div class="container" style="padding-bottom:8px">
+<div class="section room-section" id="sec-room">
+<div class="room-inner">
   <div class="room-header">
     <div class="room-header-left">
       <div class="room-title" id="room-title">会议名称</div>
