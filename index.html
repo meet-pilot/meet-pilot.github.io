@@ -2,7 +2,7 @@
 <html lang="zh-CN" data-theme="light">
 <head>
 <meta charset="UTF-8">
-<meta name="viewport" content="width=device-width,initial-scale=1.0">
+<meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
 <title>MeetPilot · 智能会议助手</title>
 <style>
 :root{
@@ -10,9 +10,9 @@
   --accent:#6366F1;--accent-soft:#EEF2FF;--accent-dim:rgba(99,102,241,.12);
   --success:#10B981;--danger:#EF4444;--warn:#F59E0B;
   --text0:#1A202C;--text1:#4A5568;--text2:#718096;--text3:#A0AEC0;
-  --shadow:0 1px 3px rgba(0,0,0,.08),0 1px 2px rgba(0,0,0,.05);
-  --shadow-md:0 4px 12px rgba(0,0,0,.08),0 2px 4px rgba(0,0,0,.05);
-  --shadow-lg:0 12px 24px rgba(0,0,0,.1),0 4px 8px rgba(0,0,0,.06);
+  --shadow:0 1px 3px rgba(0,0,0,.08);
+  --shadow-md:0 4px 16px rgba(0,0,0,.1);
+  --shadow-lg:0 12px 32px rgba(0,0,0,.12);
   --r:12px;--r-sm:8px;--r-lg:20px;
 }
 [data-theme="dark"]{
@@ -20,1355 +20,1462 @@
   --accent:#818CF8;--accent-soft:#1e1b4b;--accent-dim:rgba(129,140,248,.14);
   --success:#34D399;--danger:#F87171;--warn:#FBBF24;
   --text0:#F1F5F9;--text1:#CBD5E1;--text2:#94A3B8;--text3:#64748B;
-  --shadow:0 1px 3px rgba(0,0,0,.35),0 1px 2px rgba(0,0,0,.2);
-  --shadow-md:0 4px 12px rgba(0,0,0,.3),0 2px 4px rgba(0,0,0,.2);
-  --shadow-lg:0 12px 28px rgba(0,0,0,.4),0 4px 8px rgba(0,0,0,.2);
+  --shadow:0 1px 3px rgba(0,0,0,.35);
+  --shadow-md:0 4px 16px rgba(0,0,0,.3);
+  --shadow-lg:0 12px 32px rgba(0,0,0,.4);
 }
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg0);color:var(--text1);font-size:15px;line-height:1.6;transition:background .25s,color .25s}
-a{color:var(--accent);text-decoration:none}
 button{cursor:pointer;border:none;background:none;font:inherit;color:inherit}
-textarea,input{font:inherit;color:inherit;background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:10px 14px;outline:none;width:100%;transition:border-color .2s}
-textarea:focus,input:focus{border-color:var(--accent)}
+textarea,input,select{font:inherit;color:inherit;background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:9px 13px;outline:none;width:100%;transition:border-color .2s,box-shadow .2s}
+textarea:focus,input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
+select{cursor:pointer}
 
 /* ── Topbar ── */
-.topbar{position:sticky;top:0;z-index:100;background:var(--bg1);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;height:56px;gap:6px;box-shadow:var(--shadow)}
-.topbar-logo{font-weight:700;font-size:16px;color:var(--text0);display:flex;align-items:center;gap:8px;margin-right:20px;white-space:nowrap}
-.topbar-logo .logo-dot{width:28px;height:28px;background:linear-gradient(135deg,var(--accent),#a78bfa);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px}
-.topbar-nav{display:flex;gap:2px;flex:1}
-.topbar-nav button{padding:6px 14px;border-radius:var(--r-sm);color:var(--text2);font-size:14px;font-weight:500;transition:all .2s}
-.topbar-nav button:hover{background:var(--bg2);color:var(--text0)}
-.topbar-nav button.active{background:var(--accent-dim);color:var(--accent);font-weight:600}
-.topbar-actions{display:flex;align-items:center;gap:8px;margin-left:auto}
-.btn-icon{width:36px;height:36px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;font-size:18px;transition:background .2s;cursor:pointer}
-.btn-icon:hover{background:var(--bg2)}
+.topbar{position:sticky;top:0;z-index:100;background:var(--bg1);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;height:56px;gap:4px;box-shadow:var(--shadow)}
+.logo{font-weight:800;font-size:16px;color:var(--text0);display:flex;align-items:center;gap:8px;margin-right:16px;white-space:nowrap;user-select:none}
+.logo-mark{width:30px;height:30px;background:linear-gradient(135deg,var(--accent),#a78bfa);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px}
+.topnav{display:flex;gap:1px;flex:1}
+.topnav button{padding:6px 14px;border-radius:var(--r-sm);color:var(--text2);font-size:14px;font-weight:500;transition:all .18s}
+.topnav button:hover{background:var(--bg2);color:var(--text0)}
+.topnav button.active{background:var(--accent-dim);color:var(--accent);font-weight:700}
+.topbar-end{margin-left:auto;display:flex;align-items:center;gap:6px}
+.icon-btn{width:36px;height:36px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;font-size:18px;transition:background .18s;cursor:pointer}
+.icon-btn:hover{background:var(--bg2)}
 
-/* ── Sections ── */
-.section{display:none;animation:fadeIn .25s ease}
+/* ── Section ── */
+.section{display:none;animation:fadeUp .22s ease}
 .section.active{display:block}
-@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
-.container{max-width:1100px;margin:0 auto;padding:28px 20px}
+@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
+.container{max-width:1080px;margin:0 auto;padding:28px 20px}
+.page-title{font-size:18px;font-weight:800;color:var(--text0);margin-bottom:20px}
 
 /* ── Buttons ── */
-.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--r-sm);font-size:14px;font-weight:600;transition:all .18s;cursor:pointer;border:none}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--r-sm);font-size:14px;font-weight:600;transition:all .18s;cursor:pointer;border:none;white-space:nowrap}
 .btn-primary{background:var(--accent);color:#fff}
-.btn-primary:hover{filter:brightness(1.1);transform:translateY(-1px);box-shadow:0 4px 12px rgba(99,102,241,.35)}
+.btn-primary:hover{filter:brightness(1.1);transform:translateY(-1px);box-shadow:0 4px 14px rgba(99,102,241,.4)}
 .btn-secondary{background:var(--bg2);color:var(--text1);border:1.5px solid var(--border)}
 .btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
 .btn-danger{background:var(--danger);color:#fff}
 .btn-danger:hover{filter:brightness(1.1)}
-.btn-success{background:var(--success);color:#fff}
-.btn-sm{padding:6px 13px;font-size:13px}
-.btn-lg{padding:13px 28px;font-size:16px;border-radius:var(--r)}
+.btn-ghost{color:var(--text2)}
+.btn-ghost:hover{background:var(--bg2);color:var(--text0)}
+.btn-sm{padding:6px 12px;font-size:13px;border-radius:var(--r-sm)}
+.btn-lg{padding:14px 32px;font-size:16px;border-radius:var(--r)}
 
 /* ── Cards ── */
-.card{background:var(--bg1);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow);transition:box-shadow .2s,transform .2s}
-.card:hover{box-shadow:var(--shadow-md)}
+.card{background:var(--bg1);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow)}
 .card-body{padding:20px}
 
-/* ── Dashboard ── */
-.dash-hero{text-align:center;padding:48px 20px 36px;background:linear-gradient(160deg,var(--bg1) 0%,var(--bg0) 100%);border-radius:var(--r-lg);border:1px solid var(--border);margin-bottom:28px;position:relative;overflow:hidden}
-.dash-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 30% 50%,var(--accent-dim) 0%,transparent 60%),radial-gradient(ellipse at 70% 20%,rgba(167,139,250,.07) 0%,transparent 50%);pointer-events:none}
-.dash-hero h1{font-size:32px;font-weight:800;color:var(--text0);line-height:1.2;margin-bottom:10px}
-.dash-hero h1 span{background:linear-gradient(135deg,var(--accent),#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.dash-hero p{color:var(--text2);font-size:15px;margin-bottom:24px;max-width:420px;margin-left:auto;margin-right:auto}
-.hero-badges{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:28px}
-.hero-badge{padding:4px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:99px;font-size:12px;color:var(--text2)}
-.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px}
-.stat-card{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r);padding:18px 16px;text-align:center}
-.stat-card .val{font-size:28px;font-weight:800;color:var(--text0);line-height:1}
-.stat-card .lbl{font-size:12px;color:var(--text2);margin-top:4px}
-.stat-card .ico{font-size:20px;margin-bottom:8px}
+/* ── Toggle ── */
+.toggle{position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0}
+.toggle input{opacity:0;width:0;height:0}
+.tslider{position:absolute;inset:0;background:var(--border);border-radius:99px;cursor:pointer;transition:background .2s}
+.tslider::before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.toggle input:checked+.tslider{background:var(--accent)}
+.toggle input:checked+.tslider::before{transform:translateX(20px)}
 
-/* Templates grid */
-.tpl-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:12px;margin-bottom:28px}
-.tpl-card{background:var(--bg1);border:1.5px solid var(--border);border-radius:var(--r);padding:16px;cursor:pointer;transition:all .2s;position:relative;overflow:hidden}
-.tpl-card:hover{border-color:var(--accent);box-shadow:var(--shadow-md);transform:translateY(-2px)}
-.tpl-card.coding{display:none}
-.tpl-card .tpl-icon{font-size:24px;margin-bottom:8px}
-.tpl-card .tpl-name{font-weight:600;font-size:14px;color:var(--text0);margin-bottom:4px}
-.tpl-card .tpl-meta{font-size:12px;color:var(--text2)}
-.tpl-badge{position:absolute;top:10px;right:10px;font-size:10px;padding:2px 7px;border-radius:99px;background:var(--accent-soft);color:var(--accent);font-weight:600}
-.tpl-badge.code-badge{background:rgba(52,211,153,.12);color:var(--success)}
+/* ── Dashboard ── */
+.dash-hero{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r-lg);padding:48px 32px;text-align:center;position:relative;overflow:hidden;margin-bottom:28px}
+.dash-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 25% 60%,var(--accent-dim),transparent 55%),radial-gradient(ellipse at 75% 30%,rgba(167,139,250,.08),transparent 55%);pointer-events:none}
+.dash-hero h1{font-size:34px;font-weight:900;color:var(--text0);line-height:1.2;margin-bottom:10px;position:relative}
+.dash-hero h1 em{font-style:normal;background:linear-gradient(135deg,var(--accent),#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
+.dash-hero p{font-size:15px;color:var(--text2);margin-bottom:28px;position:relative}
+.hero-pills{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:32px;position:relative}
+.pill{padding:4px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:99px;font-size:12px;color:var(--text2)}
+.start-row{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;position:relative}
+
+.stats-row{display:grid;grid-template-columns:repeat(3,1fr);gap:14px;margin-bottom:28px}
+.stat{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r);padding:18px 14px;text-align:center}
+.stat .s-val{font-size:30px;font-weight:900;color:var(--text0);line-height:1}
+.stat .s-lbl{font-size:12px;color:var(--text2);margin-top:4px}
+.stat .s-ico{font-size:22px;margin-bottom:8px}
 
 /* Recent meetings */
-.section-title{font-size:17px;font-weight:700;color:var(--text0);margin-bottom:14px;display:flex;align-items:center;justify-content:space-between}
-.section-title .subtitle{font-size:13px;font-weight:400;color:var(--text2)}
-.meeting-list{display:flex;flex-direction:column;gap:10px}
-.meeting-item{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r);padding:14px 18px;display:flex;align-items:center;gap:14px;transition:all .2s;cursor:pointer}
-.meeting-item:hover{border-color:var(--accent);box-shadow:var(--shadow-md);transform:translateX(2px)}
-.meeting-item .m-icon{width:40px;height:40px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
-.meeting-item .m-info{flex:1;min-width:0}
-.meeting-item .m-title{font-weight:600;color:var(--text0);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.meeting-item .m-meta{font-size:12px;color:var(--text2);margin-top:2px}
-.meeting-item .m-dur{font-size:13px;color:var(--text2);white-space:nowrap}
-.empty-state{text-align:center;padding:48px 20px;color:var(--text3)}
-.empty-state .empty-ico{font-size:48px;margin-bottom:12px}
-.empty-state p{font-size:14px}
+.section-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
+.section-hd .shd-title{font-size:16px;font-weight:700;color:var(--text0)}
+.section-hd .shd-sub{font-size:13px;color:var(--text2)}
+.meeting-list{display:flex;flex-direction:column;gap:8px}
+.m-item{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r);padding:13px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .18s}
+.m-item:hover{border-color:var(--accent);box-shadow:var(--shadow-md);transform:translateX(2px)}
+.m-ico{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
+.m-info{flex:1;min-width:0}
+.m-title{font-weight:600;color:var(--text0);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.m-meta{font-size:12px;color:var(--text2);margin-top:2px}
+.m-dur{font-size:12px;color:var(--text2);white-space:nowrap}
+.empty{text-align:center;padding:48px 20px;color:var(--text3)}
+.empty .empty-ico{font-size:44px;margin-bottom:12px}
+.empty p{font-size:14px}
 
 /* ── Meeting Room ── */
-.room-layout{display:grid;grid-template-columns:200px 1fr 280px;gap:16px;min-height:calc(100vh - 200px)}
-.room-panel{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r);padding:16px;display:flex;flex-direction:column;gap:12px}
-.panel-title{font-size:12px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text3);margin-bottom:4px}
+.room-header{display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:10px}
+.room-header-left .room-title{font-size:18px;font-weight:800;color:var(--text0)}
+.room-header-left .room-meta{display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap}
+.room-header-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
 
-/* Timer */
-.timer-display{text-align:center;padding:14px 0}
-.timer-num{font-size:32px;font-weight:800;letter-spacing:2px;color:var(--text0);font-variant-numeric:tabular-nums}
-.timer-label{font-size:11px;color:var(--text2);margin-top:2px}
-.rec-dot{display:inline-block;width:8px;height:8px;border-radius:50%;background:var(--danger);margin-right:5px;animation:blink 1.2s ease-in-out infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
+.room-grid{display:grid;grid-template-columns:190px 1fr 268px;gap:14px}
 
-/* Agenda */
-.agenda-list{list-style:none;display:flex;flex-direction:column;gap:4px}
-.agenda-item{font-size:13px;color:var(--text2);padding:5px 8px;border-radius:var(--r-sm);cursor:pointer;display:flex;align-items:center;gap:6px;transition:background .15s}
+/* Side panels */
+.rpanel{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px}
+.rpanel-title{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text3)}
+
+.timer-wrap{text-align:center;padding:12px 0}
+.timer-val{font-size:30px;font-weight:900;color:var(--text0);letter-spacing:2px;font-variant-numeric:tabular-nums}
+.timer-sub{font-size:11px;color:var(--text2);margin-top:3px}
+.agenda-list{list-style:none;display:flex;flex-direction:column;gap:3px}
+.agenda-item{font-size:13px;color:var(--text2);padding:5px 8px;border-radius:var(--r-sm);cursor:pointer;display:flex;align-items:flex-start;gap:7px;transition:background .15s}
 .agenda-item:hover{background:var(--bg2)}
 .agenda-item.done{color:var(--text3);text-decoration:line-through}
-.agenda-item .agenda-num{width:18px;height:18px;border-radius:50%;background:var(--accent-dim);color:var(--accent);font-size:11px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0}
+.ag-num{width:17px;height:17px;border-radius:50%;background:var(--accent-dim);color:var(--accent);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
+.divider{height:1px;background:var(--border)}
 
-/* Notes editor */
-.notes-area{flex:1;resize:none;border-radius:var(--r-sm);padding:14px;font-size:14px;line-height:1.7;min-height:300px;background:var(--bg2)}
-.code-panel{display:none;flex-direction:column;gap:8px;border-top:1px solid var(--border);padding-top:12px;margin-top:4px}
-.code-panel.visible{display:flex}
-.code-editor-wrap{position:relative;border-radius:var(--r-sm);overflow:hidden;border:1.5px solid var(--border);background:#0d1117;transition:border-color .2s}
-.code-editor-wrap:focus-within{border-color:var(--accent)}
-.code-nums{position:absolute;left:0;top:0;bottom:0;width:36px;background:rgba(0,0,0,.2);padding:10px 0;text-align:center;color:#555;font-size:12px;font-family:monospace;line-height:1.6;pointer-events:none;user-select:none;overflow:hidden}
-.code-textarea{display:block;width:100%;padding:10px 12px 10px 46px;min-height:180px;background:transparent;border:none;outline:none;font-family:'JetBrains Mono','Fira Code','Courier New',monospace;font-size:13px;color:#c9d1d9;resize:vertical;line-height:1.6;tab-size:2}
-.code-toolbar{display:flex;gap:6px;flex-wrap:wrap}
+/* Center panel */
+.center-panel{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px}
+.center-tabs{display:flex;gap:2px}
+.center-tabs button{padding:5px 12px;border-radius:var(--r-sm);font-size:13px;font-weight:500;color:var(--text2);transition:all .18s}
+.center-tabs button.active{background:var(--accent-dim);color:var(--accent);font-weight:700}
+.ctab{display:none;flex:1;flex-direction:column;gap:8px}
+.ctab.active{display:flex}
+.notes-ta{flex:1;resize:none;font-size:14px;line-height:1.7;min-height:360px;background:var(--bg2)}
+.code-wrap{position:relative;border-radius:var(--r-sm);overflow:hidden;border:1.5px solid var(--border);background:#0d1117;transition:border-color .2s;flex:1}
+.code-wrap:focus-within{border-color:var(--accent)}
+.line-nums{position:absolute;left:0;top:0;bottom:0;width:34px;background:rgba(0,0,0,.25);padding:10px 0;text-align:center;color:#4a5568;font-size:12px;font-family:monospace;line-height:1.6;pointer-events:none;user-select:none;overflow:hidden}
+.code-ta{display:block;width:100%;padding:10px 12px 10px 44px;min-height:300px;background:transparent;border:none;outline:none;font-family:'JetBrains Mono','Fira Code',monospace;font-size:13px;color:#c9d1d9;resize:vertical;line-height:1.6;tab-size:2}
+.code-tbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center}
 
-/* Transcript panel */
-.transcript-feed{flex:1;overflow-y:auto;max-height:280px;display:flex;flex-direction:column;gap:6px}
-.tx-item{padding:8px 10px;border-radius:var(--r-sm);font-size:13px;line-height:1.5;border-left:3px solid transparent;transition:background .15s}
-.tx-item.final{background:var(--bg2);border-left-color:var(--accent)}
-.tx-item.interim{color:var(--text3);font-style:italic;background:var(--accent-dim)}
-.tx-item .tx-time{font-size:11px;color:var(--text3);margin-bottom:3px}
-.tx-interim-live{color:var(--text3);font-style:italic;font-size:13px;padding:6px 10px;border-radius:var(--r-sm)}
+/* Right panel: transcript */
+.tx-feed{flex:1;overflow-y:auto;max-height:260px;display:flex;flex-direction:column;gap:5px}
+.tx-item{padding:7px 10px;border-radius:var(--r-sm);font-size:13px;line-height:1.5}
+.tx-item.final{background:var(--bg2);border-left:3px solid var(--accent)}
+.tx-live{font-size:13px;color:var(--text3);font-style:italic;padding:6px 10px;animation:fadeUp .3s}
+.tx-time{font-size:11px;color:var(--text3);margin-bottom:2px}
+.auto-badge{font-size:11px;padding:1px 7px;border-radius:99px;background:rgba(245,158,11,.12);color:var(--warn);font-weight:600;margin-left:6px}
 
-.actions-list{display:flex;flex-direction:column;gap:5px;max-height:180px;overflow-y:auto}
-.action-item{display:flex;gap:8px;align-items:flex-start;padding:6px 8px;border-radius:var(--r-sm);background:var(--bg2);font-size:12.5px;color:var(--text1)}
-.action-item input[type=checkbox]{margin-top:2px;accent-color:var(--accent);cursor:pointer}
-.action-add{display:flex;gap:6px;margin-top:4px}
-.action-add input{font-size:13px;padding:6px 10px}
-.action-add button{flex-shrink:0;padding:6px 10px;background:var(--accent);color:#fff;border-radius:var(--r-sm);font-size:13px}
+/* Action items */
+.actions-wrap{max-height:200px;overflow-y:auto;display:flex;flex-direction:column;gap:4px}
+.ac-item{display:flex;gap:7px;align-items:flex-start;padding:6px 8px;border-radius:var(--r-sm);background:var(--bg2);font-size:12.5px;color:var(--text1);animation:fadeUp .3s}
+.ac-item input[type=checkbox]{margin-top:2px;accent-color:var(--accent);cursor:pointer;flex-shrink:0}
+.ac-item .ac-text{flex:1}
+.ac-item .ac-del{color:var(--text3);font-size:14px;cursor:pointer;flex-shrink:0;line-height:1;padding:1px 3px;border-radius:3px;transition:color .15s}
+.ac-item .ac-del:hover{color:var(--danger)}
+.ac-add{display:flex;gap:6px;margin-top:4px}
+.ac-add input{font-size:13px;padding:6px 10px}
+.ac-add button{flex-shrink:0;padding:6px 12px;background:var(--accent);color:#fff;border-radius:var(--r-sm);font-size:13px;font-weight:600}
 
-.meeting-title-display{font-weight:700;color:var(--text0);font-size:15px;margin-bottom:2px}
-.meeting-tpl-tag{display:inline-flex;align-items:center;gap:4px;font-size:11px;padding:2px 8px;background:var(--accent-dim);color:var(--accent);border-radius:99px;font-weight:600}
+/* ── BIG MIC BUTTON ── */
+.room-mic-bar{padding:16px 0 8px;display:flex;flex-direction:column;align-items:center;gap:12px}
+.big-mic-btn{width:100%;max-width:420px;height:64px;border-radius:99px;font-size:17px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;border:none;transition:all .22s;position:relative;overflow:hidden}
+.big-mic-btn.off{background:var(--bg1);border:2px solid var(--border);color:var(--text1)}
+.big-mic-btn.off:hover{border-color:var(--accent);color:var(--accent);box-shadow:var(--shadow-md);transform:translateY(-1px)}
+.big-mic-btn.on{background:linear-gradient(135deg,#ef4444,#f97316);color:#fff;box-shadow:0 6px 20px rgba(239,68,68,.45)}
+.big-mic-btn.on:hover{filter:brightness(1.06);transform:translateY(-1px)}
+.big-mic-btn.on::after{content:'';position:absolute;inset:-2px;border-radius:99px;background:linear-gradient(135deg,#ef4444,#f97316);opacity:.4;animation:ripple 1.5s ease-out infinite}
+@keyframes ripple{0%{transform:scale(1);opacity:.4}100%{transform:scale(1.06);opacity:0}}
+.rec-dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#fff;animation:blink 1.1s ease-in-out infinite;margin-right:2px}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
+.mic-sub-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center}
+.room-badge{display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:4px 10px;border-radius:99px;font-weight:600}
+.rb-live{background:rgba(239,68,68,.12);color:var(--danger)}
+.rb-info{background:var(--accent-dim);color:var(--accent)}
 
-/* Room bottom bar */
-.room-bottom{display:flex;align-items:center;justify-content:center;gap:12px;padding:14px 0 6px;flex-wrap:wrap}
-.room-bottom .mic-btn{padding:11px 22px;border-radius:99px;font-size:14px;font-weight:600;display:flex;align-items:center;gap:7px;transition:all .2s;border:none;cursor:pointer}
-.mic-btn.off{background:var(--bg2);border:1.5px solid var(--border);color:var(--text1)}
-.mic-btn.on{background:linear-gradient(135deg,var(--danger),#f97316);color:#fff;box-shadow:0 4px 14px rgba(239,68,68,.4)}
-.mic-btn.on .rec-dot{background:#fff}
+/* Code mode inline toggle */
+.code-mode-toggle{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-sm);font-size:13px;cursor:pointer;transition:all .18s}
+.code-mode-toggle:hover{border-color:var(--accent)}
+.code-mode-toggle.on{background:rgba(52,211,153,.08);border-color:var(--success);color:var(--success)}
+.code-mode-toggle .cmt-label{font-weight:600;color:var(--text1)}
+.code-mode-toggle.on .cmt-label{color:var(--success)}
 
-/* Floating ball */
-.float-ball{position:fixed;bottom:88px;right:20px;z-index:200;width:52px;height:52px;border-radius:50%;background:linear-gradient(135deg,var(--accent),#a78bfa);box-shadow:0 4px 16px rgba(99,102,241,.5);display:none;align-items:center;justify-content:center;cursor:pointer;font-size:20px;transition:transform .2s;border:2px solid rgba(255,255,255,.25)}
-.float-ball.active{display:flex}
-.float-ball:hover{transform:scale(1.08)}
-.float-ball .ball-inner{position:relative}
-.float-ball .ball-rec{position:absolute;top:-3px;right:-3px;width:10px;height:10px;border-radius:50%;background:var(--danger);border:1.5px solid white;animation:blink 1.2s infinite}
-.float-ball.muted{background:linear-gradient(135deg,#64748b,#475569)}
-
-/* ── Summary section ── */
-.summary-section{padding:0}
-.summary-header{background:linear-gradient(135deg,var(--accent),#a78bfa);border-radius:var(--r);padding:20px 24px;color:#fff;margin-bottom:20px}
-.summary-header h2{font-size:20px;font-weight:800;margin-bottom:4px}
-.summary-meta{font-size:13px;opacity:.8}
-.summary-grid{display:grid;grid-template-columns:1fr 1fr;gap:16px}
-.summary-block{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r);padding:16px}
-.summary-block h3{font-size:13px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-bottom:10px}
-.summary-block ul{list-style:none;display:flex;flex-direction:column;gap:6px}
-.summary-block ul li{font-size:14px;color:var(--text1);padding:6px 10px;background:var(--bg2);border-radius:var(--r-sm);display:flex;gap:6px}
-.summary-block ul li::before{content:'•';color:var(--accent);font-weight:700;flex-shrink:0}
-.summary-txt{font-size:14px;color:var(--text1);line-height:1.8;white-space:pre-wrap}
+/* ── Summary ── */
+.sum-hero{background:linear-gradient(135deg,var(--accent) 0%,#a78bfa 100%);border-radius:var(--r);padding:22px 24px;color:#fff;margin-bottom:20px}
+.sum-hero h2{font-size:22px;font-weight:900;margin-bottom:5px}
+.sum-hero .sum-meta{font-size:13px;opacity:.85}
+.sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
+.sum-block{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r);padding:16px}
+.sum-block h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-bottom:10px}
+.sum-block ul{list-style:none;display:flex;flex-direction:column;gap:5px}
+.sum-block ul li{font-size:13.5px;color:var(--text1);padding:6px 10px;background:var(--bg2);border-radius:var(--r-sm);display:flex;gap:6px;align-items:flex-start}
+.sum-block ul li::before{content:'•';color:var(--accent);font-weight:700;flex-shrink:0;margin-top:1px}
+.sum-txt{font-size:14px;color:var(--text1);line-height:1.8;white-space:pre-wrap}
 
 /* ── History ── */
-.history-filters{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap}
-.filter-btn{padding:5px 14px;border-radius:99px;font-size:13px;border:1.5px solid var(--border);color:var(--text2);background:var(--bg1);cursor:pointer;transition:all .18s}
-.filter-btn.active,.filter-btn:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
-.history-search{flex:1;min-width:200px;max-width:320px;padding:6px 12px;font-size:13px;background:var(--bg1);border:1.5px solid var(--border);border-radius:99px}
-.history-item{cursor:pointer}
-.history-detail{display:none;padding:14px;border-top:1px solid var(--border);background:var(--bg2);border-radius:0 0 var(--r) var(--r)}
-.history-detail.open{display:block}
+.hist-toolbar{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;align-items:center}
+.hist-search{flex:1;min-width:180px;max-width:300px;padding:7px 14px;font-size:13px;border-radius:99px;background:var(--bg1)}
+.filt{padding:5px 14px;border-radius:99px;font-size:13px;border:1.5px solid var(--border);color:var(--text2);background:var(--bg1);cursor:pointer;transition:all .18s}
+.filt.active,.filt:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
 
 /* ── Settings ── */
-.settings-section{max-width:640px}
-.setting-group{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r);margin-bottom:16px;overflow:hidden}
-.setting-group-title{padding:12px 18px;font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);border-bottom:1px solid var(--border);background:var(--bg2)}
-.setting-row{display:flex;align-items:center;justify-content:space-between;padding:14px 18px;gap:12px;border-bottom:1px solid var(--border)}
-.setting-row:last-child{border-bottom:none}
-.setting-row .s-info .s-label{font-size:14px;font-weight:600;color:var(--text0)}
-.setting-row .s-info .s-desc{font-size:12px;color:var(--text2);margin-top:2px}
-
-/* Toggle switch */
-.toggle{position:relative;display:inline-block;width:46px;height:26px;flex-shrink:0}
-.toggle input{opacity:0;width:0;height:0}
-.toggle-slider{position:absolute;inset:0;background:var(--border);border-radius:99px;cursor:pointer;transition:background .25s}
-.toggle-slider::before{content:'';position:absolute;width:20px;height:20px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform .25s;box-shadow:0 1px 4px rgba(0,0,0,.2)}
-.toggle input:checked+.toggle-slider{background:var(--accent)}
-.toggle input:checked+.toggle-slider::before{transform:translateX(20px)}
-
-/* Coding module highlight */
-.coding-toggle-card{border:2px solid var(--border);border-radius:var(--r);padding:18px;margin-bottom:12px;transition:border-color .25s,background .25s;cursor:pointer;display:flex;align-items:center;gap:14px}
-.coding-toggle-card.enabled{border-color:var(--success);background:rgba(52,211,153,.06)}
-.coding-toggle-card .ctc-icon{font-size:28px}
-.coding-toggle-card .ctc-info{flex:1}
-.coding-toggle-card .ctc-title{font-size:15px;font-weight:700;color:var(--text0);margin-bottom:3px}
-.coding-toggle-card .ctc-desc{font-size:12.5px;color:var(--text2)}
-
-/* ── Modal ── */
-.modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
-.modal-overlay.open{display:flex}
-.modal{background:var(--bg1);border-radius:var(--r-lg);padding:28px;max-width:560px;width:100%;box-shadow:var(--shadow-lg);animation:modalIn .2s ease}
-@keyframes modalIn{from{opacity:0;transform:scale(.95) translateY(8px)}to{opacity:1;transform:none}}
-.modal h2{font-size:20px;font-weight:800;color:var(--text0);margin-bottom:4px}
-.modal .modal-sub{font-size:14px;color:var(--text2);margin-bottom:22px}
-.modal-tpls{display:grid;grid-template-columns:repeat(3,1fr);gap:9px;margin-bottom:20px}
-.modal-tpl{padding:12px 10px;border:1.5px solid var(--border);border-radius:var(--r-sm);cursor:pointer;text-align:center;transition:all .18s;font-size:13px}
-.modal-tpl .mt-icon{font-size:20px;margin-bottom:4px}
-.modal-tpl .mt-name{font-weight:600;color:var(--text0);font-size:12.5px}
-.modal-tpl .mt-dur{font-size:11px;color:var(--text2)}
-.modal-tpl:hover,.modal-tpl.selected{border-color:var(--accent);background:var(--accent-dim)}
-.modal-tpl.coding-tpl{display:none}
-.modal-form{display:flex;flex-direction:column;gap:12px}
-.form-label{font-size:13px;font-weight:600;color:var(--text0);margin-bottom:5px}
-.modal-actions{display:flex;gap:10px;justify-content:flex-end;margin-top:20px}
-
-/* ── Speech not supported ── */
-.speech-unsupported{font-size:13px;color:var(--warn);padding:10px;background:rgba(245,158,11,.1);border-radius:var(--r-sm);text-align:center}
-
-/* ── Bottom nav (mobile) ── */
-.bottom-nav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg1);border-top:1px solid var(--border);z-index:150;padding:6px 0;padding-bottom:calc(6px + env(safe-area-inset-bottom))}
-.bottom-nav-inner{display:grid;grid-template-columns:repeat(4,1fr)}
-.bn-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:5px 0;cursor:pointer;transition:color .18s;color:var(--text3);font-size:11px;font-weight:500}
-.bn-btn .bn-icon{font-size:20px;line-height:1}
-.bn-btn.active{color:var(--accent)}
-
-/* ── Responsive ── */
-@media(max-width:900px){
-  .room-layout{grid-template-columns:1fr 240px}
-  .room-left{display:none}
-}
-@media(max-width:640px){
-  .topbar-nav{display:none}
-  .bottom-nav{display:block}
-  body{padding-bottom:72px}
-  .dash-hero h1{font-size:24px}
-  .stats-row{grid-template-columns:repeat(3,1fr);gap:8px}
-  .stat-card{padding:12px 8px}
-  .stat-card .val{font-size:22px}
-  .tpl-grid{grid-template-columns:repeat(2,1fr)}
-  .room-layout{grid-template-columns:1fr;grid-template-rows:auto 1fr auto}
-  .room-left{display:none}
-  .room-right{order:3}
-  .summary-grid{grid-template-columns:1fr}
-  .modal-tpls{grid-template-columns:repeat(2,1fr)}
-  .float-ball{bottom:82px}
-}
-@media(max-width:380px){
-  .tpl-grid{grid-template-columns:1fr}
-  .stats-row{grid-template-columns:repeat(3,1fr)}
-}
-
-/* ── Misc ── */
+.settings-wrap{max-width:620px}
+.sg{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r);margin-bottom:14px;overflow:hidden}
+.sg-title{padding:11px 18px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);border-bottom:1px solid var(--border);background:var(--bg2)}
+.sr{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;gap:12px;border-bottom:1px solid var(--border)}
+.sr:last-child{border-bottom:none}
+.sr-info .sr-label{font-size:14px;font-weight:600;color:var(--text0)}
+.sr-info .sr-desc{font-size:12px;color:var(--text2);margin-top:2px}
 .chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:600}
 .chip-green{background:rgba(52,211,153,.12);color:var(--success)}
 .chip-blue{background:var(--accent-dim);color:var(--accent)}
-.chip-yellow{background:rgba(251,191,36,.12);color:var(--warn)}
-.divider{height:1px;background:var(--border);margin:6px 0}
-.room-center-tabs{display:flex;gap:2px;margin-bottom:10px}
-.room-center-tabs button{padding:5px 12px;border-radius:var(--r-sm);font-size:13px;font-weight:500;color:var(--text2);transition:all .18s}
-.room-center-tabs button.active{background:var(--accent-dim);color:var(--accent);font-weight:700}
-.center-tab-content{display:none;flex:1;flex-direction:column}
-.center-tab-content.active{display:flex}
+
+/* Sync status */
+.sync-status{display:flex;align-items:center;gap:6px;font-size:13px;color:var(--text2)}
+.sync-dot{width:8px;height:8px;border-radius:50%;background:var(--text3);flex-shrink:0}
+.sync-dot.synced{background:var(--success)}
+.sync-dot.syncing{background:var(--warn);animation:blink 1s infinite}
+.sync-dot.error{background:var(--danger)}
+
+/* ── Modal ── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
+.overlay.open{display:flex}
+.modal{background:var(--bg1);border-radius:var(--r-lg);padding:28px;max-width:480px;width:100%;box-shadow:var(--shadow-lg);animation:modalIn .2s ease}
+@keyframes modalIn{from{opacity:0;transform:scale(.95) translateY(8px)}to{opacity:1;transform:none}}
+.modal h2{font-size:20px;font-weight:900;color:var(--text0);margin-bottom:5px}
+.modal .msub{font-size:14px;color:var(--text2);margin-bottom:22px}
+.mform{display:flex;flex-direction:column;gap:13px}
+.mlabel{font-size:13px;font-weight:600;color:var(--text0);margin-bottom:6px}
+.mactions{display:flex;gap:10px;justify-content:flex-end;margin-top:22px}
+
+/* ── Toast ── */
+.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--text0);color:var(--bg1);padding:10px 22px;border-radius:99px;font-size:14px;font-weight:500;z-index:999;pointer-events:none;animation:toastIn .3s ease;white-space:nowrap}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
+
+/* ── Bottom nav mobile ── */
+.bnav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg1);border-top:1px solid var(--border);z-index:150;padding-bottom:env(safe-area-inset-bottom)}
+.bnav-inner{display:grid;grid-template-columns:repeat(4,1fr)}
+.bnav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0;cursor:pointer;color:var(--text3);font-size:11px;font-weight:500;transition:color .18s}
+.bnav-btn .bi{font-size:21px;line-height:1}
+.bnav-btn.active{color:var(--accent)}
+
+/* ── Responsive ── */
+@media(max-width:900px){
+  .room-grid{grid-template-columns:1fr 240px}
+  .room-left-panel{display:none}
+}
+@media(max-width:640px){
+  .topnav{display:none}
+  .bnav{display:block}
+  body{padding-bottom:60px}
+  .dash-hero{padding:32px 20px}
+  .dash-hero h1{font-size:24px}
+  .stats-row{gap:8px}
+  .stat{padding:12px 8px}
+  .stat .s-val{font-size:22px}
+  .room-grid{grid-template-columns:1fr}
+  .room-left-panel,.room-right-panel{display:none}
+  .room-grid .center-panel{min-height:400px}
+  .sum-grid{grid-template-columns:1fr}
+  .container{padding:16px}
+  .big-mic-btn{height:56px;font-size:15px}
+}
+@media(max-width:400px){
+  .stats-row{grid-template-columns:repeat(3,1fr)}
+}
 </style>
 </head>
 <body>
 
 <!-- ══ TOPBAR ══ -->
 <header class="topbar">
-  <div class="topbar-logo">
-    <div class="logo-dot">🎯</div>
+  <div class="logo">
+    <div class="logo-mark">🎯</div>
     MeetPilot
   </div>
-  <nav class="topbar-nav">
-    <button id="tnav-dashboard" class="active" onclick="showSection('dashboard')">首页</button>
-    <button id="tnav-room" onclick="showSection('room')">会议室</button>
-    <button id="tnav-history" onclick="showSection('history')">历史记录</button>
-    <button id="tnav-settings" onclick="showSection('settings')">设置</button>
+  <nav class="topnav">
+    <button id="tnav-dashboard" class="active" onclick="nav('dashboard')">首页</button>
+    <button id="tnav-room" onclick="nav('room')">会议室</button>
+    <button id="tnav-history" onclick="nav('history')">历史记录</button>
+    <button id="tnav-settings" onclick="nav('settings')">设置</button>
   </nav>
-  <div class="topbar-actions">
-    <div class="btn-icon" id="theme-toggle" onclick="toggleTheme()" title="切换主题">🌙</div>
+  <div class="topbar-end">
+    <div id="sync-indicator" class="sync-status" style="display:none">
+      <div class="sync-dot" id="sync-dot"></div>
+      <span id="sync-label">未同步</span>
+    </div>
+    <div class="icon-btn" onclick="toggleTheme()" id="theme-icon" title="切换主题">🌙</div>
   </div>
 </header>
 
-<!-- ══ SECTIONS ══ -->
-
-<!-- DASHBOARD -->
+<!-- ══ DASHBOARD ══ -->
 <div class="section active" id="sec-dashboard">
 <div class="container">
   <div class="dash-hero">
-    <h1>开会，<span>更聪明一点</span></h1>
-    <p>实时语音转文字，AI 智能总结，全场景会议助手<br>无需注册，本地优先，隐私安全</p>
-    <div class="hero-badges">
-      <span class="hero-badge">🔒 本地存储</span>
-      <span class="hero-badge">🎙 实时转写</span>
-      <span class="hero-badge">🤖 AI 总结</span>
-      <span class="hero-badge">📤 多格式导出</span>
-      <span class="hero-badge">🌙 深色模式</span>
+    <h1>开会，<em>更聪明一点</em></h1>
+    <p>实时语音转文字 · AI 智能总结 · 待办自动识别 · 多端同步</p>
+    <div class="hero-pills">
+      <span class="pill">🔒 本地优先</span>
+      <span class="pill">☁️ 云端同步</span>
+      <span class="pill">🎙 实时转写</span>
+      <span class="pill">🤖 AI 总结</span>
+      <span class="pill">📤 多格式导出</span>
     </div>
-    <button class="btn btn-primary btn-lg" onclick="openNewMeetingModal()">🚀 &nbsp;开始新会议</button>
+    <div class="start-row">
+      <button class="btn btn-primary btn-lg" onclick="openModal()">🚀 &nbsp;开始新会议</button>
+      <button class="btn btn-secondary" onclick="nav('history')">📋 查看历史</button>
+    </div>
   </div>
 
   <div class="stats-row">
-    <div class="stat-card">
-      <div class="ico">📅</div>
-      <div class="val" id="stat-total">0</div>
-      <div class="lbl">历史会议</div>
+    <div class="stat">
+      <div class="s-ico">📅</div>
+      <div class="s-val" id="stat-total">0</div>
+      <div class="s-lbl">历史会议</div>
     </div>
-    <div class="stat-card">
-      <div class="ico">⏱</div>
-      <div class="val" id="stat-hours">0h</div>
-      <div class="lbl">累计时长</div>
+    <div class="stat">
+      <div class="s-ico">⏱</div>
+      <div class="s-val" id="stat-hours">0h</div>
+      <div class="s-lbl">累计时长</div>
     </div>
-    <div class="stat-card">
-      <div class="ico">✅</div>
-      <div class="val" id="stat-actions">0</div>
-      <div class="lbl">行动项</div>
-    </div>
-  </div>
-
-  <div class="section-title">选择会议模板 <span class="subtitle">点击快速创建</span></div>
-  <div class="tpl-grid" id="tpl-grid">
-    <div class="tpl-card" onclick="openNewMeetingModal('standup')">
-      <div class="tpl-icon">☀️</div>
-      <div class="tpl-name">日常例会</div>
-      <div class="tpl-meta">15 分钟 · 同步进展</div>
-      <div class="tpl-badge">通用</div>
-    </div>
-    <div class="tpl-card" onclick="openNewMeetingModal('business')">
-      <div class="tpl-icon">💼</div>
-      <div class="tpl-name">商务会谈</div>
-      <div class="tpl-meta">60 分钟 · 外部对接</div>
-      <div class="tpl-badge">通用</div>
-    </div>
-    <div class="tpl-card" onclick="openNewMeetingModal('brainstorm')">
-      <div class="tpl-icon">💡</div>
-      <div class="tpl-name">头脑风暴</div>
-      <div class="tpl-meta">45 分钟 · 创意发散</div>
-      <div class="tpl-badge">通用</div>
-    </div>
-    <div class="tpl-card" onclick="openNewMeetingModal('interview')">
-      <div class="tpl-icon">🤝</div>
-      <div class="tpl-name">访谈调研</div>
-      <div class="tpl-meta">45 分钟 · 用户洞察</div>
-      <div class="tpl-badge">通用</div>
-    </div>
-    <div class="tpl-card" onclick="openNewMeetingModal('training')">
-      <div class="tpl-icon">📚</div>
-      <div class="tpl-name">培训课程</div>
-      <div class="tpl-meta">90 分钟 · 知识记录</div>
-      <div class="tpl-badge">通用</div>
-    </div>
-    <div class="tpl-card" onclick="openNewMeetingModal('kickoff')">
-      <div class="tpl-icon">🚀</div>
-      <div class="tpl-name">项目启动</div>
-      <div class="tpl-meta">60 分钟 · 对齐目标</div>
-      <div class="tpl-badge">通用</div>
-    </div>
-    <!-- Coding module templates (hidden by default) -->
-    <div class="tpl-card coding" onclick="openNewMeetingModal('review')">
-      <div class="tpl-icon">🔍</div>
-      <div class="tpl-name">代码评审</div>
-      <div class="tpl-meta">60 分钟 · CR 专用</div>
-      <div class="tpl-badge code-badge">编码模块</div>
-    </div>
-    <div class="tpl-card coding" onclick="openNewMeetingModal('pair')">
-      <div class="tpl-icon">👥</div>
-      <div class="tpl-name">结对编程</div>
-      <div class="tpl-meta">90 分钟 · 协作开发</div>
-      <div class="tpl-badge code-badge">编码模块</div>
-    </div>
-    <div class="tpl-card coding" onclick="openNewMeetingModal('bugretro')">
-      <div class="tpl-icon">🐛</div>
-      <div class="tpl-name">Bug 复盘</div>
-      <div class="tpl-meta">45 分钟 · 技术复盘</div>
-      <div class="tpl-badge code-badge">编码模块</div>
+    <div class="stat">
+      <div class="s-ico">✅</div>
+      <div class="s-val" id="stat-actions">0</div>
+      <div class="s-lbl">行动项</div>
     </div>
   </div>
 
-  <div class="section-title">近期会议 <span class="subtitle">点击查看详情</span></div>
-  <div id="recent-meetings-list">
-    <div class="empty-state">
-      <div class="empty-ico">🎙</div>
-      <p>还没有会议记录<br>开始你的第一次智能会议吧</p>
-    </div>
+  <div class="section-hd">
+    <span class="shd-title">近期会议</span>
+    <span class="shd-sub">最近 5 条</span>
   </div>
+  <div id="recent-list"></div>
 </div>
 </div>
 
-<!-- MEETING ROOM -->
+<!-- ══ MEETING ROOM ══ -->
 <div class="section" id="sec-room">
-<div class="container" style="padding-bottom:0">
-  <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;flex-wrap:wrap;gap:8px">
-    <div>
-      <div class="meeting-title-display" id="room-title">会议名称</div>
-      <div style="margin-top:4px;display:flex;align-items:center;gap:8px">
-        <span class="meeting-tpl-tag" id="room-tpl-tag">☀️ 日常例会</span>
-        <span class="chip chip-green" id="room-status-chip"><span class="rec-dot"></span> 进行中</span>
+<div class="container" style="padding-bottom:8px">
+  <div class="room-header">
+    <div class="room-header-left">
+      <div class="room-title" id="room-title">会议名称</div>
+      <div class="room-meta">
+        <span class="room-badge rb-info" id="room-badge">📅 会议</span>
+        <span class="room-badge rb-live" id="room-live-badge" style="display:none"><span class="rec-dot"></span> 录音中</span>
       </div>
     </div>
-    <div style="display:flex;gap:8px">
-      <button class="btn btn-secondary btn-sm" onclick="exportMeeting('markdown')">📥 导出</button>
-      <button class="btn btn-danger btn-sm" onclick="endMeeting()">⏹ 结束会议</button>
+    <div class="room-header-right">
+      <!-- Code mode toggle inline -->
+      <div class="code-mode-toggle" id="code-mode-toggle" onclick="toggleCodeMode()" title="开启代码模式">
+        <span>💻</span>
+        <span class="cmt-label">代码模式</span>
+        <label class="toggle" onclick="event.stopPropagation()">
+          <input type="checkbox" id="code-mode-cb" onchange="toggleCodeMode()">
+          <span class="tslider"></span>
+        </label>
+      </div>
+      <button class="btn btn-secondary btn-sm" onclick="generateSummary()">🤖 AI 总结</button>
+      <button class="btn btn-secondary btn-sm" onclick="exportCurrent('markdown')">📥 导出</button>
+      <button class="btn btn-danger btn-sm" onclick="endMeeting()">⏹ 结束</button>
     </div>
   </div>
-  <div class="room-layout">
-    <!-- Left panel -->
-    <div class="room-panel room-left">
-      <div class="panel-title">计时</div>
-      <div class="timer-display">
-        <div class="timer-num" id="room-timer">00:00</div>
-        <div class="timer-label" id="room-timer-label">会议时长</div>
+
+  <div class="room-grid">
+    <!-- Left: timer + agenda -->
+    <div class="rpanel room-left-panel">
+      <div class="rpanel-title">计时</div>
+      <div class="timer-wrap">
+        <div class="timer-val" id="room-timer">00:00</div>
+        <div class="timer-sub">会议时长</div>
       </div>
       <div class="divider"></div>
-      <div class="panel-title">议程</div>
+      <div class="rpanel-title">议程</div>
       <ul class="agenda-list" id="room-agenda"></ul>
     </div>
-    <!-- Center panel -->
-    <div class="room-panel" style="min-height:500px">
-      <div class="room-center-tabs" id="center-tabs">
-        <button class="active" onclick="switchCenterTab('notes',this)">📝 笔记</button>
-        <button class="coding-tab" style="display:none" onclick="switchCenterTab('code',this)">💻 代码</button>
-      </div>
-      <!-- Notes tab -->
-      <div class="center-tab-content active" id="ctab-notes">
-        <textarea class="notes-area" id="room-notes" placeholder="在这里记录会议笔记…
 
-Ctrl+Enter 快速插入分隔线
-支持 Markdown 格式"></textarea>
+    <!-- Center: notes / code -->
+    <div class="center-panel">
+      <div class="center-tabs" id="center-tabs">
+        <button class="active" onclick="switchTab('notes',this)">📝 笔记</button>
+        <button id="code-tab-btn" style="display:none" onclick="switchTab('code',this)">💻 代码</button>
       </div>
-      <!-- Code tab (coding module) -->
-      <div class="center-tab-content" id="ctab-code">
-        <div class="code-toolbar">
+      <!-- Notes -->
+      <div class="ctab active" id="ctab-notes">
+        <textarea class="notes-ta" id="room-notes" placeholder="在这里记录会议笔记…
+
+自动识别到的待办事项会在右侧行动项中显示
+支持 Markdown · Ctrl+Enter 插入分隔线"></textarea>
+      </div>
+      <!-- Code -->
+      <div class="ctab" id="ctab-code">
+        <div class="code-tbar">
           <button class="btn btn-secondary btn-sm" onclick="insertCodeToNotes()">📋 插入笔记</button>
-          <button class="btn btn-secondary btn-sm" onclick="clearCode()">🗑 清空</button>
-          <select id="code-lang" style="padding:5px 10px;border-radius:var(--r-sm);border:1.5px solid var(--border);background:var(--bg2);color:var(--text1);font-size:13px">
-            <option>JavaScript</option><option>Python</option><option>Java</option><option>Go</option><option>TypeScript</option><option>Bash</option><option>SQL</option>
+          <select id="code-lang" style="max-width:140px;padding:5px 10px;font-size:13px">
+            <option>JavaScript</option><option>Python</option><option>Java</option><option>Go</option><option>TypeScript</option><option>Rust</option><option>Bash</option><option>SQL</option><option>C++</option>
           </select>
         </div>
-        <div class="code-editor-wrap" style="flex:1">
-          <div class="code-nums" id="code-line-nums">1</div>
-          <textarea class="code-textarea" id="room-code" placeholder="// 粘贴或输入代码片段..." onkeydown="handleCodeKey(event)" oninput="updateLineNums()"></textarea>
+        <div class="code-wrap">
+          <div class="line-nums" id="line-nums">1</div>
+          <textarea class="code-ta" id="room-code" placeholder="// 粘贴或输入代码片段..." onkeydown="codeKey(event)" oninput="updateNums()"></textarea>
         </div>
       </div>
     </div>
-    <!-- Right panel -->
-    <div class="room-panel room-right">
-      <div class="panel-title">实时转录</div>
-      <div id="speech-status-bar" style="margin-bottom:6px"></div>
-      <div class="transcript-feed" id="transcript-feed">
-        <div class="tx-interim-live" id="tx-interim">等待开始录音...</div>
+
+    <!-- Right: transcript + actions -->
+    <div class="rpanel room-right-panel">
+      <div class="rpanel-title">实时转录</div>
+      <div id="speech-warn"></div>
+      <div class="tx-feed" id="tx-feed">
+        <div class="tx-live" id="tx-live">🎙 点击下方按钮开始录音...</div>
       </div>
       <div class="divider"></div>
-      <div class="panel-title">行动项</div>
-      <div class="actions-list" id="actions-list"></div>
-      <div class="action-add">
-        <input type="text" id="action-input" placeholder="添加行动项..." onkeydown="if(event.key==='Enter')addAction()">
+      <div style="display:flex;align-items:center;gap:6px">
+        <div class="rpanel-title" style="flex:1">行动项</div>
+        <span id="auto-detected-count" style="font-size:11px;color:var(--warn);display:none">🤖 自动识别</span>
+      </div>
+      <div class="actions-wrap" id="actions-wrap"></div>
+      <div class="ac-add">
+        <input type="text" id="ac-input" placeholder="手动添加待办..." onkeydown="if(event.key==='Enter')addAction()">
         <button onclick="addAction()">+</button>
       </div>
     </div>
   </div>
-  <div class="room-bottom">
-    <button class="mic-btn off" id="mic-btn" onclick="toggleMic()">🎙 开始录音</button>
-    <button class="btn btn-secondary" onclick="generateAISummary()">🤖 AI 总结</button>
-    <button class="btn btn-secondary" onclick="showSection('dashboard')">🏠 返回首页</button>
+
+  <!-- BIG MIC BUTTON -->
+  <div class="room-mic-bar">
+    <button class="big-mic-btn off" id="big-mic" onclick="toggleMic()">
+      🎙 &nbsp;点击开始录音
+    </button>
+    <div class="mic-sub-row">
+      <button class="btn btn-ghost btn-sm" onclick="nav('dashboard')">🏠 返回首页</button>
+      <span id="mic-hint" style="font-size:12px;color:var(--text3)">支持 Chrome / Edge · 需要麦克风权限</span>
+    </div>
   </div>
 </div>
 </div>
 
-<!-- SUMMARY -->
+<!-- ══ SUMMARY ══ -->
 <div class="section" id="sec-summary">
 <div class="container">
-  <div style="display:flex;gap:10px;margin-bottom:20px">
-    <button class="btn btn-secondary" onclick="showSection('history')">← 返回历史</button>
-    <button class="btn btn-primary" onclick="exportMeeting('markdown','summary')" id="export-btn-summary">📥 导出 Markdown</button>
-    <button class="btn btn-secondary" onclick="exportMeeting('txt','summary')">📄 导出 TXT</button>
+  <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">
+    <button class="btn btn-secondary" onclick="nav('history')">← 返回历史</button>
+    <button class="btn btn-primary" id="sum-export-btn">📥 导出 Markdown</button>
+    <button class="btn btn-secondary" onclick="exportById(viewingId,'txt')">📄 导出 TXT</button>
   </div>
-  <div class="summary-header" id="summary-header">
+  <div class="sum-hero">
     <h2 id="sum-title">会议总结</h2>
-    <div class="summary-meta" id="sum-meta"></div>
+    <div class="sum-meta" id="sum-meta"></div>
   </div>
-  <div class="summary-grid" id="summary-grid">
-    <div class="summary-block">
+  <div class="sum-grid">
+    <div class="sum-block">
       <h3>📌 会议主旨</h3>
-      <p class="summary-txt" id="sum-gist">—</p>
+      <p class="sum-txt" id="sum-gist">—</p>
     </div>
-    <div class="summary-block">
-      <h3>✅ 主要决议</h3>
+    <div class="sum-block">
+      <h3>✅ 达成共识 / 决议</h3>
       <ul id="sum-decisions"></ul>
     </div>
-    <div class="summary-block">
+    <div class="sum-block">
       <h3>📋 待办事项</h3>
       <ul id="sum-todos"></ul>
     </div>
-    <div class="summary-block">
-      <h3>💬 会议实录（摘要）</h3>
-      <p class="summary-txt" id="sum-transcript">—</p>
+    <div class="sum-block">
+      <h3>💬 实录摘要</h3>
+      <p class="sum-txt" id="sum-tx">—</p>
     </div>
   </div>
-  <div style="margin-top:20px" id="sum-notes-block">
-    <div class="summary-block">
-      <h3>📝 会议笔记</h3>
-      <p class="summary-txt" id="sum-notes">—</p>
-    </div>
+  <div class="sum-block" style="margin-bottom:0">
+    <h3>📝 会议笔记</h3>
+    <p class="sum-txt" id="sum-notes">—</p>
   </div>
 </div>
 </div>
 
-<!-- HISTORY -->
+<!-- ══ HISTORY ══ -->
 <div class="section" id="sec-history">
 <div class="container">
-  <div class="section-title">历史会议</div>
-  <div class="history-filters">
-    <input type="text" class="history-search" id="history-search" placeholder="🔍 搜索会议..." oninput="renderHistory()">
-    <button class="filter-btn active" data-filter="all" onclick="setHistoryFilter('all',this)">全部</button>
-    <button class="filter-btn" data-filter="general" onclick="setHistoryFilter('general',this)">通用</button>
-    <button class="filter-btn coding-filter" style="display:none" data-filter="coding" onclick="setHistoryFilter('coding',this)">编码</button>
+  <div class="page-title">历史记录</div>
+  <div class="hist-toolbar">
+    <input type="text" class="hist-search" id="hist-search" placeholder="🔍 搜索会议..." oninput="renderHist()">
+    <button class="filt active" data-f="all" onclick="setFilt('all',this)">全部</button>
   </div>
-  <div id="history-list"></div>
+  <div id="hist-list"></div>
 </div>
 </div>
 
-<!-- SETTINGS -->
+<!-- ══ SETTINGS ══ -->
 <div class="section" id="sec-settings">
 <div class="container">
-  <div class="section-title">设置</div>
-  <div class="settings-section">
+  <div class="page-title">设置</div>
+  <div class="settings-wrap">
 
-    <!-- Coding module big toggle -->
-    <div class="coding-toggle-card" id="coding-card" onclick="toggleCodingModule()">
-      <div class="ctc-icon">💻</div>
-      <div class="ctc-info">
-        <div class="ctc-title">编码会议专项模块</div>
-        <div class="ctc-desc">开启后解锁：内嵌代码编辑器、技术会议模板、代码-笔记双向绑定、技术术语识别等专属能力。默认关闭，不影响通用会议使用。</div>
+    <!-- Multi-device sync -->
+    <div class="sg">
+      <div class="sg-title">☁️ 多端同步（GitHub Gist）</div>
+      <div class="sr">
+        <div class="sr-info">
+          <div class="sr-label">同步状态</div>
+          <div class="sr-desc">使用私密 Gist 跨设备同步数据，输入 PAT 即可</div>
+        </div>
+        <div class="sync-status">
+          <div class="sync-dot" id="sync-dot-settings"></div>
+          <span id="sync-label-settings">未配置</span>
+        </div>
       </div>
-      <label class="toggle" onclick="event.stopPropagation()">
-        <input type="checkbox" id="coding-module-toggle" onchange="toggleCodingModule()">
-        <span class="toggle-slider"></span>
-      </label>
+      <div class="sr" style="flex-direction:column;align-items:flex-start;gap:10px">
+        <div style="width:100%">
+          <div class="mlabel">GitHub Personal Access Token</div>
+          <div style="display:flex;gap:8px;width:100%">
+            <input type="password" id="gist-pat-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" style="flex:1;font-size:13px">
+            <button class="btn btn-primary btn-sm" onclick="connectGist()" style="flex-shrink:0">连接</button>
+            <button class="btn btn-secondary btn-sm" onclick="disconnectGist()" style="flex-shrink:0">断开</button>
+          </div>
+          <div style="font-size:12px;color:var(--text3);margin-top:6px">需要 <code style="background:var(--bg2);padding:1px 5px;border-radius:4px">gist</code> 权限。在 <a href="https://github.com/settings/tokens/new" target="_blank">GitHub → Settings → Tokens</a> 创建</div>
+        </div>
+        <div style="display:flex;gap:8px">
+          <button class="btn btn-secondary btn-sm" onclick="syncNow()">🔄 立即同步</button>
+          <button class="btn btn-secondary btn-sm" onclick="pullSync()">⬇ 从云端拉取</button>
+        </div>
+        <div id="sync-msg" style="font-size:12px;color:var(--text2)"></div>
+      </div>
+      <div class="sr">
+        <div class="sr-info">
+          <div class="sr-label">🔌 浏览器插件</div>
+          <div class="sr-desc">Chrome 扩展可实现一键开始录音、浮窗控制。<a href="#" onclick="downloadExtension()">下载扩展包</a> 后在 chrome://extensions 中加载</div>
+        </div>
+        <span class="chip chip-blue">Beta</span>
+      </div>
+      <div class="sr">
+        <div class="sr-info">
+          <div class="sr-label">📱 移动端访问</div>
+          <div class="sr-desc">在手机浏览器直接访问 meet-pilot.github.io，已针对移动端优化。小程序版本规划中。</div>
+        </div>
+        <span class="chip chip-green">可用</span>
+      </div>
     </div>
 
-    <div class="setting-group">
-      <div class="setting-group-title">外观</div>
-      <div class="setting-row">
-        <div class="s-info">
-          <div class="s-label">深色主题</div>
-          <div class="s-desc">保护眼睛，适合夜间使用</div>
+    <!-- 外观 -->
+    <div class="sg">
+      <div class="sg-title">外观</div>
+      <div class="sr">
+        <div class="sr-info">
+          <div class="sr-label">深色主题</div>
+          <div class="sr-desc">保护眼睛，适合夜间使用</div>
         </div>
         <label class="toggle">
-          <input type="checkbox" id="theme-toggle-setting" onchange="toggleTheme()">
-          <span class="toggle-slider"></span>
+          <input type="checkbox" id="dark-toggle" onchange="toggleTheme()">
+          <span class="tslider"></span>
         </label>
       </div>
     </div>
 
-    <div class="setting-group">
-      <div class="setting-group-title">语音识别</div>
-      <div class="setting-row">
-        <div class="s-info">
-          <div class="s-label">识别语言</div>
-          <div class="s-desc">实时转写所用语言</div>
+    <!-- 语音 -->
+    <div class="sg">
+      <div class="sg-title">语音识别</div>
+      <div class="sr">
+        <div class="sr-info">
+          <div class="sr-label">识别语言</div>
+          <div class="sr-desc">实时转写所用语言</div>
         </div>
-        <select id="speech-lang-select" style="padding:6px 10px;border-radius:var(--r-sm);border:1.5px solid var(--border);background:var(--bg2);color:var(--text1);font-size:13px" onchange="saveSetting('speechLang',this.value)">
+        <select id="lang-select" style="max-width:180px;font-size:13px" onchange="saveSetting('lang',this.value)">
           <option value="zh-CN">中文（普通话）</option>
           <option value="zh-TW">中文（繁体）</option>
           <option value="en-US">English (US)</option>
           <option value="ja-JP">日本語</option>
         </select>
       </div>
-      <div class="setting-row">
-        <div class="s-info">
-          <div class="s-label">自动停止识别</div>
-          <div class="s-desc">静音超过 30 秒自动暂停</div>
+      <div class="sr">
+        <div class="sr-info">
+          <div class="sr-label">自动识别待办</div>
+          <div class="sr-desc">从转录中自动提取行动项（含关键词时提醒）</div>
         </div>
         <label class="toggle">
-          <input type="checkbox" id="auto-stop-toggle" checked onchange="saveSetting('autoStop',this.checked)">
-          <span class="toggle-slider"></span>
+          <input type="checkbox" id="auto-action-toggle" checked onchange="saveSetting('autoAction',this.checked)">
+          <span class="tslider"></span>
         </label>
       </div>
     </div>
 
-    <div class="setting-group">
-      <div class="setting-group-title">隐私与数据</div>
-      <div class="setting-row">
-        <div class="s-info">
-          <div class="s-label">🔒 本地优先存储</div>
-          <div class="s-desc">所有会议记录仅保存在本地浏览器，不上传云端</div>
+    <!-- 编码模块 -->
+    <div class="sg">
+      <div class="sg-title">功能模块</div>
+      <div class="sr">
+        <div class="sr-info">
+          <div class="sr-label">💻 编码会议专项模块</div>
+          <div class="sr-desc">全局开关。开启后会议室中出现"代码模式"按钮，可独立控制每次会议是否启用</div>
         </div>
-        <span class="chip chip-green">已启用</span>
-      </div>
-      <div class="setting-row">
-        <div class="s-info">
-          <div class="s-label">音频原始数据</div>
-          <div class="s-desc">仅用于实时转写，不缓存，会议结束自动清空</div>
-        </div>
-        <span class="chip chip-green">安全</span>
-      </div>
-      <div class="setting-row">
-        <div class="s-info">
-          <div class="s-label">清空所有记录</div>
-          <div class="s-desc">删除本地全部会议历史，不可恢复</div>
-        </div>
-        <button class="btn btn-danger btn-sm" onclick="clearAllData()">清空数据</button>
+        <label class="toggle">
+          <input type="checkbox" id="coding-global-toggle" onchange="toggleCodingGlobal()">
+          <span class="tslider"></span>
+        </label>
       </div>
     </div>
 
-    <div class="setting-group">
-      <div class="setting-group-title">关于</div>
-      <div class="setting-row">
-        <div class="s-info">
-          <div class="s-label">MeetPilot</div>
-          <div class="s-desc">智能会议助手 · 本地优先 · 隐私安全</div>
-        </div>
-        <span class="chip chip-blue">v2.0</span>
+    <!-- 隐私 -->
+    <div class="sg">
+      <div class="sg-title">隐私与数据</div>
+      <div class="sr">
+        <div class="sr-info"><div class="sr-label">🔒 本地存储</div><div class="sr-desc">会议记录仅存本地浏览器，不强制上云</div></div>
+        <span class="chip chip-green">已启用</span>
+      </div>
+      <div class="sr">
+        <div class="sr-info"><div class="sr-label">清空所有本地数据</div><div class="sr-desc">删除全部会议历史，不可恢复</div></div>
+        <button class="btn btn-danger btn-sm" onclick="clearAll()">清空</button>
+      </div>
+    </div>
+
+    <div class="sg">
+      <div class="sg-title">关于</div>
+      <div class="sr">
+        <div class="sr-info"><div class="sr-label">MeetPilot</div><div class="sr-desc">智能会议助手 · 本地优先 · 隐私安全 · 多端同步</div></div>
+        <span class="chip chip-blue">v3.0</span>
       </div>
     </div>
   </div>
 </div>
 </div>
 
-<!-- ══ FLOATING BALL ══ -->
-<div class="float-ball" id="float-ball" title="点击切换录音" onclick="toggleMic()">
-  <div class="ball-inner">🎙<div class="ball-rec" id="ball-rec" style="display:none"></div></div>
-</div>
-
 <!-- ══ BOTTOM NAV ══ -->
-<nav class="bottom-nav">
-  <div class="bottom-nav-inner">
-    <div class="bn-btn active" id="bn-dashboard" onclick="showSection('dashboard')">
-      <div class="bn-icon">🏠</div><span>首页</span>
-    </div>
-    <div class="bn-btn" id="bn-room" onclick="showSection('room')">
-      <div class="bn-icon">🎙</div><span>会议室</span>
-    </div>
-    <div class="bn-btn" id="bn-history" onclick="showSection('history')">
-      <div class="bn-icon">📋</div><span>历史</span>
-    </div>
-    <div class="bn-btn" id="bn-settings" onclick="showSection('settings')">
-      <div class="bn-icon">⚙️</div><span>设置</span>
-    </div>
+<nav class="bnav">
+  <div class="bnav-inner">
+    <div class="bnav-btn active" id="bn-dashboard" onclick="nav('dashboard')"><div class="bi">🏠</div><span>首页</span></div>
+    <div class="bnav-btn" id="bn-room" onclick="nav('room')"><div class="bi">🎙</div><span>会议室</span></div>
+    <div class="bnav-btn" id="bn-history" onclick="nav('history')"><div class="bi">📋</div><span>历史</span></div>
+    <div class="bnav-btn" id="bn-settings" onclick="nav('settings')"><div class="bi">⚙️</div><span>设置</span></div>
   </div>
 </nav>
 
 <!-- ══ NEW MEETING MODAL ══ -->
-<div class="modal-overlay" id="new-meeting-modal" onclick="if(event.target===this)closeModal()">
+<div class="overlay" id="modal" onclick="if(event.target===this)closeModal()">
   <div class="modal">
-    <h2>🚀 新建会议</h2>
-    <div class="modal-sub">选择模板，快速开始</div>
-    <div class="modal-tpls" id="modal-tpls">
-      <div class="modal-tpl selected" data-tpl="standup" onclick="selectTpl(this,'standup')">
-        <div class="mt-icon">☀️</div><div class="mt-name">日常例会</div><div class="mt-dur">15 分钟</div>
-      </div>
-      <div class="modal-tpl" data-tpl="business" onclick="selectTpl(this,'business')">
-        <div class="mt-icon">💼</div><div class="mt-name">商务会谈</div><div class="mt-dur">60 分钟</div>
-      </div>
-      <div class="modal-tpl" data-tpl="brainstorm" onclick="selectTpl(this,'brainstorm')">
-        <div class="mt-icon">💡</div><div class="mt-name">头脑风暴</div><div class="mt-dur">45 分钟</div>
-      </div>
-      <div class="modal-tpl" data-tpl="interview" onclick="selectTpl(this,'interview')">
-        <div class="mt-icon">🤝</div><div class="mt-name">访谈调研</div><div class="mt-dur">45 分钟</div>
-      </div>
-      <div class="modal-tpl" data-tpl="training" onclick="selectTpl(this,'training')">
-        <div class="mt-icon">📚</div><div class="mt-name">培训课程</div><div class="mt-dur">90 分钟</div>
-      </div>
-      <div class="modal-tpl" data-tpl="kickoff" onclick="selectTpl(this,'kickoff')">
-        <div class="mt-icon">🚀</div><div class="mt-name">项目启动</div><div class="mt-dur">60 分钟</div>
-      </div>
-      <!-- Coding templates -->
-      <div class="modal-tpl coding-tpl" data-tpl="review" onclick="selectTpl(this,'review')">
-        <div class="mt-icon">🔍</div><div class="mt-name">代码评审</div><div class="mt-dur">60 分钟</div>
-      </div>
-      <div class="modal-tpl coding-tpl" data-tpl="pair" onclick="selectTpl(this,'pair')">
-        <div class="mt-icon">👥</div><div class="mt-name">结对编程</div><div class="mt-dur">90 分钟</div>
-      </div>
-      <div class="modal-tpl coding-tpl" data-tpl="bugretro" onclick="selectTpl(this,'bugretro')">
-        <div class="mt-icon">🐛</div><div class="mt-name">Bug 复盘</div><div class="mt-dur">45 分钟</div>
-      </div>
-    </div>
-    <div class="modal-form">
+    <h2>🚀 开始新会议</h2>
+    <div class="msub">填写基本信息，立即开始</div>
+    <div class="mform">
       <div>
-        <div class="form-label">会议主题</div>
-        <input type="text" id="modal-title" placeholder="例：2026 Q2 产品规划讨论" maxlength="80">
+        <div class="mlabel">会议主题 <span style="color:var(--danger)">*</span></div>
+        <input type="text" id="m-title" placeholder="例：Q2 产品规划讨论" maxlength="80" autofocus>
       </div>
       <div>
-        <div class="form-label">会议议程（每行一项，可选）</div>
-        <textarea id="modal-agenda" rows="3" placeholder="1. 上周进展回顾&#10;2. 本周目标确认&#10;3. 风险与问题" style="border-radius:var(--r-sm);padding:10px 14px;font-size:14px"></textarea>
+        <div class="mlabel">会议议程（每行一项，可选）</div>
+        <textarea id="m-agenda" rows="4" placeholder="1. 现状回顾&#10;2. 问题分析&#10;3. 方案讨论&#10;4. 行动计划" style="border-radius:var(--r-sm);padding:9px 13px;font-size:14px"></textarea>
       </div>
     </div>
-    <div class="modal-actions">
+    <div class="mactions">
       <button class="btn btn-secondary" onclick="closeModal()">取消</button>
-      <button class="btn btn-primary" onclick="startMeeting()">🚀 开始会议</button>
+      <button class="btn btn-primary" onclick="startMeeting()">🚀 开始</button>
     </div>
   </div>
 </div>
 
 <script>
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════
 //  STATE
-// ══════════════════════════════════════════════
-const state = {
+// ══════════════════════════════════════════════════
+const S = {
   section: 'dashboard',
   theme: 'light',
-  codingModule: false,
-  meeting: null,      // active meeting
-  meetings: [],       // history
-  recognition: null,
+  codingGlobal: false,  // global coding module switch
+  codeModeActive: false, // per-meeting code mode
   micActive: false,
+  meeting: null,
+  meetings: [],
+  recognition: null,
   timerInterval: null,
-  settings: {
-    speechLang: 'zh-CN',
-    autoStop: true,
-  },
+  syncStatus: 'none', // none | syncing | synced | error
+  settings: { lang: 'zh-CN', autoAction: true },
 };
+let viewingId = null;
 
-const TEMPLATES = {
-  standup:   {name:'日常例会',   icon:'☀️', dur:15,  type:'general', goal:'同步工作进展与阻碍', agenda:['昨日进展','今日计划','阻碍与风险']},
-  business:  {name:'商务会谈',   icon:'💼', dur:60,  type:'general', goal:'外部合作沟通与需求对齐', agenda:['背景介绍','需求确认','方案探讨','下一步']},
-  brainstorm:{name:'头脑风暴',   icon:'💡', dur:45,  type:'general', goal:'收集创意，发散思路', agenda:['问题定义','自由发散','聚合分析','输出结论']},
-  interview: {name:'访谈调研',   icon:'🤝', dur:45,  type:'general', goal:'用户洞察与需求挖掘', agenda:['自我介绍','背景了解','核心问题','开放提问']},
-  training:  {name:'培训课程',   icon:'📚', dur:90,  type:'general', goal:'知识传递与技能提升', agenda:['课程导入','核心内容','互动环节','总结复习']},
-  kickoff:   {name:'项目启动',   icon:'🚀', dur:60,  type:'general', goal:'对齐目标，建立共识', agenda:['项目背景','目标与范围','角色分工','里程碑']},
-  review:    {name:'代码评审',   icon:'🔍', dur:60,  type:'coding',  goal:'系统性审查代码，提升质量', agenda:['代码走读','问题讨论','优化建议','结论确认']},
-  pair:      {name:'结对编程',   icon:'👥', dur:90,  type:'coding',  goal:'协作开发，实时反馈', agenda:['需求分析','设计方案','编码实现','测试验证']},
-  bugretro:  {name:'Bug 复盘',   icon:'🐛', dur:45,  type:'coding',  goal:'根因分析，制定预防措施', agenda:['问题描述','根因分析','影响评估','改进方案']},
-};
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
 
-const SECTION_IDS = ['dashboard','room','summary','history','settings'];
+// Auto-detect action keywords
+const ACTION_KW = ['需要', '记得', '跟进', '确认', '通知', '联系', '安排', '负责', '待办',
+                   '下一步', '计划', '待确认', 'todo', 'TODO', '要做', '应该', '必须'];
 
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════
 //  INIT
-// ══════════════════════════════════════════════
-function init(){
-  const saved = JSON.parse(localStorage.getItem('meetpilot_data')||'{}');
-  if(saved.theme) state.theme = saved.theme;
-  if(saved.codingModule !== undefined) state.codingModule = saved.codingModule;
-  if(saved.meetings) state.meetings = saved.meetings;
-  if(saved.settings) Object.assign(state.settings, saved.settings);
+// ══════════════════════════════════════════════════
+function init() {
+  const d = JSON.parse(localStorage.getItem('mp3_data') || '{}');
+  if (d.theme) S.theme = d.theme;
+  if (d.codingGlobal !== undefined) S.codingGlobal = d.codingGlobal;
+  if (d.meetings) S.meetings = d.meetings;
+  if (d.settings) Object.assign(S.settings, d.settings);
 
   applyTheme();
-  applyCodingModule();
+  applyCodingGlobal();
   updateStats();
-  renderRecentMeetings();
+  renderRecent();
+  loadSettingsUI();
+  updateSyncUI();
 
-  // Apply settings UI
-  document.getElementById('speech-lang-select').value = state.settings.speechLang;
-  document.getElementById('auto-stop-toggle').checked = state.settings.autoStop !== false;
-}
-
-function saveData(){
-  localStorage.setItem('meetpilot_data', JSON.stringify({
-    theme: state.theme,
-    codingModule: state.codingModule,
-    meetings: state.meetings,
-    settings: state.settings,
-  }));
-}
-
-// ══════════════════════════════════════════════
-//  NAVIGATION
-// ══════════════════════════════════════════════
-function showSection(name){
-  state.section = name;
-  SECTION_IDS.forEach(n => {
-    document.getElementById('sec-'+n)?.classList.toggle('active', n===name);
-    const t = document.getElementById('tnav-'+n);
-    if(t) t.classList.toggle('active', n===name);
-    const b = document.getElementById('bn-'+n);
-    if(b) b.classList.toggle('active', n===name);
-  });
-  if(name==='history') renderHistory();
-  if(name==='room' && state.meeting) document.getElementById('float-ball').classList.add('active');
-  else if(name!=='room') document.getElementById('float-ball').classList.remove('active');
-}
-
-// ══════════════════════════════════════════════
-//  THEME
-// ══════════════════════════════════════════════
-function applyTheme(){
-  document.documentElement.setAttribute('data-theme', state.theme);
-  document.getElementById('theme-toggle').textContent = state.theme==='dark' ? '☀️' : '🌙';
-  document.getElementById('theme-toggle-setting').checked = state.theme==='dark';
-}
-function toggleTheme(){
-  state.theme = state.theme==='dark' ? 'light' : 'dark';
-  applyTheme();
-  saveData();
-}
-
-// ══════════════════════════════════════════════
-//  CODING MODULE
-// ══════════════════════════════════════════════
-function applyCodingModule(){
-  const on = state.codingModule;
-  document.getElementById('coding-module-toggle').checked = on;
-  document.getElementById('coding-card').classList.toggle('enabled', on);
-  // Show/hide coding templates
-  document.querySelectorAll('.tpl-card.coding').forEach(el => el.style.display = on ? '' : 'none');
-  document.querySelectorAll('.modal-tpl.coding-tpl').forEach(el => el.style.display = on ? '' : 'none');
-  document.querySelectorAll('.coding-filter').forEach(el => el.style.display = on ? '' : 'none');
-  // Show/hide coding tab in room
-  document.querySelectorAll('.coding-tab').forEach(el => el.style.display = on ? '' : 'none');
-}
-function toggleCodingModule(){
-  state.codingModule = document.getElementById('coding-module-toggle').checked;
-  applyCodingModule();
-  saveData();
-}
-
-// ══════════════════════════════════════════════
-//  SETTINGS
-// ══════════════════════════════════════════════
-function saveSetting(key, val){
-  state.settings[key] = val;
-  saveData();
-}
-
-// ══════════════════════════════════════════════
-//  NEW MEETING MODAL
-// ══════════════════════════════════════════════
-let selectedTpl = 'standup';
-function openNewMeetingModal(tpl){
-  selectedTpl = tpl || 'standup';
-  document.querySelectorAll('.modal-tpl').forEach(el => el.classList.toggle('selected', el.dataset.tpl===selectedTpl));
-  const t = TEMPLATES[selectedTpl];
-  document.getElementById('modal-title').value = t ? t.name : '';
-  document.getElementById('modal-agenda').value = t ? t.agenda.join('\n') : '';
-  document.getElementById('new-meeting-modal').classList.add('open');
-  setTimeout(()=>document.getElementById('modal-title').focus(), 100);
-}
-function closeModal(){
-  document.getElementById('new-meeting-modal').classList.remove('open');
-}
-function selectTpl(el, tpl){
-  selectedTpl = tpl;
-  document.querySelectorAll('.modal-tpl').forEach(e => e.classList.remove('selected'));
-  el.classList.add('selected');
-  const t = TEMPLATES[tpl];
-  if(t){
-    document.getElementById('modal-title').value = t.name;
-    document.getElementById('modal-agenda').value = t.agenda.join('\n');
+  // Restore gist PAT indicator
+  if (localStorage.getItem('mp3_gist_pat')) {
+    document.getElementById('gist-pat-input').value = '••••••••••••••••••••';
   }
 }
 
-// ══════════════════════════════════════════════
+function saveData() {
+  localStorage.setItem('mp3_data', JSON.stringify({
+    theme: S.theme, codingGlobal: S.codingGlobal,
+    meetings: S.meetings, settings: S.settings,
+  }));
+}
+
+// ══════════════════════════════════════════════════
+//  NAVIGATION
+// ══════════════════════════════════════════════════
+const SECTIONS = ['dashboard','room','summary','history','settings'];
+
+function nav(name) {
+  S.section = name;
+  SECTIONS.forEach(n => {
+    document.getElementById('sec-'+n)?.classList.toggle('active', n===name);
+    document.getElementById('tnav-'+n)?.classList.toggle('active', n===name);
+    document.getElementById('bn-'+n)?.classList.toggle('active', n===name);
+  });
+  if (name === 'history') renderHist();
+}
+
+// ══════════════════════════════════════════════════
+//  THEME
+// ══════════════════════════════════════════════════
+function applyTheme() {
+  document.documentElement.setAttribute('data-theme', S.theme);
+  document.getElementById('theme-icon').textContent = S.theme === 'dark' ? '☀️' : '🌙';
+  const dt = document.getElementById('dark-toggle');
+  if (dt) dt.checked = S.theme === 'dark';
+}
+function toggleTheme() {
+  S.theme = S.theme === 'dark' ? 'light' : 'dark';
+  applyTheme();
+  saveData();
+}
+
+// ══════════════════════════════════════════════════
+//  CODING MODULE
+// ══════════════════════════════════════════════════
+function applyCodingGlobal() {
+  const on = S.codingGlobal;
+  const tog = document.getElementById('coding-global-toggle');
+  if (tog) tog.checked = on;
+  // Show/hide code mode toggle in room
+  document.getElementById('code-mode-toggle').style.display = on ? '' : 'none';
+}
+function toggleCodingGlobal() {
+  S.codingGlobal = document.getElementById('coding-global-toggle').checked;
+  applyCodingGlobal();
+  // If turning off, also disable code mode
+  if (!S.codingGlobal) setCodeMode(false);
+  saveData();
+}
+
+function toggleCodeMode() {
+  const cb = document.getElementById('code-mode-cb');
+  setCodeMode(cb.checked);
+}
+function setCodeMode(on) {
+  S.codeModeActive = on;
+  document.getElementById('code-mode-cb').checked = on;
+  document.getElementById('code-mode-toggle').classList.toggle('on', on);
+  document.getElementById('code-tab-btn').style.display = on ? '' : 'none';
+  if (!on && S.section === 'room') {
+    // Switch back to notes if code tab is active
+    const codeTabActive = document.getElementById('ctab-code').classList.contains('active');
+    if (codeTabActive) switchTab('notes', document.querySelector('.center-tabs button'));
+  }
+}
+
+// ══════════════════════════════════════════════════
+//  SETTINGS
+// ══════════════════════════════════════════════════
+function saveSetting(k, v) {
+  S.settings[k] = v;
+  saveData();
+}
+function loadSettingsUI() {
+  const ls = document.getElementById('lang-select');
+  if (ls) ls.value = S.settings.lang || 'zh-CN';
+  const aa = document.getElementById('auto-action-toggle');
+  if (aa) aa.checked = S.settings.autoAction !== false;
+}
+
+// ══════════════════════════════════════════════════
+//  MODAL
+// ══════════════════════════════════════════════════
+function openModal() {
+  document.getElementById('modal').classList.add('open');
+  setTimeout(() => document.getElementById('m-title').focus(), 80);
+}
+function closeModal() {
+  document.getElementById('modal').classList.remove('open');
+}
+
+// ══════════════════════════════════════════════════
 //  START / END MEETING
-// ══════════════════════════════════════════════
-function startMeeting(){
-  const title = document.getElementById('modal-title').value.trim() || '未命名会议';
-  const agendaRaw = document.getElementById('modal-agenda').value.trim();
-  const agenda = agendaRaw ? agendaRaw.split('\n').filter(Boolean) : [];
-  const tpl = TEMPLATES[selectedTpl] || TEMPLATES['standup'];
+// ══════════════════════════════════════════════════
+function startMeeting() {
+  const title = document.getElementById('m-title').value.trim();
+  if (!title) { document.getElementById('m-title').focus(); return; }
+  const agRaw = document.getElementById('m-agenda').value.trim();
+  const agenda = agRaw ? agRaw.split('\n').filter(Boolean) : [];
   closeModal();
 
-  state.meeting = {
+  S.meeting = {
     id: Date.now(),
     title,
-    tpl: selectedTpl,
-    tplName: tpl.name,
-    tplIcon: tpl.icon,
-    tplType: tpl.type,
-    startTime: Date.now(),
     agenda,
+    startTime: Date.now(),
+    endTime: null,
     transcript: [],
     notes: '',
     code: '',
     actions: [],
     summary: null,
   };
+  S.codeModeActive = false;
 
-  // Update room UI
+  // Reset room UI
   document.getElementById('room-title').textContent = title;
-  document.getElementById('room-tpl-tag').textContent = tpl.icon + ' ' + tpl.name;
+  document.getElementById('room-badge').textContent = '📅 ' + new Date().toLocaleDateString('zh-CN',{month:'2-digit',day:'2-digit'});
+  document.getElementById('room-live-badge').style.display = 'none';
   document.getElementById('room-notes').value = '';
   document.getElementById('room-code').value = '';
-  document.getElementById('transcript-feed').innerHTML = '<div class="tx-interim-live" id="tx-interim">🎙 点击"开始录音"启动实时转写...</div>';
-  document.getElementById('actions-list').innerHTML = '';
+  document.getElementById('tx-feed').innerHTML = '<div class="tx-live" id="tx-live">🎙 点击下方按钮开始录音...</div>';
+  document.getElementById('actions-wrap').innerHTML = '';
+  document.getElementById('auto-detected-count').style.display = 'none';
 
-  // Render agenda
+  // Agenda
   const ul = document.getElementById('room-agenda');
-  ul.innerHTML = agenda.map((a,i) => `<li class="agenda-item" onclick="this.classList.toggle('done')"><span class="agenda-num">${i+1}</span>${a}</li>`).join('');
+  ul.innerHTML = agenda.map((a,i) =>
+    `<li class="agenda-item" onclick="this.classList.toggle('done')"><span class="ag-num">${i+1}</span>${a}</li>`
+  ).join('');
 
-  // Start timer
-  clearInterval(state.timerInterval);
-  state.timerInterval = setInterval(updateTimer, 1000);
+  // Code mode reset
+  setCodeMode(false);
+  document.getElementById('code-tab-btn').style.display = 'none';
+  applyCodingGlobal();
+  document.getElementById('code-mode-cb').checked = false;
+  document.getElementById('code-mode-toggle').classList.remove('on');
 
-  // Floating ball
-  document.getElementById('float-ball').classList.add('active');
+  // Timer
+  clearInterval(S.timerInterval);
+  S.timerInterval = setInterval(() => {
+    if (!S.meeting) return;
+    const secs = Math.floor((Date.now() - S.meeting.startTime) / 1000);
+    document.getElementById('room-timer').textContent =
+      String(Math.floor(secs/60)).padStart(2,'0') + ':' + String(secs%60).padStart(2,'0');
+  }, 1000);
 
-  showSection('room');
-  checkSpeechSupport();
+  checkSpeech();
+  nav('room');
 }
 
-function updateTimer(){
-  if(!state.meeting) return;
-  const secs = Math.floor((Date.now() - state.meeting.startTime) / 1000);
-  const m = String(Math.floor(secs/60)).padStart(2,'0');
-  const s = String(secs%60).padStart(2,'0');
-  document.getElementById('room-timer').textContent = m + ':' + s;
-}
-
-function endMeeting(){
-  if(!confirm('确定要结束当前会议并生成总结吗？')) return;
-  clearInterval(state.timerInterval);
+function endMeeting() {
+  if (!confirm('结束会议并生成 AI 总结？')) return;
+  clearInterval(S.timerInterval);
   stopMic();
 
-  if(state.meeting){
-    state.meeting.endTime = Date.now();
-    state.meeting.notes = document.getElementById('room-notes').value;
-    state.meeting.code = document.getElementById('room-code').value;
-    state.meeting.actions = getActions();
-
-    // Generate summary
-    state.meeting.summary = buildSummary(state.meeting);
-
-    // Save to history
-    state.meetings.unshift(state.meeting);
-    if(state.meetings.length > 100) state.meetings.pop();
+  if (S.meeting) {
+    S.meeting.endTime = Date.now();
+    S.meeting.notes = document.getElementById('room-notes').value;
+    S.meeting.code = document.getElementById('room-code').value;
+    S.meeting.actions = getActions();
+    S.meeting.summary = buildSummary(S.meeting);
+    S.meetings.unshift(S.meeting);
+    if (S.meetings.length > 200) S.meetings.pop();
     saveData();
     updateStats();
-    renderRecentMeetings();
+    renderRecent();
+    syncNowSilent();
 
-    // Show summary
-    renderSummary(state.meeting);
-    showSection('summary');
-    document.getElementById('float-ball').classList.remove('active');
+    viewingId = S.meeting.id;
+    renderSummary(S.meeting);
+    document.getElementById('sum-export-btn').onclick = () => exportById(viewingId, 'markdown');
+    nav('summary');
+    S.meeting = null;
   }
 }
 
-// ══════════════════════════════════════════════
-//  CENTER TAB SWITCH
-// ══════════════════════════════════════════════
-function switchCenterTab(tab, btn){
-  document.querySelectorAll('.center-tab-content').forEach(el=>el.classList.remove('active'));
-  document.querySelectorAll('.room-center-tabs button').forEach(el=>el.classList.remove('active'));
+// ══════════════════════════════════════════════════
+//  CENTER TAB
+// ══════════════════════════════════════════════════
+function switchTab(tab, btn) {
+  document.querySelectorAll('.ctab').forEach(el => el.classList.remove('active'));
+  document.querySelectorAll('.center-tabs button').forEach(el => el.classList.remove('active'));
   document.getElementById('ctab-'+tab).classList.add('active');
-  if(btn) btn.classList.add('active');
+  if (btn) btn.classList.add('active');
 }
 
-// ══════════════════════════════════════════════
-//  SPEECH RECOGNITION
-// ══════════════════════════════════════════════
-const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-function checkSpeechSupport(){
-  const bar = document.getElementById('speech-status-bar');
-  if(!SR){
-    bar.innerHTML = '<div class="speech-unsupported">⚠️ 当前浏览器不支持语音识别，请使用 Chrome 或 Edge</div>';
-    document.getElementById('mic-btn').disabled = true;
+// ══════════════════════════════════════════════════
+//  SPEECH
+// ══════════════════════════════════════════════════
+function checkSpeech() {
+  const w = document.getElementById('speech-warn');
+  const mb = document.getElementById('big-mic');
+  if (!SR) {
+    w.innerHTML = '<div style="font-size:12px;color:var(--warn);padding:7px 10px;background:rgba(245,158,11,.1);border-radius:var(--r-sm);margin-bottom:6px">⚠️ 请使用 Chrome 或 Edge 浏览器以启用语音识别</div>';
+    mb.disabled = true;
+    mb.style.opacity = '.5';
   } else {
-    bar.innerHTML = '';
-    document.getElementById('mic-btn').disabled = false;
+    w.innerHTML = '';
+    mb.disabled = false;
+    mb.style.opacity = '';
   }
 }
 
-function toggleMic(){
-  if(state.micActive) stopMic();
-  else startMic();
+function toggleMic() {
+  S.micActive ? stopMic() : startMic();
 }
 
-function startMic(){
-  if(!SR){ alert('您的浏览器不支持语音识别功能，请使用 Chrome 或 Edge'); return; }
-  if(state.recognition) state.recognition.abort();
+function startMic() {
+  if (!SR) { alert('请使用 Chrome 或 Edge 浏览器'); return; }
+  if (S.recognition) S.recognition.abort();
 
   const r = new SR();
-  r.lang = state.settings.speechLang || 'zh-CN';
+  r.lang = S.settings.lang || 'zh-CN';
   r.continuous = true;
   r.interimResults = true;
-  state.recognition = r;
-  state.micActive = true;
+  S.recognition = r;
+  S.micActive = true;
 
-  r.onresult = function(e){
+  r.onresult = (e) => {
     let interim = '';
-    for(let i=e.resultIndex;i<e.results.length;i++){
+    for (let i = e.resultIndex; i < e.results.length; i++) {
       const txt = e.results[i][0].transcript;
-      if(e.results[i].isFinal){
-        addTranscript(txt, true);
-        if(state.meeting) state.meeting.transcript.push({time:Date.now(), text:txt});
+      if (e.results[i].isFinal) {
+        addTx(txt, true);
+        if (S.meeting) S.meeting.transcript.push({ time: Date.now(), text: txt });
+        // Auto-detect action items
+        if (S.settings.autoAction !== false) autoDetect(txt);
       } else {
         interim += txt;
       }
     }
-    const el = document.getElementById('tx-interim');
-    if(el) el.textContent = interim || '';
+    const live = document.getElementById('tx-live');
+    if (live) live.textContent = interim || '';
   };
 
-  r.onerror = function(e){
-    if(e.error==='not-allowed'){
+  r.onerror = (e) => {
+    if (e.error === 'not-allowed') {
       alert('麦克风权限被拒绝，请在浏览器设置中允许麦克风访问');
       stopMic(); return;
     }
-    if(e.error!=='aborted') console.warn('Speech error:', e.error);
+    if (e.error !== 'aborted') console.warn('Speech:', e.error);
   };
 
-  r.onend = function(){
-    if(state.micActive){
-      // Auto-restart
-      try{ state.recognition.start(); }catch(err){}
-    }
+  r.onend = () => {
+    if (S.micActive) try { S.recognition.start(); } catch(e) {}
   };
 
-  try{
+  try {
     r.start();
     updateMicUI(true);
-  }catch(err){
-    state.micActive = false;
-    alert('无法启动语音识别：' + err.message);
+  } catch(e) {
+    S.micActive = false;
+    toast('无法启动录音：' + e.message);
   }
 }
 
-function stopMic(){
-  state.micActive = false;
-  if(state.recognition){ try{state.recognition.abort();}catch(e){} state.recognition=null; }
+function stopMic() {
+  S.micActive = false;
+  if (S.recognition) { try { S.recognition.abort(); } catch(e) {} S.recognition = null; }
   updateMicUI(false);
 }
 
-function updateMicUI(active){
-  const btn = document.getElementById('mic-btn');
-  const ball = document.getElementById('float-ball');
-  const rec = document.getElementById('ball-rec');
-  if(active){
-    btn.className = 'mic-btn on';
-    btn.innerHTML = '<span class="rec-dot"></span> 录音中…';
-    ball.classList.remove('muted');
-    rec.style.display = 'block';
+function updateMicUI(on) {
+  const mb = document.getElementById('big-mic');
+  const lb = document.getElementById('room-live-badge');
+  if (on) {
+    mb.className = 'big-mic-btn on';
+    mb.innerHTML = '<span class="rec-dot"></span> &nbsp;录音中 — 点击停止';
+    lb.style.display = '';
+    document.getElementById('mic-hint').textContent = '正在使用麦克风 · 实时转写中';
   } else {
-    btn.className = 'mic-btn off';
-    btn.innerHTML = '🎙 开始录音';
-    ball.classList.add('muted');
-    rec.style.display = 'none';
+    mb.className = 'big-mic-btn off';
+    mb.innerHTML = '🎙 &nbsp;点击开始录音';
+    lb.style.display = 'none';
+    document.getElementById('mic-hint').textContent = '支持 Chrome / Edge · 需要麦克风权限';
   }
 }
 
-function addTranscript(text, isFinal){
-  const feed = document.getElementById('transcript-feed');
-  // Remove interim placeholder
-  const interim = document.getElementById('tx-interim');
-  if(interim && isFinal){ interim.textContent = ''; }
+function addTx(text, final) {
+  const feed = document.getElementById('tx-feed');
+  const live = document.getElementById('tx-live');
+  if (live && final) live.textContent = '';
 
-  const now = new Date();
-  const timeStr = now.toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
+  const now = new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
   const el = document.createElement('div');
-  el.className = 'tx-item ' + (isFinal ? 'final' : 'interim');
-  el.innerHTML = `<div class="tx-time">${timeStr}</div>${text}`;
+  el.className = 'tx-item final';
+  el.innerHTML = `<div class="tx-time">${now}</div>${text}`;
   feed.insertBefore(el, feed.firstChild);
-
-  // Keep max 50 entries
-  while(feed.children.length > 52) feed.removeChild(feed.lastChild);
+  while (feed.children.length > 60) feed.removeChild(feed.lastChild);
 }
 
-// ══════════════════════════════════════════════
-//  ACTION ITEMS
-// ══════════════════════════════════════════════
-function addAction(){
-  const inp = document.getElementById('action-input');
-  const text = inp.value.trim();
-  if(!text) return;
-  inp.value = '';
-  const list = document.getElementById('actions-list');
-  const item = document.createElement('div');
-  item.className = 'action-item';
-  item.innerHTML = `<input type="checkbox"><span style="flex:1">${text}</span>`;
-  list.appendChild(item);
-}
+// ══════════════════════════════════════════════════
+//  AUTO-DETECT ACTION ITEMS
+// ══════════════════════════════════════════════════
+let autoDetectedCount = 0;
 
-function getActions(){
-  const items = [];
-  document.querySelectorAll('#actions-list .action-item').forEach(el => {
-    const cb = el.querySelector('input[type=checkbox]');
-    const txt = el.querySelector('span')?.textContent||'';
-    if(txt) items.push({text:txt, done: cb?.checked||false});
+function autoDetect(text) {
+  const hit = ACTION_KW.some(kw => text.includes(kw));
+  if (!hit) return;
+
+  // Extract candidate action: split by punctuation, pick sentences with keywords
+  const sentences = text.split(/[，。！？、；\n]/).filter(s => s.trim().length > 3);
+  const candidates = sentences.filter(s => ACTION_KW.some(kw => s.includes(kw)));
+
+  candidates.forEach(c => {
+    const cleaned = c.trim();
+    if (cleaned.length < 4) return;
+    addActionItem(cleaned, true);
+    autoDetectedCount++;
   });
-  return items;
-}
 
-// ══════════════════════════════════════════════
-//  AI SUMMARY (heuristic)
-// ══════════════════════════════════════════════
-function generateAISummary(){
-  if(!state.meeting) return;
-  const summary = buildSummary(state.meeting, document.getElementById('room-notes').value, getActions());
-  state.meeting.summary = summary;
-
-  // Show a quick toast
-  const toast = document.createElement('div');
-  toast.style.cssText = 'position:fixed;bottom:80px;left:50%;transform:translateX(-50%);background:#333;color:#fff;padding:10px 20px;border-radius:99px;font-size:14px;z-index:999;animation:fadeIn .3s';
-  toast.textContent = '✅ AI 总结已生成，结束会议后可查看完整版';
-  document.body.appendChild(toast);
-  setTimeout(()=>toast.remove(), 2500);
-}
-
-function buildSummary(meeting, notesOverride, actionsOverride){
-  const transcript = meeting.transcript || [];
-  const notes = notesOverride !== undefined ? notesOverride : (meeting.notes || '');
-  const actions = actionsOverride || meeting.actions || [];
-  const tpl = TEMPLATES[meeting.tpl] || TEMPLATES['standup'];
-  const allText = transcript.map(t=>t.text).join(' ');
-
-  // Extract questions
-  const questions = allText.split(/[。！？\n]/).filter(s=>s.includes('？')||s.includes('?')).slice(0,5);
-  // Extract decisions (sentences with decision keywords)
-  const decisionKW = ['决定','确认','同意','通过','明确','计划','安排'];
-  const decisions = allText.split(/[。！？\n]/).filter(s=>decisionKW.some(k=>s.includes(k))).slice(0,5);
-  // Todos from action items
-  const todos = actions.map(a=>a.text);
-
-  // Build gist
-  const dur = meeting.endTime ? Math.round((meeting.endTime - meeting.startTime)/60000) : 0;
-  let gist = `本次「${tpl.name}」会议`;
-  if(dur) gist += `历时约 ${dur} 分钟`;
-  gist += `，围绕「${meeting.title}」展开讨论。`;
-  if(transcript.length > 0){
-    gist += `会议共产生 ${transcript.length} 条转录记录。`;
+  if (autoDetectedCount > 0) {
+    const badge = document.getElementById('auto-detected-count');
+    badge.textContent = `🤖 自动识别 ${autoDetectedCount} 条`;
+    badge.style.display = '';
   }
-  if(tpl.goal) gist += `\n\n会议目标：${tpl.goal}`;
+}
+
+// ══════════════════════════════════════════════════
+//  ACTION ITEMS
+// ══════════════════════════════════════════════════
+function addAction() {
+  const inp = document.getElementById('ac-input');
+  const t = inp.value.trim();
+  if (!t) return;
+  inp.value = '';
+  addActionItem(t, false);
+}
+
+function addActionItem(text, auto) {
+  const wrap = document.getElementById('actions-wrap');
+  const el = document.createElement('div');
+  el.className = 'ac-item';
+  el.innerHTML = `
+    <input type="checkbox">
+    <span class="ac-text">${text}${auto ? '<span class="auto-badge">自动</span>' : ''}</span>
+    <span class="ac-del" onclick="this.parentElement.remove()">×</span>`;
+  wrap.appendChild(el);
+  wrap.scrollTop = wrap.scrollHeight;
+}
+
+function getActions() {
+  const res = [];
+  document.querySelectorAll('#actions-wrap .ac-item').forEach(el => {
+    const cb = el.querySelector('input[type=checkbox]');
+    let txt = el.querySelector('.ac-text')?.textContent || '';
+    txt = txt.replace('自动','').trim();
+    if (txt) res.push({ text: txt, done: cb?.checked || false });
+  });
+  return res;
+}
+
+// ══════════════════════════════════════════════════
+//  CODE EDITOR
+// ══════════════════════════════════════════════════
+function codeKey(e) {
+  if (e.key === 'Tab') {
+    e.preventDefault();
+    const ta = e.target, s = ta.selectionStart;
+    ta.value = ta.value.substring(0,s) + '  ' + ta.value.substring(ta.selectionEnd);
+    ta.selectionStart = ta.selectionEnd = s + 2;
+    updateNums();
+  }
+}
+function updateNums() {
+  const ta = document.getElementById('room-code');
+  const n = (ta.value.match(/\n/g)||[]).length + 1;
+  document.getElementById('line-nums').textContent = Array.from({length:n},(_,i)=>i+1).join('\n');
+}
+function insertCodeToNotes() {
+  const code = document.getElementById('room-code').value.trim();
+  if (!code) return;
+  const lang = document.getElementById('code-lang').value.toLowerCase();
+  const notes = document.getElementById('room-notes');
+  notes.value += `\n\n\`\`\`${lang}\n${code}\n\`\`\`\n`;
+  switchTab('notes', document.querySelector('.center-tabs button'));
+  toast('代码已插入笔记');
+}
+
+// ══════════════════════════════════════════════════
+//  AI SUMMARY
+// ══════════════════════════════════════════════════
+function generateSummary() {
+  if (!S.meeting) return;
+  S.meeting.notes = document.getElementById('room-notes').value;
+  S.meeting.actions = getActions();
+  S.meeting.summary = buildSummary(S.meeting);
+  toast('✅ AI 总结已生成，结束会议后可查看完整版');
+}
+
+function buildSummary(m) {
+  const tx = (m.transcript || []).map(t => t.text).join(' ');
+  const actions = (m.actions || []).map(a => a.text);
+  const dur = m.endTime ? Math.round((m.endTime - m.startTime) / 60000) : 0;
+
+  // Extract decisions
+  const decKW = ['决定','确认','同意','通过','明确','共识'];
+  const all = tx.split(/[。！？\n]/).filter(s => s.length > 3);
+  const decisions = all.filter(s => decKW.some(k => s.includes(k))).slice(0, 5);
+
+  let gist = `本次会议「${m.title}」`;
+  if (dur) gist += `历时约 ${dur} 分钟`;
+  gist += `，围绕主题展开深入讨论。`;
+  if (m.transcript?.length) gist += `\n共产生 ${m.transcript.length} 条实时转录记录。`;
+  if (m.agenda?.length) gist += `\n\n议程覆盖：${m.agenda.join('、')}。`;
 
   return {
     gist,
-    decisions: decisions.length > 0 ? decisions : ['（未识别到明确决议，请在笔记中补充）'],
-    todos: todos.length > 0 ? todos : ['（未添加行动项）'],
-    questions,
-    transcriptSummary: transcript.length > 0
-      ? transcript.slice(-5).map(t=>t.text).join('。')
-      : '（本次会议未启用语音转录）',
-    notes,
+    decisions: decisions.length ? decisions : ['（未从转录中识别到明确决议，请在笔记中补充）'],
+    todos: actions.length ? actions : ['（未添加行动项）'],
+    transcriptSummary: m.transcript?.length
+      ? m.transcript.slice(-6).map(t => t.text).join('。')
+      : '（本次未启用语音转录）',
+    notes: m.notes || '',
   };
 }
 
-function renderSummary(meeting){
-  const s = meeting.summary;
-  if(!s) return;
-  const tpl = TEMPLATES[meeting.tpl] || {};
-  const dur = meeting.endTime ? Math.round((meeting.endTime - meeting.startTime)/60000) : '—';
-  const dateStr = new Date(meeting.startTime).toLocaleString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
-
-  document.getElementById('sum-title').textContent = (tpl.icon||'📋') + ' ' + meeting.title;
-  document.getElementById('sum-meta').textContent = `${dateStr}  ·  时长 ${dur} 分钟  ·  ${tpl.name||'会议'}`;
-  document.getElementById('sum-gist').textContent = s.gist || '—';
-  document.getElementById('sum-transcript').textContent = s.transcriptSummary || '—';
+function renderSummary(m) {
+  const s = m.summary;
+  if (!s) return;
+  const dur = m.endTime ? Math.round((m.endTime - m.startTime) / 60000) : '—';
+  const dt = new Date(m.startTime).toLocaleString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+  document.getElementById('sum-title').textContent = '📋 ' + m.title;
+  document.getElementById('sum-meta').textContent = `${dt}  ·  时长 ${dur} 分钟`;
+  document.getElementById('sum-gist').textContent = s.gist;
+  document.getElementById('sum-tx').textContent = s.transcriptSummary;
   document.getElementById('sum-notes').textContent = s.notes || '（无笔记）';
-
-  const decUl = document.getElementById('sum-decisions');
-  decUl.innerHTML = (s.decisions||[]).map(d=>`<li>${d}</li>`).join('');
-
-  const todoUl = document.getElementById('sum-todos');
-  todoUl.innerHTML = (s.todos||[]).map(t=>`<li>${t}</li>`).join('');
+  document.getElementById('sum-decisions').innerHTML = (s.decisions||[]).map(d=>`<li>${d}</li>`).join('');
+  document.getElementById('sum-todos').innerHTML = (s.todos||[]).map(t=>`<li>${t}</li>`).join('');
 }
 
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════
 //  EXPORT
-// ══════════════════════════════════════════════
-function exportMeeting(fmt, source){
-  const meeting = source==='summary' && state.meetings.length>0 ? state.meetings[0] : state.meeting;
-  if(!meeting){ alert('没有可导出的会议数据'); return; }
+// ══════════════════════════════════════════════════
+function exportCurrent(fmt) {
+  if (!S.meeting) { toast('当前无进行中的会议'); return; }
+  S.meeting.notes = document.getElementById('room-notes').value;
+  S.meeting.actions = getActions();
+  doExport(S.meeting, fmt);
+}
 
-  const tpl = TEMPLATES[meeting.tpl] || {};
-  const dateStr = new Date(meeting.startTime).toLocaleString('zh-CN');
-  const dur = meeting.endTime ? Math.round((meeting.endTime - meeting.startTime)/60000) : '—';
-  const tx = (meeting.transcript||[]).map(t=>t.text).join('\n');
-  const actions = (meeting.actions||[]).map(a=>(a.done?'[x]':'[ ]')+' '+a.text).join('\n');
+function exportById(id, fmt) {
+  const m = S.meetings.find(x => x.id === id);
+  if (!m) { toast('找不到会议数据'); return; }
+  doExport(m, fmt);
+}
 
-  let content = '';
-  if(fmt==='markdown'){
-    content = `# ${tpl.icon||'📋'} ${meeting.title}\n\n`;
-    content += `**日期：** ${dateStr}  \n**时长：** ${dur} 分钟  \n**模板：** ${tpl.name||'会议'}\n\n`;
-    content += `---\n\n## 📌 会议目标\n${tpl.goal||'—'}\n\n`;
-    content += `## 📝 会议笔记\n${meeting.notes||'（无笔记）'}\n\n`;
+function doExport(m, fmt) {
+  const dt = new Date(m.startTime).toLocaleDateString('zh-CN').replace(/\//g,'-');
+  const dur = m.endTime ? Math.round((m.endTime - m.startTime) / 60000) : '—';
+  const tx = (m.transcript||[]).map(t => t.text).join('\n');
+  const actions = (m.actions||[]).map(a => (a.done?'[x]':'[ ]') + ' ' + a.text).join('\n');
+
+  let content;
+  if (fmt === 'markdown') {
+    content = `# 📋 ${m.title}\n\n`;
+    content += `**日期：** ${new Date(m.startTime).toLocaleString('zh-CN')}  \n**时长：** ${dur} 分钟\n\n---\n\n`;
+    if (m.agenda?.length) content += `## 📅 会议议程\n${m.agenda.map((a,i)=>`${i+1}. ${a}`).join('\n')}\n\n`;
+    content += `## 📝 会议笔记\n${m.notes||'（无笔记）'}\n\n`;
     content += `## ✅ 行动项\n${actions||'（无行动项）'}\n\n`;
     content += `## 💬 会议实录\n${tx||'（未启用语音转录）'}\n`;
-    if(meeting.code) content += `\n## 💻 代码片段\n\`\`\`\n${meeting.code}\n\`\`\`\n`;
+    if (m.code) content += `\n## 💻 代码片段\n\`\`\`\n${m.code}\n\`\`\`\n`;
   } else {
-    content = `会议：${meeting.title}\n日期：${dateStr}\n时长：${dur} 分钟\n模板：${tpl.name||'会议'}\n\n`;
-    content += `【会议笔记】\n${meeting.notes||'（无笔记）'}\n\n`;
-    content += `【行动项】\n${actions||'（无行动项）'}\n\n`;
-    content += `【会议实录】\n${tx||'（未启用语音转录）'}\n`;
+    content = `【${m.title}】\n日期：${new Date(m.startTime).toLocaleString('zh-CN')}\n时长：${dur} 分钟\n\n`;
+    content += `【议程】\n${(m.agenda||[]).join('\n')||'无'}\n\n`;
+    content += `【笔记】\n${m.notes||'无'}\n\n`;
+    content += `【行动项】\n${actions||'无'}\n\n`;
+    content += `【实录】\n${tx||'（未启用语音转录）'}\n`;
   }
 
-  const blob = new Blob([content], {type:'text/plain;charset=utf-8'});
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = `${meeting.title}_${new Date(meeting.startTime).toLocaleDateString('zh-CN').replace(/\//g,'-')}.${fmt==='markdown'?'md':'txt'}`;
+  a.href = URL.createObjectURL(new Blob([content], {type:'text/plain;charset=utf-8'}));
+  a.download = `${m.title}_${dt}.${fmt==='markdown'?'md':'txt'}`;
   a.click();
   URL.revokeObjectURL(a.href);
 }
 
-// ══════════════════════════════════════════════
-//  CODE EDITOR
-// ══════════════════════════════════════════════
-function handleCodeKey(e){
-  if(e.key==='Tab'){
-    e.preventDefault();
-    const ta = e.target;
-    const s = ta.selectionStart, end = ta.selectionEnd;
-    ta.value = ta.value.substring(0,s) + '  ' + ta.value.substring(end);
-    ta.selectionStart = ta.selectionEnd = s+2;
-    updateLineNums();
-  }
-}
-function updateLineNums(){
-  const ta = document.getElementById('room-code');
-  const lines = (ta.value.match(/\n/g)||[]).length + 1;
-  document.getElementById('code-line-nums').textContent = Array.from({length:lines},(_,i)=>i+1).join('\n');
-}
-function insertCodeToNotes(){
-  const code = document.getElementById('room-code').value.trim();
-  if(!code) return;
-  const lang = document.getElementById('code-lang').value.toLowerCase();
-  const notes = document.getElementById('room-notes');
-  const insert = `\n\`\`\`${lang}\n${code}\n\`\`\`\n`;
-  notes.value += insert;
-  switchCenterTab('notes', document.querySelector('.room-center-tabs button'));
-}
-function clearCode(){
-  if(confirm('确定清空代码编辑器？')) {
-    document.getElementById('room-code').value = '';
-    updateLineNums();
-  }
-}
+// ══════════════════════════════════════════════════
+//  MULTI-DEVICE SYNC (GitHub Gist)
+// ══════════════════════════════════════════════════
+function getGistPAT() { return localStorage.getItem('mp3_gist_pat') || ''; }
+function getGistId()  { return localStorage.getItem('mp3_gist_id') || ''; }
 
-// ══════════════════════════════════════════════
-//  STATS & RECENT MEETINGS
-// ══════════════════════════════════════════════
-function updateStats(){
-  const total = state.meetings.length;
-  const totalMins = state.meetings.reduce((s,m)=>s+(m.endTime?Math.round((m.endTime-m.startTime)/60000):0),0);
-  const totalActions = state.meetings.reduce((s,m)=>s+(m.actions||[]).length,0);
-  document.getElementById('stat-total').textContent = total;
-  document.getElementById('stat-hours').textContent = Math.round(totalMins/60*10)/10+'h';
-  document.getElementById('stat-actions').textContent = totalActions;
-}
-
-function renderRecentMeetings(){
-  const el = document.getElementById('recent-meetings-list');
-  const recent = state.meetings.slice(0,5);
-  if(!recent.length){
-    el.innerHTML = '<div class="empty-state"><div class="empty-ico">🎙</div><p>还没有会议记录<br>开始你的第一次智能会议吧</p></div>';
+async function connectGist() {
+  let pat = document.getElementById('gist-pat-input').value.trim();
+  if (!pat || pat.startsWith('•')) {
+    toast('请输入有效的 GitHub PAT');
     return;
   }
-  el.innerHTML = '<div class="meeting-list">' + recent.map(m=>meetingItemHTML(m)).join('') + '</div>';
+  // Verify token
+  setSyncStatus('syncing', '验证中...');
+  try {
+    const res = await fetch('https://api.github.com/user', {
+      headers: { Authorization: 'Bearer ' + pat }
+    });
+    if (!res.ok) throw new Error('Token 无效，请检查权限');
+    const user = await res.json();
+    localStorage.setItem('mp3_gist_pat', pat);
+    document.getElementById('gist-pat-input').value = '••••••••••••••••••••';
+    setSyncStatus('synced', '已连接 @' + user.login);
+    updateSyncUI();
+    await syncNow();
+    toast('✅ 已连接 GitHub @' + user.login);
+  } catch(e) {
+    setSyncStatus('error', '连接失败');
+    toast('❌ ' + e.message);
+  }
 }
 
-function meetingItemHTML(m){
-  const tpl = TEMPLATES[m.tpl] || {};
+function disconnectGist() {
+  localStorage.removeItem('mp3_gist_pat');
+  localStorage.removeItem('mp3_gist_id');
+  document.getElementById('gist-pat-input').value = '';
+  setSyncStatus('none', '已断开');
+  updateSyncUI();
+  toast('已断开同步');
+}
+
+async function syncNow() {
+  const pat = getGistPAT();
+  if (!pat) return;
+  setSyncStatus('syncing', '同步中...');
+  try {
+    const data = JSON.stringify({ meetings: S.meetings, settings: S.settings, version: Date.now() });
+    const gistId = getGistId();
+    let res;
+    if (gistId) {
+      res = await fetch(`https://api.github.com/gists/${gistId}`, {
+        method: 'PATCH',
+        headers: { Authorization: 'Bearer '+pat, 'Content-Type': 'application/json' },
+        body: JSON.stringify({ files: { 'meetpilot-data.json': { content: data } } })
+      });
+    } else {
+      res = await fetch('https://api.github.com/gists', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer '+pat, 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          description: 'MeetPilot sync data (private)',
+          public: false,
+          files: { 'meetpilot-data.json': { content: data } }
+        })
+      });
+    }
+    const gist = await res.json();
+    if (!res.ok) throw new Error(gist.message || '同步失败');
+    if (!gistId) localStorage.setItem('mp3_gist_id', gist.id);
+    const now = new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'});
+    setSyncStatus('synced', `上次同步 ${now}`);
+    document.getElementById('sync-msg').textContent = `✅ 数据已同步至 Gist，其他设备凭同一 PAT 可拉取`;
+  } catch(e) {
+    setSyncStatus('error', '同步失败');
+    document.getElementById('sync-msg').textContent = '❌ ' + e.message;
+  }
+}
+
+async function syncNowSilent() {
+  const pat = getGistPAT();
+  if (!pat) return;
+  try { await syncNow(); } catch(e) {}
+}
+
+async function pullSync() {
+  const pat = getGistPAT();
+  if (!pat) { toast('请先连接 GitHub PAT'); return; }
+  const gistId = getGistId();
+  if (!gistId) { toast('尚未创建同步 Gist，请先上传一次'); return; }
+  setSyncStatus('syncing', '拉取中...');
+  try {
+    const res = await fetch(`https://api.github.com/gists/${gistId}`, {
+      headers: { Authorization: 'Bearer '+pat }
+    });
+    const gist = await res.json();
+    if (!res.ok) throw new Error(gist.message || '拉取失败');
+    const raw = gist.files?.['meetpilot-data.json']?.content;
+    if (!raw) throw new Error('Gist 中没有找到 meetpilot-data.json');
+    const d = JSON.parse(raw);
+    if (d.meetings) { S.meetings = d.meetings; }
+    if (d.settings) Object.assign(S.settings, d.settings);
+    saveData();
+    updateStats();
+    renderRecent();
+    const now = new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'});
+    setSyncStatus('synced', `拉取完成 ${now}`);
+    toast('✅ 已从云端拉取最新数据');
+  } catch(e) {
+    setSyncStatus('error', '拉取失败');
+    toast('❌ ' + e.message);
+  }
+}
+
+function setSyncStatus(status, label) {
+  S.syncStatus = status;
+  const cls = {none:'',syncing:'syncing',synced:'synced',error:'error'};
+  ['sync-dot','sync-dot-settings'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) { el.className = 'sync-dot ' + (cls[status]||''); }
+  });
+  ['sync-label','sync-label-settings'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.textContent = label || '';
+  });
+}
+
+function updateSyncUI() {
+  const hasPat = !!getGistPAT();
+  const topInd = document.getElementById('sync-indicator');
+  if (topInd) topInd.style.display = hasPat ? '' : 'none';
+  if (!hasPat) setSyncStatus('none', '未配置');
+}
+
+// ══════════════════════════════════════════════════
+//  EXTENSION DOWNLOAD
+// ══════════════════════════════════════════════════
+function downloadExtension() {
+  toast('📦 扩展包正在生成...');
+  // Build a minimal extension zip manifest in JSON and offer download as JSON
+  const manifest = {
+    manifest_version: 3,
+    name: 'MeetPilot',
+    version: '1.0',
+    description: '智能会议助手 - 一键开始录音',
+    action: { default_popup: 'popup.html', default_icon: { '48': 'icon.png' } },
+    permissions: ['activeTab', 'storage'],
+    host_permissions: ['https://meet-pilot.github.io/*']
+  };
+  const popup = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
+body{width:220px;padding:16px;font-family:system-ui;background:#F0F4F8}
+h2{font-size:14px;font-weight:800;margin-bottom:12px;color:#1A202C}
+a{display:block;padding:9px 14px;background:#6366F1;color:#fff;border-radius:8px;text-align:center;text-decoration:none;font-size:13px;font-weight:700;margin-bottom:8px}
+a:hover{filter:brightness(1.1)}
+p{font-size:11px;color:#718096;text-align:center}
+</style></head><body>
+<h2>🎯 MeetPilot</h2>
+<a href="https://meet-pilot.github.io" target="_blank">🚀 打开会议助手</a>
+<a href="https://meet-pilot.github.io#room" target="_blank">🎙 直接进入会议室</a>
+<p>在会议室页面点击大按钮开始录音</p>
+</body></html>`;
+
+  // Create a simple "extension info" text file since we can't create a real zip
+  const info = `MeetPilot Chrome 扩展安装指南\n\n1. 在 Chrome 地址栏输入: chrome://extensions\n2. 开启右上角"开发者模式"\n3. 点击"加载已解压的扩展程序"\n4. 选择包含以下文件的文件夹\n\n== manifest.json ==\n${JSON.stringify(manifest,null,2)}\n\n== popup.html ==\n${popup}\n\n说明：将以上两个文件保存到同一文件夹，然后在 Chrome 扩展管理器中加载即可。`;
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(new Blob([info],{type:'text/plain;charset=utf-8'}));
+  a.download = 'meetpilot-extension-guide.txt';
+  a.click();
+  setTimeout(()=>toast('✅ 安装指南已下载，按指引操作'),500);
+}
+
+// ══════════════════════════════════════════════════
+//  STATS & LISTS
+// ══════════════════════════════════════════════════
+function updateStats() {
+  document.getElementById('stat-total').textContent = S.meetings.length;
+  const totalMins = S.meetings.reduce((s,m) => s+(m.endTime?Math.round((m.endTime-m.startTime)/60000):0), 0);
+  document.getElementById('stat-hours').textContent = (Math.round(totalMins/60*10)/10)+'h';
+  const totalAc = S.meetings.reduce((s,m) => s+(m.actions||[]).length, 0);
+  document.getElementById('stat-actions').textContent = totalAc;
+}
+
+function renderRecent() {
+  const el = document.getElementById('recent-list');
+  const list = S.meetings.slice(0,5);
+  if (!list.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-ico">🎙</div><p>还没有会议记录<br>点击"开始新会议"创建第一条</p></div>';
+    return;
+  }
+  el.innerHTML = '<div class="meeting-list">' + list.map(mItemHTML).join('') + '</div>';
+}
+
+function mItemHTML(m) {
   const dur = m.endTime ? Math.round((m.endTime-m.startTime)/60000) : null;
-  const dateStr = new Date(m.startTime).toLocaleDateString('zh-CN',{month:'2-digit',day:'2-digit'});
-  const colors = {general:'var(--accent-dim)',coding:'rgba(52,211,153,.12)'};
-  return `<div class="meeting-item" onclick="viewMeeting(${m.id})">
-    <div class="m-icon" style="background:${colors[tpl.type]||'var(--bg2)'};">${tpl.icon||'📋'}</div>
+  const dt = new Date(m.startTime).toLocaleDateString('zh-CN',{month:'2-digit',day:'2-digit'});
+  const ac = (m.actions||[]).filter(a=>!a.done).length;
+  return `<div class="m-item" onclick="viewMeeting(${m.id})">
+    <div class="m-ico" style="background:var(--accent-dim)">📋</div>
     <div class="m-info">
       <div class="m-title">${m.title}</div>
-      <div class="m-meta">${dateStr} · ${tpl.name||'会议'}${m.transcript?.length?' · '+m.transcript.length+'条转录':''}</div>
+      <div class="m-meta">${dt}${dur?' · '+dur+'分钟':''}${m.transcript?.length?' · '+m.transcript.length+'条转录':''}${ac?' · ⚡'+ac+'项待办':''}</div>
     </div>
-    ${dur ? `<div class="m-dur">${dur}min</div>` : ''}
+    ${dur?`<div class="m-dur">${dur}min</div>`:''}
   </div>`;
 }
 
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════
 //  HISTORY
-// ══════════════════════════════════════════════
-let historyFilter = 'all';
-
-function setHistoryFilter(f, btn){
-  historyFilter = f;
-  document.querySelectorAll('.filter-btn').forEach(b=>b.classList.remove('active'));
+// ══════════════════════════════════════════════════
+let histFilt = 'all';
+function setFilt(f, btn) {
+  histFilt = f;
+  document.querySelectorAll('.filt').forEach(b=>b.classList.remove('active'));
   btn.classList.add('active');
-  renderHistory();
+  renderHist();
 }
-
-function renderHistory(){
-  const q = (document.getElementById('history-search')?.value||'').toLowerCase();
-  let list = state.meetings;
-  if(historyFilter==='general') list = list.filter(m=>(TEMPLATES[m.tpl]||{}).type==='general');
-  if(historyFilter==='coding') list = list.filter(m=>(TEMPLATES[m.tpl]||{}).type==='coding');
-  if(q) list = list.filter(m=>m.title.toLowerCase().includes(q));
-
-  const el = document.getElementById('history-list');
-  if(!list.length){
-    el.innerHTML = '<div class="empty-state"><div class="empty-ico">📋</div><p>没有找到匹配的会议记录</p></div>';
+function renderHist() {
+  const q = (document.getElementById('hist-search')?.value||'').toLowerCase();
+  let list = S.meetings;
+  if (q) list = list.filter(m => m.title.toLowerCase().includes(q));
+  const el = document.getElementById('hist-list');
+  if (!list.length) {
+    el.innerHTML = '<div class="empty"><div class="empty-ico">📋</div><p>没有匹配的会议记录</p></div>';
     return;
   }
-  el.innerHTML = '<div class="meeting-list">' + list.map(m=>{
-    const tpl = TEMPLATES[m.tpl]||{};
+  el.innerHTML = '<div class="meeting-list">' + list.map(m => {
     const dur = m.endTime ? Math.round((m.endTime-m.startTime)/60000) : null;
-    const dateStr = new Date(m.startTime).toLocaleString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
-    const actions = (m.actions||[]).filter(a=>!a.done);
-    return `<div class="meeting-item history-item" onclick="viewMeeting(${m.id})">
-      <div class="m-icon" style="background:var(--accent-dim)">${tpl.icon||'📋'}</div>
-      <div class="m-info">
+    const dt = new Date(m.startTime).toLocaleString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
+    return `<div class="m-item">
+      <div class="m-ico" style="background:var(--accent-dim)">📋</div>
+      <div class="m-info" onclick="viewMeeting(${m.id})" style="cursor:pointer">
         <div class="m-title">${m.title}</div>
-        <div class="m-meta">${dateStr} · ${tpl.name||'会议'} ${dur?'· '+dur+'分钟':''} ${actions.length?'· ⚡'+actions.length+'项待办':''}</div>
+        <div class="m-meta">${dt}${dur?' · '+dur+'分钟':''}</div>
       </div>
       <div style="display:flex;gap:6px;flex-shrink:0">
-        <button class="btn btn-secondary btn-sm" onclick="event.stopPropagation();exportMeetingById(${m.id},'markdown')">📥</button>
-        <button class="btn btn-danger btn-sm" onclick="event.stopPropagation();deleteMeeting(${m.id})">🗑</button>
+        <button class="btn btn-secondary btn-sm" onclick="exportById(${m.id},'markdown')">📥</button>
+        <button class="btn btn-danger btn-sm" onclick="delMeeting(${m.id})">🗑</button>
       </div>
     </div>`;
   }).join('') + '</div>';
 }
 
-function viewMeeting(id){
-  const m = state.meetings.find(x=>x.id===id);
-  if(!m) return;
-  if(!m.summary) m.summary = buildSummary(m);
+function viewMeeting(id) {
+  const m = S.meetings.find(x => x.id === id);
+  if (!m) return;
+  if (!m.summary) m.summary = buildSummary(m);
+  viewingId = id;
   renderSummary(m);
-  // Store ref for export
-  window._viewingMeeting = m;
-  document.getElementById('export-btn-summary').onclick = ()=>exportMeetingById(id,'markdown');
-  showSection('summary');
+  document.getElementById('sum-export-btn').onclick = () => exportById(id, 'markdown');
+  nav('summary');
 }
 
-function exportMeetingById(id, fmt){
-  const m = state.meetings.find(x=>x.id===id);
-  if(!m) return;
-  const orig = state.meeting;
-  state.meeting = m;
-  exportMeeting(fmt);
-  state.meeting = orig;
+function delMeeting(id) {
+  if (!confirm('删除这条会议记录？')) return;
+  S.meetings = S.meetings.filter(m => m.id !== id);
+  saveData(); updateStats(); renderHist(); renderRecent();
 }
 
-function deleteMeeting(id){
-  if(!confirm('确定删除这条会议记录？')) return;
-  state.meetings = state.meetings.filter(m=>m.id!==id);
-  saveData();
-  updateStats();
-  renderHistory();
-  renderRecentMeetings();
+function clearAll() {
+  if (!confirm('清空所有会议记录？不可恢复。')) return;
+  S.meetings = [];
+  saveData(); updateStats(); renderRecent();
+  toast('已清空所有数据');
 }
 
-function clearAllData(){
-  if(!confirm('确定要清空所有会议记录？此操作不可恢复。')) return;
-  state.meetings = [];
-  saveData();
-  updateStats();
-  renderRecentMeetings();
-  alert('已清空所有数据');
+// ══════════════════════════════════════════════════
+//  TOAST
+// ══════════════════════════════════════════════════
+function toast(msg) {
+  document.querySelectorAll('.toast').forEach(el=>el.remove());
+  const el = document.createElement('div');
+  el.className = 'toast';
+  el.textContent = msg;
+  document.body.appendChild(el);
+  setTimeout(() => el.remove(), 2500);
 }
 
-// ══════════════════════════════════════════════
-//  KEYBOARD SHORTCUTS
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════
+//  KEYBOARD
+// ══════════════════════════════════════════════════
 document.addEventListener('keydown', e => {
-  if(e.ctrlKey && e.key==='Enter' && state.section==='room'){
+  if (e.ctrlKey && e.key === 'Enter' && S.section === 'room') {
     const notes = document.getElementById('room-notes');
-    if(document.activeElement===notes){
+    if (document.activeElement === notes) {
       notes.value += '\n\n---\n\n';
       notes.selectionStart = notes.selectionEnd = notes.value.length;
     }
   }
+  if (e.key === 'Escape') closeModal();
 });
 
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════
 //  BOOT
-// ══════════════════════════════════════════════
+// ══════════════════════════════════════════════════
 init();
 </script>
 </body>
