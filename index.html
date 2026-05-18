@@ -1711,7 +1711,9 @@ async function startWhisperTranscribe(file) {
   if (apiKey) {
     await startCloudTranscribe(file, apiKey);
   } else {
-    await startLocalWhisper(file);
+    const el = document.getElementById('whisper-status');
+    if (el) el.innerHTML = '⚠️ 尚未配置语音识别 API Key<br><span style="font-size:12px;color:var(--text2)">请前往 <b>设置 → 语音识别</b> 填写 API Key 后点击"🔄 重新转写"<br>推荐免费使用 <a href="https://console.groq.com" target="_blank" style="color:var(--accent)">Groq API</a>（注册即得，速度极快）</span>';
+    document.getElementById('retranscribe-btn').style.display = '';
   }
 }
 
