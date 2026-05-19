@@ -6,8 +6,8 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>MeetPilot · 智能会议助手 v3.13</title>
-<meta name="version" content="3.13-20260519">
+<title>MeetPilot · 智能会议助手 v3.14</title>
+<meta name="version" content="3.14-20260519">
 <style>
 :root{
   --bg0:#F0F4F8;--bg1:#FFFFFF;--bg2:#F7F9FC;--border:#E2E8F0;
@@ -911,6 +911,12 @@ function init() {
 }
 
 function saveData() {
+  // 确保进行中的会议始终持久化（S.meeting 可能尚未加入 S.meetings）
+  if (S.meeting) {
+    const idx = S.meetings.findIndex(m => m.id === S.meeting.id);
+    if (idx === -1) S.meetings.unshift(S.meeting);
+    else S.meetings[idx] = S.meeting;
+  }
   localStorage.setItem('mp3_data', JSON.stringify({
     theme: S.theme, codingGlobal: S.codingGlobal,
     meetings: S.meetings, settings: S.settings,
@@ -1336,7 +1342,7 @@ function getActions() {
   document.querySelectorAll('#actions-wrap .ac-item').forEach(el => {
     const cb = el.querySelector('input[type=checkbox]');
     let txt = el.querySelector('.ac-text')?.textContent || '';
-    txt = txt.replace('自动','').trim();
+    txt = txt.trim();
     if (txt) res.push({ text: txt, done: cb?.checked || false });
   });
   return res;
@@ -2190,10 +2196,10 @@ function segmentTitle(items) {
 // ── smartNotes: entry point — uses AI if API key available, else local ──
 function smartNotes() { aiSmartNotes('manual'); }
 
-// ── aiSmartNotes: calls chat completions → agenda + actions panels ──
+// ── aiSmartNotes: calls chat completions → actions panel only (agenda handled by autoSyncAgenda) ──
 async function aiSmartNotes(triggerSource) {
   let tx = (S.meeting?.transcript || []).filter(t => t.text?.trim().length > 2);
-  // 兜底：transcript为空时从notes textarea读内容（页面刷新后数据格式不一致场景）
+  // 兜底：transcript为空时从notes textarea读内容
   if (!tx.length) {
     const notesVal = document.getElementById('room-notes')?.value?.trim();
     if (notesVal && notesVal.length > 10) {
@@ -2210,32 +2216,33 @@ async function aiSmartNotes(triggerSource) {
   const btn = document.getElementById('smart-notes-btn');
   if (btn) { btn.disabled = true; btn.textContent = '⏳ AI 整理中...'; }
 
-  // Derive chat endpoint from whisper endpoint
   const whisperEp = localStorage.getItem('mp3_speech_api_endpoint') || 'https://api.openai.com/v1/audio/transcriptions';
   const chatEp = whisperEp.replace(/\/audio\/transcriptions.*$/, '/chat/completions');
   const model = whisperEp.includes('siliconflow') ? 'Qwen/Qwen2.5-7B-Instruct' : 'gpt-4o-mini';
 
-  // Build transcript text (max 3000 chars to stay within token limits)
   const fullText = tx.map(t => {
     const spk = t.spkId != null ? `[说话人${parseInt(t.spkId)+1}] ` : '';
     return spk + t.text.trim();
-  }).join('\n').slice(0, 3000);
+  }).join('\n').slice(0, 4000);
 
-  const prompt = `你是会议记录助手。分析下面的会议转录，完成两件事：
-1. 按话题将对话分段，每段给出一句话主旨（≤15字），生成议程列表
-2. 提取有明确主体+动作的行动项（忽略模糊口语）
+  // 只提取行动项，议程由 autoSyncAgenda 负责不覆盖
+  const prompt = `你是会议记录助手。从会议转录中提取行动项。规则：
+- 必须有明确的动作动词（如：确认、跟进、整理、提交、联系、安排、完成、调研）
+- 过滤掉模糊表达、感叹句、纯陈述句
+- 每条行动项简洁直接，5-40字
+- 最多提取10条，宁缺毋滥
 
 转录内容：
 ${fullText}
 
-只返回如下 JSON，不要解释：
-{"agenda":["主旨1","主旨2"],"actions":["行动项1","行动项2"]}`;
+只返回 JSON，不要解释：
+{"actions":["行动项1","行动项2"]}`;
 
   try {
     const res = await fetch(chatEp, {
       method: 'POST',
       headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], temperature: 0.3, max_tokens: 800 })
+      body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], temperature: 0.2, max_tokens: 500 })
     });
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const data = await res.json();
@@ -2244,17 +2251,7 @@ ${fullText}
     if (!m) throw new Error('AI 返回格式错误');
     const parsed = JSON.parse(m[0]);
 
-    // ── 更新议程 ──
-    const ul = document.getElementById('room-agenda');
-    if (parsed.agenda?.length) {
-      ul.innerHTML = parsed.agenda.map((a, i) =>
-        `<li class="agenda-item" data-noteref="${encodeURIComponent(a.slice(0,12))}" onclick="agendaJump(this)">
-          <span class="ag-num">${i+1}</span><span title="${a}">${a}</span>
-        </li>`
-      ).join('');
-    }
-
-    // ── 更新行动项（替换 AI 旧项，保留手动项）──
+    // ── 更新行动项（替换 AI 旧项，保留手动项），不碰议程 ──
     const wrap = document.getElementById('actions-wrap');
     wrap.querySelectorAll('.ac-item[data-auto="1"]').forEach(el => el.remove());
     if (parsed.actions?.length) {
@@ -2263,7 +2260,7 @@ ${fullText}
         const div = document.createElement('div');
         div.className = 'ac-item';
         div.dataset.auto = '1';
-        div.innerHTML = `<input type="checkbox"><span class="ac-text">${text}</span>`;
+        div.innerHTML = `<input type="checkbox"><span class="ac-text">${text}</span><span class="ac-del" onclick="this.parentElement.remove()">×</span>`;
         div.querySelector('input').addEventListener('change', e => div.classList.toggle('done', e.target.checked));
         frag.appendChild(div);
       });
@@ -2272,19 +2269,20 @@ ${fullText}
       if (badge) { badge.textContent = `🤖 AI识别 ${parsed.actions.length} 条`; badge.style.display=''; }
     }
 
-    // ── 同步到 meeting 对象 ──
     if (S.meeting) {
-      S.meeting.aiAgenda = parsed.agenda || [];
       S.meeting.actions = getActions();
       saveData(); updateStats(); renderRecent(); renderHist();
     }
-    toast(`✅ AI整理：${parsed.agenda?.length||0} 个议程 · ${parsed.actions?.length||0} 条行动项`);
+    toast(`✅ AI识别行动项 ${parsed.actions?.length||0} 条`);
   } catch (err) {
     console.warn('AI smart notes failed, falling back to local:', err.message);
     smartNotesLocal();
     if (triggerSource === 'manual') toast('AI整理失败，已用本地算法');
+  } finally {
+    // 无论成功失败都同步仪表盘
+    if (S.meeting) { saveData(); updateStats(); renderRecent(); renderHist(); }
+    if (btn) { btn.disabled = false; btn.textContent = '✨ 智能整理笔记'; }
   }
-  if (btn) { btn.disabled = false; btn.textContent = '✨ 智能整理笔记'; }
 }
 
 // ── smartNotesLocal: local keyword-based fallback ──
