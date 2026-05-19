@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta http-equiv="surrogate-control" content="no-store">
-<title>MeetPilot · 会议转录 v4.1.9</title>
+<title>MeetPilot · 会议转录 v4.2.0</title>
 <style>
 :root{
   --bg:#F4F6FB;--bg1:#FFFFFF;--bg2:#F0F2F7;--border:#E2E8F0;
@@ -106,7 +106,10 @@ input[type=text]:focus,input[type=password]:focus{border-color:var(--accent)}
 .rec-dot{width:9px;height:9px;background:#fff;border-radius:50%;flex-shrink:0;animation:blink 1s infinite}
 @keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
 
-/* ── Timer ── */
+/* ── Mic action row ── */
+.mic-actions{display:none;gap:6px;margin-top:8px}
+.mic-actions.show{display:flex}
+.mic-actions .btn{flex:1;font-size:13px;padding:7px 8px;justify-content:center}
 .timer{font-size:28px;font-weight:800;color:var(--text0);letter-spacing:2px;font-variant-numeric:tabular-nums;font-family:ui-monospace,monospace}
 .timer-row{display:flex;align-items:center;gap:12px;margin-bottom:12px}
 .status-tip{font-size:12px;color:var(--text2);flex:1;min-width:0}
@@ -263,6 +266,10 @@ audio{width:100%;border-radius:7px;margin-bottom:7px}
           <button class="mic-btn off" id="mic-btn" onclick="toggleMic()">
             🎙 &nbsp;点击开始录音
           </button>
+          <div class="mic-actions" id="mic-actions">
+            <button class="btn btn-secondary" onclick="restartMic()" title="重启识别连接，不清除笔记">🔄 重启识别</button>
+            <button class="btn btn-primary" onclick="openSave()" title="保存当前笔记到历史记录">💾 保存会议</button>
+          </div>
         </div>
       </div>
 
@@ -506,20 +513,32 @@ function startMic() {
     }
   };
   r.onerror = (e) => {
-    if (e.error === 'not-allowed') {
+    if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
       stopMic();
-      document.getElementById('speech-warn').innerHTML = '🚫 麦克风权限被拒绝<br><small style="color:var(--text3)">请在地址栏🔒图标中允许麦克风后重试</small>';
+      document.getElementById('speech-warn').innerHTML = '<div style="font-size:12px;color:var(--danger);background:rgba(239,68,68,.08);padding:8px 12px;border-radius:8px;margin-bottom:8px">🚫 麦克风权限被拒绝，请在地址栏 🔒 图标中允许麦克风后重试</div>';
       return;
     }
+    if (e.error === 'audio-capture') {
+      stopMic();
+      document.getElementById('speech-warn').innerHTML = '<div style="font-size:12px;color:var(--danger);background:rgba(239,68,68,.08);padding:8px 12px;border-radius:8px;margin-bottom:8px">🎤 未检测到麦克风设备，请检查连接后重试</div>';
+      return;
+    }
+    if (e.error === 'network') {
+      setStatusTip('⚠️ 网络中断，正在重连...');
+      return; // onend 会自动重启
+    }
+    if (e.error === 'no-speech') return; // 静音超时，onend 自动重启，不提示
     if (e.error !== 'aborted') setStatusTip('识别错误：' + e.error);
   };
-  r.onend = () => { if (S.micActive) try { S.recognition.start(); } catch (ex) {} };
+  r.onend = () => { if (S.micActive) { try { S.recognition.start(); } catch (ex) {} } };
 
   try {
     r.start();
     const btn = document.getElementById('mic-btn');
     btn.className = 'mic-btn on';
     btn.innerHTML = '<span class="rec-dot"></span> 录音中 — 点击停止';
+    document.getElementById('mic-actions').classList.add('show');
+    document.getElementById('speech-warn').innerHTML = '';
     startTimer();
     setStatusTip('🎙 正在录音，实时转写中...');
   } catch (e) { S.micActive = false; toast('无法启动录音：' + e.message); }
@@ -531,8 +550,16 @@ function stopMic() {
   const btn = document.getElementById('mic-btn');
   btn.className = 'mic-btn off';
   btn.innerHTML = '🎙 &nbsp;点击开始录音';
+  document.getElementById('mic-actions').classList.add('show'); // 停止后保留按钮，可保存
   stopTimer();
   setStatusTip('录音已停止');
+}
+
+function restartMic() {
+  stopMic();
+  document.getElementById('speech-warn').innerHTML = '';
+  setStatusTip('准备就绪');
+  setTimeout(() => startMic(), 300);
 }
 
 function setStatusTip(msg) { document.getElementById('status-tip').textContent = msg; }
@@ -710,6 +737,7 @@ function confirmSave() {
   notes.innerHTML = '';
   stopMic(); stopTimer();
   document.getElementById('timer').textContent = '00:00';
+  document.getElementById('mic-actions').classList.remove('show');
   setStatusTip('准备就绪');
   updateSidebar();
   toast('✅ 已保存："' + title + '"');
