@@ -7,87 +7,120 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta http-equiv="surrogate-control" content="no-store">
-<title>MeetPilot · 会议转录 v4.0</title>
+<title>MeetPilot · 会议转录 v4.1</title>
 <style>
 :root{
-  --bg:#F8FAFC;--bg1:#FFFFFF;--bg2:#F1F5F9;--border:#E2E8F0;
-  --accent:#6366F1;--accent-dim:rgba(99,102,241,.1);
+  --bg:#F4F6FB;--bg1:#FFFFFF;--bg2:#F0F2F7;--border:#E2E8F0;
+  --accent:#6366F1;--accent-dim:rgba(99,102,241,.1);--accent-soft:rgba(99,102,241,.06);
+  --hl-bg:rgba(139,92,246,.18);--hl-color:#6d28d9;
   --success:#10B981;--danger:#EF4444;--warn:#F59E0B;
-  --text0:#1A202C;--text1:#4A5568;--text2:#718096;
-  --r:10px;--shadow:0 1px 4px rgba(0,0,0,.07);
+  --text0:#1A202C;--text1:#4A5568;--text2:#718096;--text3:#A0AEC0;
+  --r:10px;--shadow:0 1px 4px rgba(0,0,0,.07);--shadow-md:0 4px 16px rgba(0,0,0,.1);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text1);font-size:15px;line-height:1.6}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text1);font-size:15px;line-height:1.6;overflow:hidden}
 button{cursor:pointer;border:none;background:none;font:inherit;color:inherit}
-input,textarea,select{font:inherit;color:var(--text0);background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--r);padding:9px 12px;outline:none;width:100%;transition:border-color .2s}
-input:focus,textarea:focus,select:focus{border-color:var(--accent)}
+input[type=text],input[type=password],select{font:inherit;color:var(--text0);background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--r);padding:9px 12px;outline:none;width:100%;transition:border-color .2s}
+input[type=text]:focus,input[type=password]:focus{border-color:var(--accent)}
 
 /* ── Topbar ── */
-.topbar{position:sticky;top:0;z-index:100;background:var(--bg1);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;height:54px;gap:4px;box-shadow:var(--shadow)}
-.logo{font-weight:800;font-size:16px;color:var(--text0);display:flex;align-items:center;gap:8px;margin-right:16px;user-select:none;flex-shrink:0}
+.topbar{position:fixed;top:0;left:0;right:0;z-index:100;background:var(--bg1);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 24px;height:54px;gap:4px;box-shadow:var(--shadow)}
+.logo{font-weight:800;font-size:16px;color:var(--text0);display:flex;align-items:center;gap:8px;margin-right:20px;user-select:none;flex-shrink:0}
 .logo-mark{width:28px;height:28px;background:linear-gradient(135deg,#6366F1,#a78bfa);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px}
 .nav{display:flex;gap:2px}
-.nav button{padding:6px 14px;border-radius:8px;color:var(--text2);font-size:14px;font-weight:500;transition:all .15s}
+.nav button{padding:6px 16px;border-radius:8px;color:var(--text2);font-size:14px;font-weight:500;transition:all .15s}
 .nav button:hover{background:var(--bg2);color:var(--text0)}
 .nav button.active{background:var(--accent-dim);color:var(--accent);font-weight:700}
 
 /* ── Sections ── */
-.section{display:none;min-height:calc(100vh - 54px)}
+.section{display:none;position:fixed;top:54px;left:0;right:0;bottom:0;overflow:hidden}
 .section.active{display:block}
-.wrap{max-width:900px;margin:0 auto;padding:28px 20px}
+.section.scrollable{overflow-y:auto}
+
+/* ── Room layout: sidebar | notes | controls ── */
+.room-layout{display:grid;grid-template-columns:210px 1fr 300px;gap:14px;padding:16px 20px;height:100%;box-sizing:border-box}
+.room-col{display:flex;flex-direction:column;min-height:0;overflow-y:auto;gap:12px}
+
+/* ── Card ── */
+.card{background:var(--bg1);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);flex-shrink:0}
+.card-body{padding:16px}
+.card-title{font-size:13px;font-weight:700;color:var(--text0);margin-bottom:12px;display:flex;align-items:center;gap:5px}
+
+/* ── Marks sidebar ── */
+.sidebar-card{background:var(--bg1);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
+.sidebar-header{padding:12px 14px 8px;border-bottom:1px solid var(--border);font-size:13px;font-weight:700;color:var(--text0);flex-shrink:0}
+.sidebar-body{flex:1;overflow-y:auto;padding:8px}
+.sb-empty{font-size:12px;color:var(--text3);text-align:center;padding:24px 8px;line-height:1.8}
+.sb-sec{margin-bottom:12px}
+.sb-sec-title{font-size:11px;font-weight:700;color:var(--text2);text-transform:uppercase;letter-spacing:.5px;margin-bottom:6px;padding:0 4px;display:flex;align-items:center;gap:6px}
+.sb-count{background:var(--bg2);border-radius:99px;padding:1px 7px;font-size:11px;font-weight:600;color:var(--text2)}
+.sb-item{font-size:12px;padding:6px 8px;border-radius:7px;cursor:pointer;line-height:1.5;transition:background .12s;word-break:break-all;margin-bottom:3px}
+.sb-item:hover{background:var(--bg2)}
+.sb-hl{background:var(--hl-bg);color:var(--hl-color);font-weight:500}
+.sb-todo{color:var(--text1)}
+.sb-todo.done{text-decoration:line-through;opacity:.5}
+
+/* ── Notes column ── */
+.notes-wrap{flex:1;min-height:0;display:flex;flex-direction:column;background:var(--bg1);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);overflow:hidden}
+.notes-toolbar{padding:8px 12px;border-bottom:1px solid var(--border);display:flex;gap:5px;flex-wrap:wrap;align-items:center;flex-shrink:0;background:var(--bg2)}
+.tool-btn{padding:4px 11px;border-radius:6px;font-size:12px;font-weight:600;background:var(--bg1);border:1.5px solid var(--border);color:var(--text1);cursor:pointer;transition:all .14s;white-space:nowrap}
+.tool-btn:hover{border-color:var(--accent);color:var(--accent)}
+.tool-btn.hl-btn:hover{border-color:var(--hl-color);color:var(--hl-color);background:var(--hl-bg)}
+.notes-editor{flex:1;overflow-y:auto;padding:16px 18px;outline:none;font-size:14px;line-height:1.95;color:var(--text0);min-height:0;word-break:break-word}
+.notes-editor:empty::before{content:attr(data-placeholder);color:var(--text3);pointer-events:none}
+.notes-editor div,.notes-editor p{margin-bottom:2px}
+.notes-footer{padding:8px 12px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;flex-shrink:0;background:var(--bg2)}
+
+/* ── Mark styles (inside editor + history detail) ── */
+.mark-hl{background:var(--hl-bg);color:var(--hl-color);border-radius:3px;padding:1px 3px;font-weight:500}
+.mark-hl.mark-flash{outline:2px solid var(--hl-color);outline-offset:1px}
+.mark-todo{display:inline-flex;align-items:center;gap:5px;color:var(--accent)}
+.mark-todo input[type=checkbox]{width:14px;height:14px;flex-shrink:0;accent-color:var(--accent);cursor:pointer}
+.mark-todo.done{text-decoration:line-through;opacity:.55}
+.mark-todo.mark-flash{outline:2px dashed var(--accent);outline-offset:2px;border-radius:3px}
 
 /* ── Buttons ── */
-.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--r);font-size:14px;font-weight:600;transition:all .15s;cursor:pointer;border:none;white-space:nowrap}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:8px 16px;border-radius:var(--r);font-size:14px;font-weight:600;transition:all .15s;cursor:pointer;border:none;white-space:nowrap}
 .btn-primary{background:var(--accent);color:#fff}
 .btn-primary:hover{filter:brightness(1.08);transform:translateY(-1px)}
 .btn-secondary{background:var(--bg2);color:var(--text1);border:1.5px solid var(--border)}
 .btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
 .btn-danger{background:var(--danger);color:#fff}
 .btn-danger:hover{filter:brightness(1.08)}
-.btn-sm{padding:6px 12px;font-size:13px}
-
-/* ── Card ── */
-.card{background:var(--bg1);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:var(--shadow)}
-.card-title{font-size:14px;font-weight:700;color:var(--text0);margin-bottom:14px;display:flex;align-items:center;gap:6px}
+.btn-sm{padding:5px 12px;font-size:13px}
 
 /* ── Mic button ── */
-.mic-btn{width:100%;padding:18px;border-radius:12px;font-size:17px;font-weight:700;letter-spacing:.3px;transition:all .2s;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px}
-.mic-btn.off{background:var(--accent);color:#fff;box-shadow:0 4px 18px rgba(99,102,241,.35)}
+.mic-btn{width:100%;padding:16px;border-radius:10px;font-size:16px;font-weight:700;transition:all .2s;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px}
+.mic-btn.off{background:var(--accent);color:#fff;box-shadow:0 4px 16px rgba(99,102,241,.35)}
 .mic-btn.off:hover{filter:brightness(1.08);transform:translateY(-1px)}
-.mic-btn.on{background:#EF4444;color:#fff;box-shadow:0 4px 18px rgba(239,68,68,.35);animation:micpulse 2s infinite}
+.mic-btn.on{background:#EF4444;color:#fff;box-shadow:0 4px 16px rgba(239,68,68,.35);animation:mpulse 2s infinite}
 .mic-btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important}
-@keyframes micpulse{0%,100%{box-shadow:0 4px 18px rgba(239,68,68,.35)}50%{box-shadow:0 4px 28px rgba(239,68,68,.6)}}
-.rec-dot{width:10px;height:10px;background:#fff;border-radius:50%;flex-shrink:0;animation:blink 1s infinite}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
-
-/* ── Live text ── */
-.live-box{min-height:40px;padding:10px 14px;background:var(--bg2);border-radius:var(--r);font-size:14px;color:var(--text2);border:1.5px dashed var(--border);margin-top:10px;font-style:italic;transition:all .2s}
-.live-box.active{color:var(--text0);border-color:var(--accent);background:rgba(99,102,241,.04);font-style:normal}
+@keyframes mpulse{0%,100%{box-shadow:0 4px 16px rgba(239,68,68,.35)}50%{box-shadow:0 4px 24px rgba(239,68,68,.6)}}
+.rec-dot{width:9px;height:9px;background:#fff;border-radius:50%;flex-shrink:0;animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.25}}
 
 /* ── Timer ── */
-.timer{font-size:30px;font-weight:800;color:var(--text0);letter-spacing:2px;font-variant-numeric:tabular-nums;font-family:ui-monospace,monospace}
-.timer-row{display:flex;align-items:center;gap:14px;margin-bottom:14px}
-.status-tip{font-size:12px;color:var(--text2);flex:1}
+.timer{font-size:28px;font-weight:800;color:var(--text0);letter-spacing:2px;font-variant-numeric:tabular-nums;font-family:ui-monospace,monospace}
+.timer-row{display:flex;align-items:center;gap:12px;margin-bottom:12px}
+.status-tip{font-size:12px;color:var(--text2);flex:1;min-width:0}
 
-/* ── Notes ── */
-.notes-toolbar{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;align-items:center}
-.tool-btn{padding:5px 12px;border-radius:7px;font-size:13px;font-weight:600;background:var(--bg2);border:1.5px solid var(--border);color:var(--text1);cursor:pointer;transition:all .15s;white-space:nowrap}
-.tool-btn:hover{border-color:var(--accent);color:var(--accent)}
-.notes-area{width:100%;resize:vertical;min-height:320px;font-size:14px;line-height:1.9;font-family:inherit;border-radius:var(--r)}
+/* ── Live box ── */
+.live-box{min-height:36px;padding:8px 12px;background:var(--bg2);border-radius:8px;font-size:13px;color:var(--text3);border:1.5px dashed var(--border);margin-top:8px;font-style:italic;transition:all .2s;word-break:break-all}
+.live-box.active{color:var(--text0);border-color:var(--accent);background:var(--accent-soft);font-style:normal}
 
 /* ── Dropzone ── */
-.dropzone{border:2px dashed var(--border);border-radius:var(--r);padding:22px;text-align:center;cursor:pointer;transition:all .2s;color:var(--text2);font-size:14px}
+.dropzone{border:2px dashed var(--border);border-radius:var(--r);padding:18px;text-align:center;cursor:pointer;transition:all .2s;color:var(--text2);font-size:13px}
 .dropzone:hover,.dropzone.drag{border-color:var(--accent);background:var(--accent-dim);color:var(--accent)}
-.audio-player-wrap{display:none}
-.audio-filename{font-size:13px;color:var(--text0);margin-bottom:8px;font-weight:600;word-break:break-all}
-audio{width:100%;border-radius:8px;margin-bottom:8px}
+.audio-pw{display:none}
+.audio-fn{font-size:12px;color:var(--text0);margin-bottom:7px;font-weight:600;word-break:break-all}
+audio{width:100%;border-radius:7px;margin-bottom:7px}
+.upload-status{font-size:12px;color:var(--text2);margin-top:6px;min-height:16px}
 
-/* ── Room grid ── */
-.room-grid{display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start}
-@media(max-width:800px){.room-grid{grid-template-columns:1fr}}
-
-/* ── History ── */
+/* ── History / Settings common wrap ── */
+.wrap{max-width:1000px;margin:0 auto;padding:28px 28px}
 .page-title{font-size:18px;font-weight:800;color:var(--text0);margin-bottom:20px}
+
+/* ── History list ── */
 .m-item{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--bg1);border:1px solid var(--border);border-radius:12px;margin-bottom:10px;transition:border-color .15s;box-shadow:var(--shadow)}
 .m-item:hover{border-color:var(--accent)}
 .m-info{flex:1;min-width:0;cursor:pointer}
@@ -95,11 +128,16 @@ audio{width:100%;border-radius:8px;margin-bottom:8px}
 .m-meta{font-size:12px;color:var(--text2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
 .empty-state{text-align:center;padding:64px 20px;color:var(--text2)}
 .empty-ico{font-size:52px;margin-bottom:12px}
+.m-badge{font-size:11px;padding:2px 7px;border-radius:99px;background:rgba(99,102,241,.1);color:var(--accent);font-weight:700;margin-left:6px;flex-shrink:0}
 
-/* ── Detail view ── */
-.detail-header{display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+/* ── History detail ── */
+.detail-header{display:flex;align-items:center;gap:12px;margin-bottom:14px;flex-wrap:wrap}
 .detail-title{font-size:18px;font-weight:800;color:var(--text0);flex:1;min-width:0}
-.detail-content{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;font-size:14px;line-height:1.9;white-space:pre-wrap;word-break:break-word;min-height:200px;max-height:calc(100vh - 260px);overflow-y:auto}
+.detail-content{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px;font-size:14px;line-height:1.95;word-break:break-word;min-height:200px;max-height:calc(100vh - 280px);overflow-y:auto}
+.detail-content .mark-hl{background:var(--hl-bg);color:var(--hl-color);border-radius:3px;padding:1px 3px;font-weight:500}
+.detail-content .mark-todo{display:inline-flex;align-items:center;gap:5px;color:var(--accent)}
+.detail-content .mark-todo input{width:14px;height:14px;flex-shrink:0;accent-color:var(--accent)}
+.detail-content .mark-todo.done{text-decoration:line-through;opacity:.55}
 
 /* ── Settings ── */
 .sg{background:var(--bg1);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:14px;box-shadow:var(--shadow)}
@@ -110,25 +148,29 @@ audio{width:100%;border-radius:8px;margin-bottom:8px}
 .hint a{color:var(--accent)}
 
 /* ── Save dialog ── */
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center}
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:300;align-items:center;justify-content:center}
 .overlay.show{display:flex}
-.dialog{background:var(--bg1);border-radius:14px;padding:28px;width:92%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.dialog{background:var(--bg1);border-radius:14px;padding:28px;width:92%;max-width:420px;box-shadow:var(--shadow-md)}
 .dialog h3{font-size:17px;font-weight:800;color:var(--text0);margin-bottom:16px}
 .dialog-btns{display:flex;gap:8px;margin-top:18px;justify-content:flex-end}
 
 /* ── Toast ── */
-.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#1A202C;color:#fff;padding:10px 22px;border-radius:99px;font-size:14px;font-weight:600;z-index:999;pointer-events:none;animation:toastIn .2s ease;white-space:nowrap}
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#1A202C;color:#fff;padding:10px 22px;border-radius:99px;font-size:14px;font-weight:600;z-index:500;pointer-events:none;animation:toastIn .2s ease;white-space:nowrap}
 @keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%)}}
 
 /* ── Responsive ── */
-@media(max-width:600px){
-  .wrap{padding:16px 12px}
-  .topbar{padding:0 12px}
-  .nav button{padding:5px 9px;font-size:13px}
-  .timer{font-size:22px}
-  .mic-btn{padding:15px;font-size:15px}
-  .notes-area{min-height:240px}
-  .dialog{padding:20px}
+@media(max-width:1000px){
+  .room-layout{grid-template-columns:0 1fr 280px}
+  .room-col:first-child{display:none}
+}
+@media(max-width:720px){
+  .room-layout{grid-template-columns:1fr;padding:12px}
+  .room-col.controls-col{order:-1}
+  html,body{overflow:auto}
+  .section{position:static;overflow:visible;height:auto}
+  .room-layout{height:auto}
+  .notes-wrap{min-height:300px}
+  .wrap{padding:16px 14px}
 }
 </style>
 </head>
@@ -164,31 +206,46 @@ audio{width:100%;border-radius:8px;margin-bottom:8px}
 
 <!-- ════════════════ 会议室 ════════════════ -->
 <section class="section active" id="sec-room">
-  <div class="wrap">
-    <div class="room-grid">
+  <div class="room-layout">
 
-      <!-- 左：笔记区 -->
-      <div>
-        <div class="card">
-          <div class="card-title">📝 会议记录</div>
-          <div class="notes-toolbar">
-            <button class="tool-btn" onclick="markHighlight()" title="选中文字后点击">⭐ 标记重点</button>
-            <button class="tool-btn" onclick="markTodo()" title="选中文字后点击">☑ 标记待办</button>
-            <button class="tool-btn" onclick="copyNotes()">📋 复制全部</button>
-            <button class="tool-btn" onclick="exportNotes()">📥 导出文本</button>
-            <button class="tool-btn" onclick="clearNotes()" style="margin-left:auto;color:var(--danger)">🗑 清空</button>
-          </div>
-          <textarea id="notes" class="notes-area" placeholder="实时转写内容将自动追加到此处&#10;也可直接在此输入或编辑会议记录..."></textarea>
-        </div>
-        <div style="display:flex;gap:8px;justify-content:flex-end">
-          <button class="btn btn-primary" onclick="openSave()">💾 保存会议</button>
+    <!-- 左：标记侧边栏 -->
+    <div class="room-col">
+      <div class="sidebar-card">
+        <div class="sidebar-header">📌 标记列表</div>
+        <div class="sidebar-body" id="marks-sidebar">
+          <div class="sb-empty">选中文字后<br>点击上方标记按钮</div>
         </div>
       </div>
+    </div>
 
-      <!-- 右：控制区 -->
-      <div>
-        <!-- 录音控制 -->
-        <div class="card">
+    <!-- 中：笔记区 -->
+    <div class="room-col">
+      <div class="notes-wrap">
+        <div class="notes-toolbar">
+          <button class="tool-btn hl-btn" onclick="markHighlight()" title="选中文字 → 标记为重点（紫色高亮）">⭐ 标记重点</button>
+          <button class="tool-btn" onclick="markTodo()" title="选中文字 → 标记为待办（加复选框）">☑ 标记待办</button>
+          <button class="tool-btn" onclick="copyNotes()">📋 复制</button>
+          <button class="tool-btn" onclick="exportNotes()">📥 导出</button>
+          <button class="tool-btn" onclick="clearNotes()" style="margin-left:auto;color:var(--danger)">🗑 清空</button>
+        </div>
+        <div id="notes"
+          class="notes-editor"
+          contenteditable="true"
+          data-placeholder="实时转写内容将自动追加到此处，也可直接输入或编辑..."
+          oninput="onNotesInput()"
+          spellcheck="false"></div>
+        <div class="notes-footer">
+          <button class="btn btn-primary btn-sm" onclick="openSave()">💾 保存会议</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- 右：控制区 -->
+    <div class="room-col controls-col">
+
+      <!-- 录音 -->
+      <div class="card">
+        <div class="card-body">
           <div class="card-title">🎙 实时录音转写</div>
           <div class="timer-row">
             <div class="timer" id="timer">00:00</div>
@@ -198,11 +255,13 @@ audio{width:100%;border-radius:8px;margin-bottom:8px}
           <button class="mic-btn off" id="mic-btn" onclick="toggleMic()">
             🎙 &nbsp;点击开始录音
           </button>
-          <div class="live-box" id="live-box">实时识别内容将显示在此...</div>
+          <div class="live-box" id="live-box">识别内容实时显示在此...</div>
         </div>
+      </div>
 
-        <!-- 音频上传 -->
-        <div class="card">
+      <!-- 上传 -->
+      <div class="card">
+        <div class="card-body">
           <div class="card-title">📁 上传音频转写</div>
           <div class="dropzone" id="dropzone"
             ondragover="event.preventDefault();this.classList.add('drag')"
@@ -211,14 +270,14 @@ audio{width:100%;border-radius:8px;margin-bottom:8px}
             onclick="document.getElementById('audio-input').click()">
             <input type="file" id="audio-input" accept="audio/*" style="display:none" onchange="handleFile(this.files[0])">
             <div>🎵 点击或拖入音频文件</div>
-            <div style="font-size:12px;margin-top:4px;color:var(--text2)">支持 MP3、WAV、M4A、OGG 等格式</div>
+            <div style="font-size:12px;margin-top:3px;color:var(--text3)">MP3 · WAV · M4A · OGG</div>
           </div>
-          <div class="audio-player-wrap" id="audio-player-wrap">
-            <div class="audio-filename" id="audio-filename"></div>
+          <div class="audio-pw" id="audio-pw">
+            <div class="audio-fn" id="audio-fn"></div>
             <audio id="audio-player" controls></audio>
             <button class="btn btn-secondary btn-sm" style="width:100%" onclick="resetAudio()">↩ 重新上传</button>
           </div>
-          <div id="upload-status" style="font-size:12px;color:var(--text2);margin-top:8px;min-height:18px"></div>
+          <div class="upload-status" id="upload-status"></div>
         </div>
       </div>
 
@@ -227,10 +286,8 @@ audio{width:100%;border-radius:8px;margin-bottom:8px}
 </section>
 
 <!-- ════════════════ 历史记录 ════════════════ -->
-<section class="section" id="sec-history">
+<section class="section scrollable" id="sec-history">
   <div class="wrap">
-
-    <!-- 列表视图 -->
     <div id="hist-list-wrap">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
         <div class="page-title">历史记录</div>
@@ -238,8 +295,6 @@ audio{width:100%;border-radius:8px;margin-bottom:8px}
       </div>
       <div id="hist-list"></div>
     </div>
-
-    <!-- 详情视图 -->
     <div id="hist-detail" style="display:none">
       <div class="detail-header">
         <button class="btn btn-secondary btn-sm" onclick="closeDetail()">← 返回</button>
@@ -249,15 +304,13 @@ audio{width:100%;border-radius:8px;margin-bottom:8px}
       <div style="font-size:12px;color:var(--text2);margin-bottom:12px" id="detail-meta"></div>
       <div class="detail-content" id="detail-content"></div>
     </div>
-
   </div>
 </section>
 
 <!-- ════════════════ 设置 ════════════════ -->
-<section class="section" id="sec-settings">
-  <div class="wrap" style="max-width:620px">
+<section class="section scrollable" id="sec-settings">
+  <div class="wrap" style="max-width:680px">
     <div class="page-title">设置</div>
-
     <div class="sg">
       <div class="sg-title">🔑 语音识别 API Key</div>
       <div class="form-row">
@@ -265,39 +318,35 @@ audio{width:100%;border-radius:8px;margin-bottom:8px}
         <input type="password" id="s-apikey" placeholder="sk-..." oninput="saveSetting('apikey',this.value)">
       </div>
       <div class="form-row">
-        <label class="form-label">API Endpoint（留空使用 OpenAI 默认，可改为其他 Whisper 兼容地址）</label>
+        <label class="form-label">API Endpoint（留空使用 OpenAI 默认，可填其他 Whisper 兼容地址）</label>
         <input type="text" id="s-endpoint" placeholder="https://api.openai.com/v1/audio/transcriptions" oninput="saveSetting('endpoint',this.value)">
       </div>
       <div class="hint">
         推荐免费接口：
-        <a href="https://console.groq.com" target="_blank">Groq</a>（注册即得，速度极快） ·
+        <a href="https://console.groq.com" target="_blank">Groq</a>（注册即得，速度快） ·
         <a href="https://siliconflow.cn" target="_blank">SiliconFlow</a>（国内，中文效果好）
       </div>
     </div>
-
     <div class="sg">
       <div class="sg-title">📖 使用说明</div>
       <div style="font-size:14px;line-height:2.1;color:var(--text1)">
         <b>实时录音：</b>点击「开始录音」，允许麦克风后即可实时转写（需 Chrome / Edge）。<br>
-        <b>音频上传：</b>上传 MP3/WAV/M4A 文件，配置 API Key 后自动调用云端转写。<br>
-        <b>标记重点：</b>选中文字后点击「⭐ 标记重点」，内容前后加上【重点】标记。<br>
-        <b>标记待办：</b>选中文字后点击「☑ 标记待办」，内容前加上 [待办] 标记。<br>
-        <b>保存会议：</b>点击「💾 保存会议」，输入名称后保存到本地浏览器。<br>
-        <b>历史记录：</b>点击顶部「历史记录」标签，查看、导出或删除已保存的会议。<br>
+        <b>音频上传：</b>上传音频文件，配置 API Key 后自动调用云端转写，<b>并自动保存到历史记录</b>。<br>
+        <b>标记重点：</b>在笔记区选中文字后点击「⭐ 标记重点」，文字变为<span class="mark-hl">紫色高亮</span>，并显示在左侧边栏。<br>
+        <b>标记待办：</b>选中文字后点击「☑ 标记待办」，文字前加上复选框，并显示在左侧边栏。<br>
+        <b>保存会议：</b>点击「💾 保存会议」，输入名称后保存到本地浏览器（不上传任何数据）。<br>
         <br>
-        <b style="color:var(--warn)">⚠️ 若页面功能未更新，请按 Ctrl+Shift+R 强制刷新。</b>
+        <b style="color:var(--warn)">⚠️ 若页面未更新，按 Ctrl+Shift+R 强制刷新。</b>
       </div>
     </div>
-
     <div class="sg">
       <div class="sg-title">ℹ️ 关于</div>
       <div style="font-size:14px;line-height:2;color:var(--text1)">
         <b>MeetPilot</b> · 纯前端会议实时转录工具<br>
-        版本：<b>v4.0</b> · 100% 本地运行，无服务端，不上传任何数据<br>
-        所有记录仅存储在您的浏览器本地（localStorage），清除浏览器数据时会同步删除。
+        版本：<b>v4.1</b> · 100% 本地运行，无服务端，不上传任何数据<br>
+        所有记录仅存储在浏览器本地（localStorage）。
       </div>
     </div>
-
   </div>
 </section>
 
@@ -317,18 +366,26 @@ let S = {
 };
 let _viewingId = null;
 let _audioURL = null;
+// References to mark elements for sidebar click-to-scroll
+let _hlEls = [], _tdEls = [];
 
-// ── 初始化 ──
+// ── Init ──
 (function init() {
   loadData();
   checkSpeech();
   loadSettingsUI();
-  document.getElementById('save-title').addEventListener('keydown', e => {
-    if (e.key === 'Enter') confirmSave();
+  document.getElementById('save-title').addEventListener('keydown', e => { if (e.key === 'Enter') confirmSave(); });
+
+  // Plain-text paste only
+  document.getElementById('notes').addEventListener('paste', e => {
+    e.preventDefault();
+    const text = e.clipboardData?.getData('text/plain') || '';
+    if (!text) return;
+    document.execCommand('insertText', false, text);
   });
 })();
 
-// ── 导航 ──
+// ── Nav ──
 function nav(page) {
   document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
   document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
@@ -338,10 +395,9 @@ function nav(page) {
   if (page === 'history') renderHist();
 }
 
-// ── 数据 ──
+// ── Data ──
 function loadData() {
   try {
-    // 兼容旧版本存储键名
     const raw = localStorage.getItem(STORE_KEY)
              || localStorage.getItem('mp_lite')
              || localStorage.getItem('mp3_data');
@@ -352,114 +408,81 @@ function loadData() {
         id: m.id || Date.now() + Math.random(),
         title: m.title || '未命名会议',
         savedAt: m.savedAt || m.endTime || m.startTime || Date.now(),
-        text: m.text
-          || m.notes
-          || (Array.isArray(m.transcript) ? m.transcript.map(t => t.text || '').join('\n') : '')
-          || '',
+        source: m.source || 'manual',
+        text: m.text || m.notes || (Array.isArray(m.transcript) ? m.transcript.map(t => t.text || '').join('\n') : '') || '',
+        html: m.html || '',
       })).filter(m => m.title || m.text);
     }
     if (d.settings) {
       if (d.settings.apikey) S.settings.apikey = d.settings.apikey;
       if (d.settings.endpoint) S.settings.endpoint = d.settings.endpoint;
     }
-    // 兼容旧版分散存储的 API key
-    if (!S.settings.apikey) {
-      const k = localStorage.getItem('mp3_speech_api_key');
-      if (k) S.settings.apikey = k;
-    }
-    if (!S.settings.endpoint) {
-      const ep = localStorage.getItem('mp3_speech_api_endpoint');
-      if (ep) S.settings.endpoint = ep;
-    }
-  } catch (e) { /* 忽略损坏数据 */ }
+    if (!S.settings.apikey) { const k = localStorage.getItem('mp3_speech_api_key'); if (k) S.settings.apikey = k; }
+    if (!S.settings.endpoint) { const ep = localStorage.getItem('mp3_speech_api_endpoint'); if (ep) S.settings.endpoint = ep; }
+  } catch (e) { /* ignore */ }
 }
 
 function saveData() {
-  localStorage.setItem(STORE_KEY, JSON.stringify({
-    meetings: S.meetings,
-    settings: S.settings,
-  }));
+  localStorage.setItem(STORE_KEY, JSON.stringify({ meetings: S.meetings, settings: S.settings }));
 }
 
-// ── 设置 ──
+// ── Settings ──
 function loadSettingsUI() {
   document.getElementById('s-apikey').value = S.settings.apikey || '';
   document.getElementById('s-endpoint').value = S.settings.endpoint || '';
 }
+function saveSetting(key, val) { S.settings[key] = val.trim(); saveData(); }
 
-function saveSetting(key, val) {
-  S.settings[key] = val.trim();
-  saveData();
-}
-
-// ── 计时器 ──
+// ── Timer ──
 function startTimer() {
   S.startTime = Date.now();
   clearInterval(S.timerInterval);
   S.timerInterval = setInterval(() => {
     const s = Math.floor((Date.now() - S.startTime) / 1000);
-    document.getElementById('timer').textContent =
-      String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
+    document.getElementById('timer').textContent = pad(Math.floor(s / 60)) + ':' + pad(s % 60);
   }, 1000);
 }
+function stopTimer() { clearInterval(S.timerInterval); S.timerInterval = null; }
+function pad(n) { return String(n).padStart(2, '0'); }
 
-function stopTimer() {
-  clearInterval(S.timerInterval);
-  S.timerInterval = null;
-}
-
-// ── 语音识别 ──
+// ── Speech ──
 function checkSpeech() {
   const warn = document.getElementById('speech-warn');
   const btn = document.getElementById('mic-btn');
   if (!SR) {
-    warn.innerHTML = '<div style="font-size:12px;color:var(--warn);background:rgba(245,158,11,.1);padding:8px 12px;border-radius:8px;margin-bottom:10px">⚠️ 实时录音需使用 Chrome 或 Edge 浏览器</div>';
+    warn.innerHTML = '<div style="font-size:12px;color:var(--warn);background:rgba(245,158,11,.1);padding:8px 12px;border-radius:8px;margin-bottom:10px">⚠️ 实时录音需要 Chrome 或 Edge 浏览器</div>';
     btn.disabled = true;
   }
 }
 
-function toggleMic() {
-  S.micActive ? stopMic() : startMic();
-}
+function toggleMic() { S.micActive ? stopMic() : startMic(); }
 
 function startMic() {
   if (!SR) { toast('请使用 Chrome 或 Edge 浏览器'); return; }
   if (S.recognition) S.recognition.abort();
-
   const r = new SR();
-  r.lang = 'zh-CN';
-  r.continuous = true;
-  r.interimResults = true;
-  S.recognition = r;
-  S.micActive = true;
+  r.lang = 'zh-CN'; r.continuous = true; r.interimResults = true;
+  S.recognition = r; S.micActive = true;
 
   r.onresult = (e) => {
     let interim = '';
     for (let i = e.resultIndex; i < e.results.length; i++) {
-      if (e.results[i].isFinal) {
-        appendToNotes(e.results[i][0].transcript.trim());
-      } else {
-        interim += e.results[i][0].transcript;
-      }
+      if (e.results[i].isFinal) appendToNotes(e.results[i][0].transcript.trim());
+      else interim += e.results[i][0].transcript;
     }
     const box = document.getElementById('live-box');
-    box.textContent = interim || '实时识别内容将显示在此...';
+    box.textContent = interim || '识别内容实时显示在此...';
     box.className = 'live-box' + (interim ? ' active' : '');
   };
-
   r.onerror = (e) => {
     if (e.error === 'not-allowed') {
       stopMic();
-      document.getElementById('live-box').innerHTML =
-        '🚫 麦克风权限被拒绝<br><small style="color:var(--text2)">请在地址栏🔒图标中允许麦克风后重试</small>';
+      document.getElementById('live-box').innerHTML = '🚫 麦克风权限被拒绝<br><small style="color:var(--text3)">请在地址栏🔒图标中允许麦克风后重试</small>';
       return;
     }
     if (e.error !== 'aborted') setStatusTip('识别错误：' + e.error);
   };
-
-  r.onend = () => {
-    if (S.micActive) try { S.recognition.start(); } catch (ex) {}
-  };
+  r.onend = () => { if (S.micActive) try { S.recognition.start(); } catch (ex) {} };
 
   try {
     r.start();
@@ -468,124 +491,192 @@ function startMic() {
     btn.innerHTML = '<span class="rec-dot"></span> 录音中 — 点击停止';
     startTimer();
     setStatusTip('🎙 正在录音，实时转写中...');
-  } catch (e) {
-    S.micActive = false;
-    toast('无法启动录音：' + e.message);
-  }
+  } catch (e) { S.micActive = false; toast('无法启动录音：' + e.message); }
 }
 
 function stopMic() {
   S.micActive = false;
-  if (S.recognition) {
-    try { S.recognition.abort(); } catch (e) {}
-    S.recognition = null;
-  }
+  if (S.recognition) { try { S.recognition.abort(); } catch (e) {} S.recognition = null; }
   const btn = document.getElementById('mic-btn');
   btn.className = 'mic-btn off';
   btn.innerHTML = '🎙 &nbsp;点击开始录音';
   const box = document.getElementById('live-box');
-  box.textContent = '实时识别内容将显示在此...';
+  box.textContent = '识别内容实时显示在此...';
   box.className = 'live-box';
   stopTimer();
   setStatusTip('录音已停止');
 }
 
-function setStatusTip(msg) {
-  document.getElementById('status-tip').textContent = msg;
-}
+function setStatusTip(msg) { document.getElementById('status-tip').textContent = msg; }
 
-// ── 笔记操作 ──
+// ── Notes ──
 function appendToNotes(text) {
   if (!text) return;
-  const ta = document.getElementById('notes');
-  const cur = ta.value;
-  ta.value = cur + (cur && !cur.endsWith('\n') ? '\n' : '') + text + '\n';
-  ta.scrollTop = ta.scrollHeight;
+  const notes = document.getElementById('notes');
+  const div = document.createElement('div');
+  div.textContent = text;
+  notes.appendChild(div);
+  notes.scrollTop = notes.scrollHeight;
 }
 
+function onNotesInput() { updateSidebar(); }
+
+// ── Mark: highlight ──
 function markHighlight() {
-  const ta = document.getElementById('notes');
-  const s = ta.selectionStart, e = ta.selectionEnd;
-  if (s === e) { toast('请先选中要标记的文字'); return; }
-  const sel = ta.value.slice(s, e);
-  const marked = '【重点】' + sel + '【/重点】';
-  ta.value = ta.value.slice(0, s) + marked + ta.value.slice(e);
-  ta.setSelectionRange(s, s + marked.length);
-  ta.focus();
+  const sel = window.getSelection();
+  if (!sel || sel.isCollapsed) { toast('请先选中要标记的文字'); return; }
+  const notes = document.getElementById('notes');
+  const range = sel.getRangeAt(0);
+  if (!notes.contains(range.commonAncestorContainer)) { toast('请在笔记区域内选中文字'); return; }
+
+  const text = range.toString();
+  if (!text.trim()) { toast('选中内容为空'); return; }
+
+  const span = document.createElement('span');
+  span.className = 'mark-hl';
+  span.textContent = text;
+  try {
+    range.deleteContents();
+    range.insertNode(span);
+  } catch (e) { toast('标记失败，请重新选中'); return; }
+  sel.removeAllRanges();
+  updateSidebar();
   toast('✅ 已标记为重点');
 }
 
+// ── Mark: todo ──
 function markTodo() {
-  const ta = document.getElementById('notes');
-  const s = ta.selectionStart, e = ta.selectionEnd;
-  if (s === e) { toast('请先选中要标记的文字'); return; }
-  const sel = ta.value.slice(s, e);
-  const marked = '[待办] ' + sel;
-  ta.value = ta.value.slice(0, s) + marked + ta.value.slice(e);
-  ta.setSelectionRange(s, s + marked.length);
-  ta.focus();
+  const sel = window.getSelection();
+  if (!sel || sel.isCollapsed) { toast('请先选中要标记的文字'); return; }
+  const notes = document.getElementById('notes');
+  const range = sel.getRangeAt(0);
+  if (!notes.contains(range.commonAncestorContainer)) { toast('请在笔记区域内选中文字'); return; }
+
+  const text = range.toString();
+  if (!text.trim()) { toast('选中内容为空'); return; }
+
+  const wrapper = document.createElement('span');
+  wrapper.className = 'mark-todo';
+
+  const cb = document.createElement('input');
+  cb.type = 'checkbox';
+  cb.setAttribute('contenteditable', 'false');
+  cb.addEventListener('change', function () {
+    wrapper.classList.toggle('done', this.checked);
+    updateSidebar();
+  });
+
+  const textSpan = document.createElement('span');
+  textSpan.textContent = text;
+
+  wrapper.appendChild(cb);
+  wrapper.appendChild(textSpan);
+
+  try {
+    range.deleteContents();
+    range.insertNode(wrapper);
+  } catch (e) { toast('标记失败，请重新选中'); return; }
+  sel.removeAllRanges();
+  updateSidebar();
   toast('✅ 已标记为待办');
 }
 
+// ── Sidebar ──
+function updateSidebar() {
+  const notes = document.getElementById('notes');
+  const sidebar = document.getElementById('marks-sidebar');
+  _hlEls = [...notes.querySelectorAll('.mark-hl')];
+  _tdEls = [...notes.querySelectorAll('.mark-todo')];
+
+  if (!_hlEls.length && !_tdEls.length) {
+    sidebar.innerHTML = '<div class="sb-empty">选中文字后<br>点击上方标记按钮</div>';
+    return;
+  }
+
+  let html = '';
+  if (_hlEls.length) {
+    html += `<div class="sb-sec"><div class="sb-sec-title">⭐ 重点 <span class="sb-count">${_hlEls.length}</span></div>`;
+    _hlEls.forEach((el, i) => {
+      const t = el.textContent.slice(0, 36);
+      html += `<div class="sb-item sb-hl" onclick="scrollToMark('hl',${i})">${escHtml(t)}${el.textContent.length > 36 ? '…' : ''}</div>`;
+    });
+    html += '</div>';
+  }
+  if (_tdEls.length) {
+    html += `<div class="sb-sec"><div class="sb-sec-title">☑ 待办 <span class="sb-count">${_tdEls.length}</span></div>`;
+    _tdEls.forEach((el, i) => {
+      const cb = el.querySelector('input[type=checkbox]');
+      const done = cb?.checked;
+      const t = el.textContent.trim().slice(0, 36);
+      html += `<div class="sb-item sb-todo ${done ? 'done' : ''}" onclick="scrollToMark('todo',${i})">${escHtml(t)}${el.textContent.trim().length > 36 ? '…' : ''}</div>`;
+    });
+    html += '</div>';
+  }
+  sidebar.innerHTML = html;
+}
+
+function scrollToMark(type, idx) {
+  const el = (type === 'hl' ? _hlEls : _tdEls)[idx];
+  if (!el) return;
+  el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+  el.classList.add('mark-flash');
+  setTimeout(() => el.classList.remove('mark-flash'), 1400);
+}
+
+// ── Notes actions ──
 function copyNotes() {
-  const text = document.getElementById('notes').value;
+  const text = document.getElementById('notes').innerText;
   if (!text.trim()) { toast('暂无内容'); return; }
   navigator.clipboard?.writeText(text)
     .then(() => toast('✅ 已复制到剪贴板'))
-    .catch(() => {
-      document.getElementById('notes').select();
-      document.execCommand('copy');
-      toast('✅ 已复制');
-    });
+    .catch(() => { document.execCommand('selectAll'); document.execCommand('copy'); toast('✅ 已复制'); });
 }
 
 function clearNotes() {
-  const ta = document.getElementById('notes');
-  if (!ta.value.trim()) return;
-  if (!confirm('确认清空当前会议记录内容？')) return;
-  ta.value = '';
+  const notes = document.getElementById('notes');
+  if (!notes.innerText.trim()) return;
+  if (!confirm('确认清空当前笔记内容？')) return;
+  notes.innerHTML = '';
+  updateSidebar();
   toast('已清空');
 }
 
 function exportNotes() {
-  const text = document.getElementById('notes').value;
+  const text = document.getElementById('notes').innerText;
   if (!text.trim()) { toast('暂无内容可导出'); return; }
   downloadText(text, '会议记录_' + fmtDate(new Date()) + '.txt');
 }
 
-// ── 保存会议 ──
+// ── Save meeting ──
 function openSave() {
-  if (!document.getElementById('notes').value.trim()) {
-    toast('暂无内容，请先录音或输入记录');
-    return;
-  }
+  if (!document.getElementById('notes').innerText.trim()) { toast('暂无内容，请先录音或输入记录'); return; }
   document.getElementById('save-title').value = '';
   document.getElementById('save-overlay').classList.add('show');
   setTimeout(() => document.getElementById('save-title').focus(), 60);
 }
-
-function closeSave() {
-  document.getElementById('save-overlay').classList.remove('show');
-}
+function closeSave() { document.getElementById('save-overlay').classList.remove('show'); }
 
 function confirmSave() {
+  const notes = document.getElementById('notes');
+  const text = notes.innerText.trim();
+  const html = notes.innerHTML;
+  if (!text) { toast('暂无内容'); return; }
   const rawTitle = document.getElementById('save-title').value.trim();
   const title = rawTitle || ('会议_' + fmtDate(new Date()));
-  const text = document.getElementById('notes').value;
-  const m = { id: Date.now(), title, savedAt: Date.now(), text };
+  const m = { id: Date.now(), title, savedAt: Date.now(), source: 'manual', text, html };
   S.meetings.unshift(m);
   if (S.meetings.length > 300) S.meetings.pop();
   saveData();
   closeSave();
-  document.getElementById('notes').value = '';
-  stopMic();
-  stopTimer();
+  notes.innerHTML = '';
+  stopMic(); stopTimer();
   document.getElementById('timer').textContent = '00:00';
   setStatusTip('准备就绪');
+  updateSidebar();
   toast('✅ 已保存："' + title + '"');
 }
 
-// ── 音频上传 ──
+// ── Audio upload ──
 function handleDrop(e) {
   e.preventDefault();
   document.getElementById('dropzone').classList.remove('drag');
@@ -599,14 +690,11 @@ function handleFile(file) {
   if (_audioURL) URL.revokeObjectURL(_audioURL);
   _audioURL = URL.createObjectURL(file);
   document.getElementById('audio-player').src = _audioURL;
-  document.getElementById('audio-filename').textContent = file.name;
+  document.getElementById('audio-fn').textContent = file.name;
   document.getElementById('dropzone').style.display = 'none';
-  document.getElementById('audio-player-wrap').style.display = '';
-  const ta = document.getElementById('notes');
+  document.getElementById('audio-pw').style.display = '';
   const now = new Date().toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
-  if (ta.value && !ta.value.endsWith('\n')) ta.value += '\n';
-  ta.value += `\n--- 📁 ${file.name} (${now}) ---\n`;
-  ta.scrollTop = ta.scrollHeight;
+  appendToNotes(`--- 📁 ${file.name} (${now}) ---`);
   startTranscribe(file);
 }
 
@@ -616,20 +704,15 @@ function resetAudio() {
   if (_audioURL) { URL.revokeObjectURL(_audioURL); _audioURL = null; }
   document.getElementById('audio-input').value = '';
   document.getElementById('dropzone').style.display = '';
-  document.getElementById('audio-player-wrap').style.display = 'none';
+  document.getElementById('audio-pw').style.display = 'none';
   document.getElementById('upload-status').textContent = '';
 }
 
-function setUploadStatus(msg) {
-  document.getElementById('upload-status').textContent = msg;
-}
+function setUploadStatus(msg) { document.getElementById('upload-status').textContent = msg; }
 
 async function startTranscribe(file) {
   const apiKey = S.settings.apikey;
-  if (!apiKey) {
-    setUploadStatus('⚠️ 请先在「设置」中配置语音识别 API Key');
-    return;
-  }
+  if (!apiKey) { setUploadStatus('⚠️ 请先在「设置」中配置语音识别 API Key'); return; }
   const endpoint = S.settings.endpoint || 'https://api.openai.com/v1/audio/transcriptions';
   const modelName = endpoint.includes('siliconflow') ? 'FunAudioLLM/SenseVoiceSmall' : 'whisper-1';
 
@@ -642,15 +725,9 @@ async function startTranscribe(file) {
     formData.append('response_format', 'verbose_json');
     if (!endpoint.includes('siliconflow')) formData.append('timestamp_granularities[]', 'segment');
 
-    const res = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + apiKey },
-      body: formData,
-    });
-    if (!res.ok) {
-      const err = await res.json().catch(() => ({}));
-      throw new Error(err.error?.message || `HTTP ${res.status}`);
-    }
+    const res = await fetch(endpoint, { method: 'POST', headers: { 'Authorization': 'Bearer ' + apiKey }, body: formData });
+    if (!res.ok) { const err = await res.json().catch(() => ({})); throw new Error(err.error?.message || `HTTP ${res.status}`); }
+
     setUploadStatus('🔍 解析结果...');
     const result = await res.json();
     const rawSegs = result.segments?.length ? result.segments : (result.text ? [{ text: result.text }] : []);
@@ -661,15 +738,28 @@ async function startTranscribe(file) {
       if (!cleaned) return;
       if (cleaned.length > 120) {
         cleaned.split(/(?<=[。！？；\n])\s*/).filter(p => p.trim()).forEach(p => lines.push(p.trim()));
-      } else {
-        lines.push(cleaned);
-      }
+      } else { lines.push(cleaned); }
     });
 
     if (lines.length) {
       lines.forEach(l => appendToNotes(l));
-      setUploadStatus(`✅ 转写完成，共 ${lines.length} 段`);
+      setUploadStatus(`✅ 转写完成，共 ${lines.length} 段 · 已自动保存到历史记录`);
       toast(`✅ 转写完成，共 ${lines.length} 段`);
+
+      // ── 自动保存到历史记录 ──
+      const autoTitle = file.name.replace(/\.[^/.]+$/, '');
+      const autoText = lines.join('\n');
+      const autoM = {
+        id: Date.now(),
+        title: autoTitle,
+        savedAt: Date.now(),
+        source: 'upload',
+        text: autoText,
+        html: lines.map(l => `<div>${escHtml(l)}</div>`).join(''),
+      };
+      S.meetings.unshift(autoM);
+      if (S.meetings.length > 300) S.meetings.pop();
+      saveData();
     } else {
       setUploadStatus('⚠️ 未识别到内容，请检查音频文件');
     }
@@ -679,30 +769,28 @@ async function startTranscribe(file) {
   }
 }
 
-// ── 历史记录 ──
+// ── History ──
 function renderHist() {
   const list = document.getElementById('hist-list');
   const clearBtn = document.getElementById('clear-all-btn');
   if (!S.meetings.length) {
-    list.innerHTML = `<div class="empty-state">
-      <div class="empty-ico">📋</div>
+    list.innerHTML = `<div class="empty-state"><div class="empty-ico">📋</div>
       <p style="font-weight:600;color:var(--text0)">暂无会议记录</p>
-      <p style="font-size:13px;margin-top:6px">前往「会议室」录音后保存即可在此查看</p>
-    </div>`;
-    clearBtn.style.display = 'none';
-    return;
+      <p style="font-size:13px;margin-top:6px">前往「会议室」录音后保存即可在此查看</p></div>`;
+    clearBtn.style.display = 'none'; return;
   }
   clearBtn.style.display = '';
   list.innerHTML = S.meetings.map(m => {
     const dt = new Date(m.savedAt).toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
-    const preview = (m.text || '').replace(/\n/g, ' ').slice(0, 55);
+    const preview = (m.text || '').replace(/\n/g, ' ').slice(0, 50);
+    const badge = m.source === 'upload' ? '<span class="m-badge">音频转录</span>' : '';
     return `<div class="m-item">
       <div class="m-info" onclick="viewMeeting(${m.id})">
-        <div class="m-title">${escHtml(m.title)}</div>
+        <div class="m-title">${escHtml(m.title)}${badge}</div>
         <div class="m-meta">${dt}${preview ? ' · ' + escHtml(preview) + '...' : ''}</div>
       </div>
       <div style="display:flex;gap:6px;flex-shrink:0">
-        <button class="btn btn-secondary btn-sm" onclick="exportById(${m.id})" title="导出为文本">📥</button>
+        <button class="btn btn-secondary btn-sm" onclick="exportById(${m.id})" title="导出">📥</button>
         <button class="btn btn-danger btn-sm" onclick="delMeeting(${m.id})" title="删除">🗑</button>
       </div>
     </div>`;
@@ -717,8 +805,15 @@ function viewMeeting(id) {
   document.getElementById('hist-detail').style.display = '';
   document.getElementById('detail-title').textContent = m.title;
   const dt = new Date(m.savedAt).toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
-  document.getElementById('detail-meta').textContent = '保存时间：' + dt;
-  document.getElementById('detail-content').textContent = m.text || '（无内容）';
+  document.getElementById('detail-meta').textContent = '保存时间：' + dt + (m.source === 'upload' ? '  ·  音频转录' : '');
+  const contentEl = document.getElementById('detail-content');
+  if (m.html) {
+    contentEl.innerHTML = m.html;
+    // 历史详情中复选框只读
+    contentEl.querySelectorAll('input[type=checkbox]').forEach(cb => cb.disabled = true);
+  } else {
+    contentEl.textContent = m.text || '（无内容）';
+  }
 }
 
 function closeDetail() {
@@ -730,53 +825,35 @@ function closeDetail() {
 function delMeeting(id) {
   if (!confirm('删除这条会议记录？删除后不可恢复。')) return;
   S.meetings = S.meetings.filter(m => m.id !== id);
-  saveData();
-  renderHist();
-  toast('已删除');
+  saveData(); renderHist(); toast('已删除');
 }
 
 function clearAll() {
   if (!confirm('清空所有会议记录？此操作不可恢复。')) return;
-  S.meetings = [];
-  saveData();
-  renderHist();
-  toast('已清空所有记录');
+  S.meetings = []; saveData(); renderHist(); toast('已清空所有记录');
 }
 
 function exportById(id) {
   const m = S.meetings.find(x => x.id === id);
   if (!m) return;
-  const dt = new Date(m.savedAt).toLocaleString('zh-CN');
-  downloadText(`${m.title}\n保存时间：${dt}\n\n${m.text}`, m.title.replace(/[\\/:*?"<>|]/g, '_') + '.txt');
+  downloadText(`${m.title}\n保存时间：${new Date(m.savedAt).toLocaleString('zh-CN')}\n\n${m.text}`, m.title.replace(/[\\/:*?"<>|]/g, '_') + '.txt');
 }
 
-function exportDetail() {
-  if (_viewingId) exportById(_viewingId);
-}
+function exportDetail() { if (_viewingId) exportById(_viewingId); }
 
-// ── 工具函数 ──
-function escHtml(s) {
-  return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
-}
-
-function fmtDate(d) {
-  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
-}
-
+// ── Utils ──
+function escHtml(s) { return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
+function fmtDate(d) { return d.getFullYear() + '-' + pad(d.getMonth() + 1) + '-' + pad(d.getDate()); }
 function downloadText(text, filename) {
   const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
   const a = document.createElement('a');
-  a.href = URL.createObjectURL(blob);
-  a.download = filename;
-  a.click();
+  a.href = URL.createObjectURL(blob); a.download = filename; a.click();
   URL.revokeObjectURL(a.href);
 }
-
 function toast(msg) {
   document.querySelectorAll('.toast').forEach(el => el.remove());
   const el = document.createElement('div');
-  el.className = 'toast';
-  el.textContent = msg;
+  el.className = 'toast'; el.textContent = msg;
   document.body.appendChild(el);
   setTimeout(() => el.remove(), 2600);
 }
