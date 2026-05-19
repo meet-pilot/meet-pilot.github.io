@@ -6,8 +6,8 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>MeetPilot · 智能会议助手 v3.8</title>
-<meta name="version" content="3.8-20260519">
+<title>MeetPilot · 智能会议助手 v3.9</title>
+<meta name="version" content="3.9-20260519">
 <style>
 :root{
   --bg0:#F0F4F8;--bg1:#FFFFFF;--bg2:#F7F9FC;--border:#E2E8F0;
@@ -226,7 +226,9 @@ select{cursor:pointer}
 .filt.active,.filt:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
 
 /* ── Settings ── */
-.settings-wrap{max-width:620px}
+.settings-wrap{display:grid;grid-template-columns:1fr 1fr;gap:0 20px;align-items:start}
+.settings-wrap .sg-full{grid-column:1/-1}
+@media(max-width:768px){.settings-wrap{grid-template-columns:1fr}}
 .sg{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r);margin-bottom:14px;overflow:hidden}
 .sg-title{padding:11px 18px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);border-bottom:1px solid var(--border);background:var(--bg2)}
 .sr{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;gap:12px;border-bottom:1px solid var(--border)}
@@ -606,7 +608,7 @@ select{cursor:pointer}
   <div class="settings-wrap">
 
     <!-- Multi-device sync -->
-    <div class="sg">
+    <div class="sg sg-full">
       <div class="sg-title">☁️ 多端同步（GitHub Gist）</div>
       <div class="sr">
         <div class="sr-info">
@@ -756,7 +758,7 @@ select{cursor:pointer}
       </div>
     </div>
 
-    <div class="sg">
+    <div class="sg sg-full">
       <div class="sg-title">关于</div>
       <div class="sr">
         <div class="sr-info"><div class="sr-label">MeetPilot</div><div class="sr-desc">智能会议助手 · 本地优先 · 隐私安全 · 多端同步</div></div>
