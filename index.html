@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta http-equiv="surrogate-control" content="no-store">
-<title>MeetPilot · 会议转录 v4.1</title>
+<title>MeetPilot · 会议转录 v4.1.2</title>
 <style>
 :root{
   --bg:#F4F6FB;--bg1:#FFFFFF;--bg2:#F0F2F7;--border:#E2E8F0;
@@ -39,7 +39,8 @@ input[type=text]:focus,input[type=password]:focus{border-color:var(--accent)}
 
 /* ── Room layout: sidebar | notes | controls ── */
 .room-layout{display:grid;grid-template-columns:210px 1fr 300px;gap:14px;padding:16px 20px;height:100%;box-sizing:border-box}
-.room-col{display:flex;flex-direction:column;min-height:0;overflow-y:auto;gap:12px;height:100%}
+.room-col{display:flex;flex-direction:column;min-height:0;gap:12px}
+.room-col.controls-col{overflow-y:auto}
 
 /* ── Card ── */
 .card{background:var(--bg1);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);flex-shrink:0}
