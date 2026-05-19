@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta http-equiv="surrogate-control" content="no-store">
-<title>MeetPilot · 会议转录 v4.2.3</title>
+<title>MeetPilot · 会议转录 v4.2.4</title>
 <style>
 :root{
   --bg:#F4F6FB;--bg1:#FFFFFF;--bg2:#F0F2F7;--border:#E2E8F0;
@@ -250,7 +250,9 @@ audio{width:100%;border-radius:7px;margin-bottom:7px}
       <!-- 录音 -->
       <div class="card">
         <div class="card-body">
-          <div class="card-title">🎙 实时录音转写</div>
+          <div class="card-title">🎙 实时录音转写
+            <span id="rec-mode-badge" style="font-size:11px;font-weight:500;border-radius:4px;padding:1px 7px;margin-left:6px"></span>
+          </div>
           <div class="timer-row">
             <div class="timer" id="timer">00:00</div>
             <div class="status-tip" id="status-tip">准备就绪</div>
@@ -400,6 +402,8 @@ let S = {
   meetings: [],
   settings: { apikey: '', endpoint: '' },
 };
+let _recorder = null;   // MediaRecorder for cloud-mode recording
+let _recStream = null;  // mic stream kept alive during recording
 let _viewingId = null;
 let _audioURL = null;
 // References to mark elements for sidebar click-to-scroll
@@ -493,18 +497,23 @@ function checkSpeech() {
 function toggleMic() { S.micActive ? stopMic() : startMic(); }
 
 function startMic() {
-  if (!SR) {
-    document.getElementById('speech-warn').innerHTML = warnBox('⚠️ 实时录音需要 <b>Chrome 或 Edge</b> 浏览器（当前浏览器不支持 Web Speech API）', 'warn');
-    return;
-  }
   const warn = document.getElementById('speech-warn');
   warn.innerHTML = warnBox('⏳ 正在请求麦克风权限…', 'info');
 
   navigator.mediaDevices.getUserMedia({ audio: true })
     .then(stream => {
-      stream.getTracks().forEach(t => t.stop());
       warn.innerHTML = '';
-      _doStartMic();
+      // 有 API Key → 云端模式（国内可用）；无 Key → Web Speech API
+      if (S.settings.apikey) {
+        _startCloudMic(stream);
+      } else {
+        stream.getTracks().forEach(t => t.stop());
+        if (!SR) {
+          warn.innerHTML = warnBox('⚠️ 无 API Key 且当前浏览器不支持 Web Speech API。<br>请在「设置」中配置 SiliconFlow 或 Groq API Key 后再录音（国内推荐）。', 'warn');
+          return;
+        }
+        _startWebSpeechMic();
+      }
     })
     .catch(err => {
       if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
@@ -517,16 +526,44 @@ function startMic() {
     });
 }
 
-function warnBox(msg, type) {
-  const styles = {
-    danger: 'color:var(--danger);background:rgba(239,68,68,.08)',
-    warn:   'color:#92400e;background:rgba(245,158,11,.1)',
-    info:   'color:var(--text2);background:var(--bg2)',
+// ── 云端模式：MediaRecorder 分块 → Whisper API ──
+function _startCloudMic(stream) {
+  _recStream = stream;
+  const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
+    ? 'audio/webm;codecs=opus' : 'audio/webm';
+  _recorder = new MediaRecorder(stream, { mimeType });
+  S.micActive = true;
+
+  _recorder.ondataavailable = async (e) => {
+    if (!e.data || e.data.size < 1000) return; // 太短跳过
+    setStatusTip('☁️ 转写中…');
+    try {
+      const endpoint = S.settings.endpoint || 'https://api.openai.com/v1/audio/transcriptions';
+      const modelName = endpoint.includes('siliconflow') ? 'FunAudioLLM/SenseVoiceSmall' : 'whisper-1';
+      const fd = new FormData();
+      fd.append('file', e.data, 'chunk.webm');
+      fd.append('model', modelName);
+      fd.append('language', 'zh');
+      const res = await fetch(endpoint, {
+        method: 'POST',
+        headers: { Authorization: 'Bearer ' + S.settings.apikey },
+        body: fd,
+      });
+      const json = await res.json();
+      const text = (json.text || '').trim();
+      if (text) { appendToNotes(text); setStatusTip('🎙 录音中，每段自动转写…'); }
+      else setStatusTip('🎙 录音中，每段自动转写…');
+    } catch (err) {
+      setStatusTip('⚠️ 转写失败：' + err.message);
+    }
   };
-  return `<div style="font-size:12px;${styles[type]||styles.info};padding:8px 12px;border-radius:8px;margin-bottom:8px">${msg}</div>`;
+
+  _recorder.start(20000); // 每 20 秒一块
+  _setMicOn('🎙 云端识别中 — 点击停止', '云端模式');
 }
 
-function _doStartMic() {
+// ── Web Speech 模式（需要 Google，境外/VPN 可用）──
+function _startWebSpeechMic() {
   if (S.recognition) S.recognition.abort();
   const r = new SR();
   r.lang = 'zh-CN'; r.continuous = true; r.interimResults = true;
@@ -538,51 +575,72 @@ function _doStartMic() {
     }
   };
   r.onerror = (e) => {
-    // getUserMedia 已成功 → not-allowed/service-not-allowed 说明 Google 服务不可达
     if (e.error === 'not-allowed' || e.error === 'service-not-allowed') {
       stopMic();
       document.getElementById('speech-warn').innerHTML = warnBox(
-        '🌐 Google 语音识别服务不可用（国内网络无法访问）。<br>建议改用右侧「上传音频转写」功能，配置 SiliconFlow / Groq API Key 后可正常使用。',
+        '🌐 Google 语音服务不可达（国内网络限制）。<br>请在「设置」中配置 <b>SiliconFlow</b> API Key，即可使用云端识别模式（国内可用）。',
         'warn'
       );
       return;
     }
-    if (e.error === 'audio-capture') {
-      stopMic();
-      document.getElementById('speech-warn').innerHTML = warnBox('🎤 未检测到麦克风设备，请检查连接后重试', 'danger');
-      return;
-    }
+    if (e.error === 'audio-capture') { stopMic(); document.getElementById('speech-warn').innerHTML = warnBox('🎤 未检测到麦克风', 'danger'); return; }
     if (e.error === 'network') { setStatusTip('⚠️ 网络中断，正在重连...'); return; }
     if (e.error === 'no-speech') return;
     if (e.error !== 'aborted') setStatusTip('识别错误：' + e.error);
   };
   r.onend = () => { if (S.micActive) { try { S.recognition.start(); } catch (ex) {} } };
+  r.start();
+  _setMicOn('录音中 — 点击停止', 'Web Speech');
+}
 
-  try {
-    r.start();
-    const btn = document.getElementById('mic-btn');
-    btn.className = 'mic-btn on';
-    btn.innerHTML = '<span class="rec-dot"></span> 录音中 — 点击停止';
-    document.getElementById('mic-actions').classList.add('show');
-    document.getElementById('speech-warn').innerHTML = '';
-    // 自动填时间为标题（仅标题为空时）
-    const titleInput = document.getElementById('notes-title');
-    if (!titleInput.value.trim()) {
-      const now = new Date().toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
-      titleInput.value = '录音_' + now;
-    }
-    startTimer();
-    setStatusTip('🎙 正在录音，实时转写中...');
-  } catch (e) { S.micActive = false; toast('无法启动录音：' + e.message); }
+function _setMicOn(label, modeName) {
+  const btn = document.getElementById('mic-btn');
+  btn.className = 'mic-btn on';
+  btn.innerHTML = `<span class="rec-dot"></span> ${label}`;
+  document.getElementById('mic-actions').classList.add('show');
+  document.getElementById('speech-warn').innerHTML = '';
+  const badge = document.getElementById('rec-mode-badge');
+  if (modeName === '云端模式') {
+    badge.style.cssText = 'background:#dbeafe;color:#1e40af';
+    badge.textContent = '☁️ 云端·国内可用';
+  } else {
+    badge.style.cssText = 'background:#f3f4f6;color:#374151';
+    badge.textContent = '🌐 Web Speech';
+  }
+  const titleInput = document.getElementById('notes-title');
+  if (!titleInput.value.trim()) {
+    const now = new Date().toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+    titleInput.value = '录音_' + now;
+  }
+  startTimer();
+  setStatusTip(modeName === '云端模式' ? '🎙 录音中，每 20 秒自动转写一次…' : '🎙 正在录音，实时转写中...');
+}
+
+function warnBox(msg, type) {
+  const styles = {
+    danger: 'color:var(--danger);background:rgba(239,68,68,.08)',
+    warn:   'color:#92400e;background:rgba(245,158,11,.1)',
+    info:   'color:var(--text2);background:var(--bg2)',
+  };
+  return `<div style="font-size:12px;${styles[type]||styles.info};padding:8px 12px;border-radius:8px;margin-bottom:8px">${msg}</div>`;
 }
 
 function stopMic() {
   S.micActive = false;
+  // 停止云端模式
+  if (_recorder && _recorder.state !== 'inactive') {
+    _recorder.requestData(); // 把最后一块也发出去
+    _recorder.stop();
+  }
+  _recorder = null;
+  if (_recStream) { _recStream.getTracks().forEach(t => t.stop()); _recStream = null; }
+  // 停止 Web Speech 模式
   if (S.recognition) { try { S.recognition.abort(); } catch (e) {} S.recognition = null; }
   const btn = document.getElementById('mic-btn');
   btn.className = 'mic-btn off';
   btn.innerHTML = '🎙 &nbsp;点击开始录音';
-  document.getElementById('mic-actions').classList.add('show'); // 停止后保留按钮，可保存
+  document.getElementById('rec-mode-badge').textContent = '';
+  document.getElementById('mic-actions').classList.add('show');
   stopTimer();
   setStatusTip('录音已停止');
 }
