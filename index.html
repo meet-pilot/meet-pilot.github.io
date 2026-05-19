@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta http-equiv="surrogate-control" content="no-store">
-<title>MeetPilot · 会议转录 v4.2.1</title>
+<title>MeetPilot · 会议转录 v4.2.2</title>
 <style>
 :root{
   --bg:#F4F6FB;--bg1:#FFFFFF;--bg2:#F0F2F7;--border:#E2E8F0;
@@ -493,7 +493,30 @@ function checkSpeech() {
 function toggleMic() { S.micActive ? stopMic() : startMic(); }
 
 function startMic() {
-  if (!SR) { toast('请使用 Chrome 或 Edge 浏览器'); return; }
+  if (!SR) {
+    document.getElementById('speech-warn').innerHTML = '<div style="font-size:12px;color:var(--warn);background:rgba(245,158,11,.1);padding:8px 12px;border-radius:8px;margin-bottom:8px">⚠️ 实时录音需要 <b>Chrome 或 Edge</b> 浏览器（当前浏览器不支持 Web Speech API）</div>';
+    return;
+  }
+  const warn = document.getElementById('speech-warn');
+  warn.innerHTML = '';
+  // 先显式请求麦克风权限，权限弹窗由浏览器原生展示
+  navigator.mediaDevices.getUserMedia({ audio: true })
+    .then(stream => {
+      stream.getTracks().forEach(t => t.stop()); // 拿到权限即释放，SpeechRecognition 自己会重新接管
+      _doStartMic();
+    })
+    .catch(err => {
+      if (err.name === 'NotAllowedError' || err.name === 'PermissionDeniedError') {
+        warn.innerHTML = '<div style="font-size:12px;color:var(--danger);background:rgba(239,68,68,.08);padding:8px 12px;border-radius:8px;margin-bottom:8px">🚫 麦克风权限被拒绝，请点击地址栏 🔒 图标 → 允许麦克风后重试</div>';
+      } else if (err.name === 'NotFoundError' || err.name === 'DevicesNotFoundError') {
+        warn.innerHTML = '<div style="font-size:12px;color:var(--danger);background:rgba(239,68,68,.08);padding:8px 12px;border-radius:8px;margin-bottom:8px">🎤 未检测到麦克风设备，请检查连接后重试</div>';
+      } else {
+        warn.innerHTML = `<div style="font-size:12px;color:var(--danger);background:rgba(239,68,68,.08);padding:8px 12px;border-radius:8px;margin-bottom:8px">❌ 无法访问麦克风：${err.message}</div>`;
+      }
+    });
+}
+
+function _doStartMic() {
   if (S.recognition) S.recognition.abort();
   const r = new SR();
   r.lang = 'zh-CN'; r.continuous = true; r.interimResults = true;
@@ -515,11 +538,8 @@ function startMic() {
       document.getElementById('speech-warn').innerHTML = '<div style="font-size:12px;color:var(--danger);background:rgba(239,68,68,.08);padding:8px 12px;border-radius:8px;margin-bottom:8px">🎤 未检测到麦克风设备，请检查连接后重试</div>';
       return;
     }
-    if (e.error === 'network') {
-      setStatusTip('⚠️ 网络中断，正在重连...');
-      return; // onend 会自动重启
-    }
-    if (e.error === 'no-speech') return; // 静音超时，onend 自动重启，不提示
+    if (e.error === 'network') { setStatusTip('⚠️ 网络中断，正在重连...'); return; }
+    if (e.error === 'no-speech') return;
     if (e.error !== 'aborted') setStatusTip('识别错误：' + e.error);
   };
   r.onend = () => { if (S.micActive) { try { S.recognition.start(); } catch (ex) {} } };
