@@ -6,8 +6,8 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>MeetPilot · 智能会议助手 v3.12</title>
-<meta name="version" content="3.12-20260519">
+<title>MeetPilot · 智能会议助手 v3.13</title>
+<meta name="version" content="3.13-20260519">
 <style>
 :root{
   --bg0:#F0F4F8;--bg1:#FFFFFF;--bg2:#F7F9FC;--border:#E2E8F0;
@@ -858,6 +858,7 @@ function init() {
   // Restore in-progress meeting after accidental refresh
   const inProgress = S.meetings.find(m => !m.endTime);
   if (inProgress) {
+    if (!Array.isArray(inProgress.transcript)) inProgress.transcript = [];
     S.meeting = inProgress;
     // Restore room UI
     document.getElementById('room-title').textContent = inProgress.title;
@@ -1975,8 +1976,7 @@ async function startCloudTranscribe(file, apiKey) {
       segments.forEach(seg => {
         const text = seg.text;
         const spkId = seg.spk_id ?? seg.speaker ?? null;
-        addTxToFeed(text, 'tx-upload-feed', null, spkId);
-        if (S.meeting) S.meeting.transcript.push({ time: Date.now(), text, spkId, source: 'upload' });
+        addTxToFeed(text, 'tx-upload-feed', null, spkId); // addTx内部已push transcript
         if (S.settings.autoAction !== false) autoDetect(text);
       });
       setStatus(`✅ 云端转写完成，共 ${segments.length} 段`);
@@ -2056,8 +2056,7 @@ async function startLocalWhisper(file) {
     if (chunks.length > 0) {
       chunks.forEach(ch => {
         const text = ch.text.trim();
-        addTxToFeed(text, 'tx-upload-feed', null);
-        if (S.meeting) S.meeting.transcript.push({ time: Date.now(), text, source: 'upload' });
+        addTxToFeed(text, 'tx-upload-feed', null); // addTx内部已push transcript
         if (S.settings.autoAction !== false) autoDetect(text);
       });
       setStatus(`✅ 转写完成，共识别 ${chunks.length} 段文字`);
@@ -2193,7 +2192,14 @@ function smartNotes() { aiSmartNotes('manual'); }
 
 // ── aiSmartNotes: calls chat completions → agenda + actions panels ──
 async function aiSmartNotes(triggerSource) {
-  const tx = (S.meeting?.transcript || []).filter(t => t.text?.trim().length > 2);
+  let tx = (S.meeting?.transcript || []).filter(t => t.text?.trim().length > 2);
+  // 兜底：transcript为空时从notes textarea读内容（页面刷新后数据格式不一致场景）
+  if (!tx.length) {
+    const notesVal = document.getElementById('room-notes')?.value?.trim();
+    if (notesVal && notesVal.length > 10) {
+      tx = notesVal.split('\n').filter(l => l.trim().length > 2).map(l => ({ text: l.trim() }));
+    }
+  }
   if (!tx.length) {
     if (triggerSource === 'manual') toast('暂无转录内容，请先录音或上传录音');
     return;
