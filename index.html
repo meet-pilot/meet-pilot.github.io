@@ -7,7 +7,7 @@
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
 <meta http-equiv="surrogate-control" content="no-store">
-<title>MeetPilot · 会议转录 v4.1.5</title>
+<title>MeetPilot · 会议转录 v4.1.6</title>
 <style>
 :root{
   --bg:#F4F6FB;--bg1:#FFFFFF;--bg2:#F0F2F7;--border:#E2E8F0;
@@ -46,6 +46,10 @@ input[type=text]:focus,input[type=password]:focus{border-color:var(--accent)}
 .card{background:var(--bg1);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);flex-shrink:0}
 .card-body{padding:16px}
 .card-title{font-size:13px;font-weight:700;color:var(--text0);margin-bottom:12px;display:flex;align-items:center;gap:5px}
+/* 上传 card 撑满右侧剩余高度 */
+.upload-card{flex:1;min-height:0;display:flex;flex-direction:column}
+.upload-card .card-body{flex:1;display:flex;flex-direction:column;min-height:0}
+.upload-card .dropzone{flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;min-height:80px}
 
 /* ── Marks sidebar ── */
 .sidebar-card{background:var(--bg1);border:1px solid var(--border);border-radius:12px;box-shadow:var(--shadow);flex:1;min-height:0;display:flex;flex-direction:column;overflow:hidden}
@@ -262,7 +266,7 @@ audio{width:100%;border-radius:7px;margin-bottom:7px}
       </div>
 
       <!-- 上传 -->
-      <div class="card">
+      <div class="card upload-card">
         <div class="card-body">
           <div class="card-title">📁 上传音频转写</div>
           <div class="dropzone" id="dropzone"
