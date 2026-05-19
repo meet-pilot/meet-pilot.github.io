@@ -6,8 +6,8 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>MeetPilot · 智能会议助手 v3.5</title>
-<meta name="version" content="3.5-20260519">
+<title>MeetPilot · 智能会议助手 v3.6</title>
+<meta name="version" content="3.6-20260519">
 <style>
 :root{
   --bg0:#F0F4F8;--bg1:#FFFFFF;--bg2:#F7F9FC;--border:#E2E8F0;
@@ -280,24 +280,66 @@ select{cursor:pointer}
   .room-grid{grid-template-columns:1fr 260px}
   .room-left-panel{display:none}
 }
+/* ── Tablet 768px ── */
+@media(max-width:768px){
+  .room-inner{padding:10px 16px 6px}
+  .room-header-right{gap:6px}
+  /* Code mode: hide label text, keep toggle icon only */
+  .code-mode-toggle .cmt-label{display:none}
+  .code-mode-toggle{padding:6px 10px;gap:6px}
+  .room-header-right .btn-secondary{padding:6px 12px;font-size:12.5px}
+  .room-header-right .btn-danger{padding:6px 12px;font-size:12.5px}
+}
+/* ── Mobile 640px ── */
 @media(max-width:640px){
   .topnav{display:none}
   .bnav{display:block}
   body{padding-bottom:60px}
+
+  /* Dashboard */
   .dash-hero{padding:32px 20px}
   .dash-hero h1{font-size:24px}
   .stats-row{gap:8px}
   .stat{padding:12px 8px}
   .stat .s-val{font-size:22px}
-  .room-grid{grid-template-columns:1fr}
-  .room-left-panel,.room-right-panel{display:none}
-  .room-grid .center-panel{min-height:400px}
   .sum-grid{grid-template-columns:1fr}
   .container{padding:16px}
-  .big-mic-btn{height:56px;font-size:15px}
+
+  /* Room – compact header */
+  .room-inner{padding:8px 12px 4px}
+  .room-header{margin-bottom:6px;gap:6px}
+  .room-header-left .room-title{font-size:15px}
+  /* Hide code mode toggle and secondary action buttons; keep only 结束 */
+  .code-mode-toggle{display:none}
+  .room-header-right .btn-secondary{display:none}
+  .room-header-right .btn-danger{padding:6px 14px;font-size:13px}
+
+  /* Room – single-column grid, no rigid min-height */
+  .room-grid{grid-template-columns:1fr}
+  .room-left-panel,.room-right-panel{display:none}
+  .room-grid .center-panel{min-height:0}
+
+  /* Notes toolbar – horizontal scroll, no wrap */
+  .notes-toolbar{overflow-x:auto;flex-wrap:nowrap;gap:4px;padding:5px 0 7px;
+    -webkit-overflow-scrolling:touch;scrollbar-width:none}
+  .notes-toolbar::-webkit-scrollbar{display:none}
+  .ntb-btn{flex-shrink:0;font-size:11.5px;padding:3px 9px}
+  .ntb-smart{font-size:11.5px;padding:4px 10px;flex-shrink:0;margin-left:4px}
+
+  /* Code editor – hide line nums, full-width padding */
+  .line-nums{display:none}
+  .code-ta{padding-left:12px !important}
+  .code-tbar{flex-wrap:nowrap}
+
+  /* Mic bar */
+  .room-mic-bar{padding:6px 0 2px}
+  .big-mic-btn{height:52px;font-size:14px;max-width:100%}
+  .mic-sub-row{gap:6px}
 }
 @media(max-width:400px){
   .stats-row{grid-template-columns:repeat(3,1fr)}
+  .room-header-left .room-title{font-size:13px}
+  .room-badge{font-size:10px;padding:2px 7px}
 }
 </style>
 </head>
