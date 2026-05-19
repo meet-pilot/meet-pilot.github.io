@@ -1,1197 +1,420 @@
 <!DOCTYPE html>
-<html lang="zh-CN" data-theme="light">
+<html lang="zh-CN">
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1.0,viewport-fit=cover">
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>MeetPilot · 智能会议助手 v3.14</title>
-<meta name="version" content="3.14-20260519">
+<meta http-equiv="surrogate-control" content="no-store">
+<title>MeetPilot · 会议转录 v4.0</title>
 <style>
 :root{
-  --bg0:#F0F4F8;--bg1:#FFFFFF;--bg2:#F7F9FC;--border:#E2E8F0;
-  --accent:#6366F1;--accent-soft:#EEF2FF;--accent-dim:rgba(99,102,241,.12);
+  --bg:#F8FAFC;--bg1:#FFFFFF;--bg2:#F1F5F9;--border:#E2E8F0;
+  --accent:#6366F1;--accent-dim:rgba(99,102,241,.1);
   --success:#10B981;--danger:#EF4444;--warn:#F59E0B;
-  --text0:#1A202C;--text1:#4A5568;--text2:#718096;--text3:#A0AEC0;
-  --shadow:0 1px 3px rgba(0,0,0,.08);
-  --shadow-md:0 4px 16px rgba(0,0,0,.1);
-  --shadow-lg:0 12px 32px rgba(0,0,0,.12);
-  --r:12px;--r-sm:8px;--r-lg:20px;
-}
-[data-theme="dark"]{
-  --bg0:#0F172A;--bg1:#1E293B;--bg2:#172032;--border:#2D3748;
-  --accent:#818CF8;--accent-soft:#1e1b4b;--accent-dim:rgba(129,140,248,.14);
-  --success:#34D399;--danger:#F87171;--warn:#FBBF24;
-  --text0:#F1F5F9;--text1:#CBD5E1;--text2:#94A3B8;--text3:#64748B;
-  --shadow:0 1px 3px rgba(0,0,0,.35);
-  --shadow-md:0 4px 16px rgba(0,0,0,.3);
-  --shadow-lg:0 12px 32px rgba(0,0,0,.4);
+  --text0:#1A202C;--text1:#4A5568;--text2:#718096;
+  --r:10px;--shadow:0 1px 4px rgba(0,0,0,.07);
 }
 *{box-sizing:border-box;margin:0;padding:0}
-html,body{height:100%;overflow:hidden;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg0);color:var(--text1);font-size:15px;line-height:1.6;transition:background .25s,color .25s}
+html,body{height:100%;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,'PingFang SC','Microsoft YaHei',sans-serif;background:var(--bg);color:var(--text1);font-size:15px;line-height:1.6}
 button{cursor:pointer;border:none;background:none;font:inherit;color:inherit}
-textarea,input,select{font:inherit;color:inherit;background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--r-sm);padding:9px 13px;outline:none;width:100%;transition:border-color .2s,box-shadow .2s}
-textarea:focus,input:focus,select:focus{border-color:var(--accent);box-shadow:0 0 0 3px var(--accent-dim)}
-select{cursor:pointer}
+input,textarea,select{font:inherit;color:var(--text0);background:var(--bg2);border:1.5px solid var(--border);border-radius:var(--r);padding:9px 12px;outline:none;width:100%;transition:border-color .2s}
+input:focus,textarea:focus,select:focus{border-color:var(--accent)}
 
 /* ── Topbar ── */
-.topbar{position:sticky;top:0;z-index:100;background:var(--bg1);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;height:56px;gap:4px;box-shadow:var(--shadow)}
-.logo{font-weight:800;font-size:16px;color:var(--text0);display:flex;align-items:center;gap:8px;margin-right:16px;white-space:nowrap;user-select:none}
-.logo-mark{width:30px;height:30px;background:linear-gradient(135deg,var(--accent),#a78bfa);border-radius:9px;display:flex;align-items:center;justify-content:center;font-size:16px}
-.topnav{display:flex;gap:1px;flex:1}
-.topnav button{padding:6px 14px;border-radius:var(--r-sm);color:var(--text2);font-size:14px;font-weight:500;transition:all .18s}
-.topnav button:hover{background:var(--bg2);color:var(--text0)}
-.topnav button.active{background:var(--accent-dim);color:var(--accent);font-weight:700}
-.topbar-end{margin-left:auto;display:flex;align-items:center;gap:6px}
-.icon-btn{width:36px;height:36px;border-radius:var(--r-sm);display:flex;align-items:center;justify-content:center;font-size:18px;transition:background .18s;cursor:pointer}
-.icon-btn:hover{background:var(--bg2)}
+.topbar{position:sticky;top:0;z-index:100;background:var(--bg1);border-bottom:1px solid var(--border);display:flex;align-items:center;padding:0 20px;height:54px;gap:4px;box-shadow:var(--shadow)}
+.logo{font-weight:800;font-size:16px;color:var(--text0);display:flex;align-items:center;gap:8px;margin-right:16px;user-select:none;flex-shrink:0}
+.logo-mark{width:28px;height:28px;background:linear-gradient(135deg,#6366F1,#a78bfa);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:15px}
+.nav{display:flex;gap:2px}
+.nav button{padding:6px 14px;border-radius:8px;color:var(--text2);font-size:14px;font-weight:500;transition:all .15s}
+.nav button:hover{background:var(--bg2);color:var(--text0)}
+.nav button.active{background:var(--accent-dim);color:var(--accent);font-weight:700}
 
-/* ── Section ── */
-.section{display:none;height:calc(100vh - 56px);overflow-y:auto;animation:fadeUp .22s ease}
+/* ── Sections ── */
+.section{display:none;min-height:calc(100vh - 54px)}
 .section.active{display:block}
-.section.active.room-section{display:flex;flex-direction:column;overflow:hidden}
-@keyframes fadeUp{from{opacity:0;transform:translateY(8px)}to{opacity:1;transform:none}}
-.container{padding:28px 28px}
-.page-title{font-size:18px;font-weight:800;color:var(--text0);margin-bottom:20px}
+.wrap{max-width:900px;margin:0 auto;padding:28px 20px}
 
 /* ── Buttons ── */
-.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--r-sm);font-size:14px;font-weight:600;transition:all .18s;cursor:pointer;border:none;white-space:nowrap}
+.btn{display:inline-flex;align-items:center;gap:6px;padding:9px 18px;border-radius:var(--r);font-size:14px;font-weight:600;transition:all .15s;cursor:pointer;border:none;white-space:nowrap}
 .btn-primary{background:var(--accent);color:#fff}
-.btn-primary:hover{filter:brightness(1.1);transform:translateY(-1px);box-shadow:0 4px 14px rgba(99,102,241,.4)}
+.btn-primary:hover{filter:brightness(1.08);transform:translateY(-1px)}
 .btn-secondary{background:var(--bg2);color:var(--text1);border:1.5px solid var(--border)}
 .btn-secondary:hover{border-color:var(--accent);color:var(--accent)}
 .btn-danger{background:var(--danger);color:#fff}
-.btn-danger:hover{filter:brightness(1.1)}
-.btn-ghost{color:var(--text2)}
-.btn-ghost:hover{background:var(--bg2);color:var(--text0)}
-.btn-sm{padding:6px 12px;font-size:13px;border-radius:var(--r-sm)}
-.btn-lg{padding:14px 32px;font-size:16px;border-radius:var(--r)}
+.btn-danger:hover{filter:brightness(1.08)}
+.btn-sm{padding:6px 12px;font-size:13px}
 
-/* ── Cards ── */
-.card{background:var(--bg1);border-radius:var(--r);border:1px solid var(--border);box-shadow:var(--shadow)}
-.card-body{padding:20px}
+/* ── Card ── */
+.card{background:var(--bg1);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:16px;box-shadow:var(--shadow)}
+.card-title{font-size:14px;font-weight:700;color:var(--text0);margin-bottom:14px;display:flex;align-items:center;gap:6px}
 
-/* ── Toggle ── */
-.toggle{position:relative;display:inline-block;width:44px;height:24px;flex-shrink:0}
-.toggle input{opacity:0;width:0;height:0}
-.tslider{position:absolute;inset:0;background:var(--border);border-radius:99px;cursor:pointer;transition:background .2s}
-.tslider::before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#fff;border-radius:50%;transition:transform .2s;box-shadow:0 1px 4px rgba(0,0,0,.2)}
-.toggle input:checked+.tslider{background:var(--accent)}
-.toggle input:checked+.tslider::before{transform:translateX(20px)}
+/* ── Mic button ── */
+.mic-btn{width:100%;padding:18px;border-radius:12px;font-size:17px;font-weight:700;letter-spacing:.3px;transition:all .2s;border:none;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:10px}
+.mic-btn.off{background:var(--accent);color:#fff;box-shadow:0 4px 18px rgba(99,102,241,.35)}
+.mic-btn.off:hover{filter:brightness(1.08);transform:translateY(-1px)}
+.mic-btn.on{background:#EF4444;color:#fff;box-shadow:0 4px 18px rgba(239,68,68,.35);animation:micpulse 2s infinite}
+.mic-btn:disabled{opacity:.5;cursor:not-allowed;transform:none!important}
+@keyframes micpulse{0%,100%{box-shadow:0 4px 18px rgba(239,68,68,.35)}50%{box-shadow:0 4px 28px rgba(239,68,68,.6)}}
+.rec-dot{width:10px;height:10px;background:#fff;border-radius:50%;flex-shrink:0;animation:blink 1s infinite}
+@keyframes blink{0%,100%{opacity:1}50%{opacity:.3}}
 
-/* ── Dashboard ── */
-.dash-hero{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r-lg);padding:48px 32px;text-align:center;position:relative;overflow:hidden;margin-bottom:28px}
-.dash-hero::before{content:'';position:absolute;inset:0;background:radial-gradient(ellipse at 25% 60%,var(--accent-dim),transparent 55%),radial-gradient(ellipse at 75% 30%,rgba(167,139,250,.08),transparent 55%);pointer-events:none}
-.dash-hero h1{font-size:34px;font-weight:900;color:var(--text0);line-height:1.2;margin-bottom:10px;position:relative}
-.dash-hero h1 em{font-style:normal;background:linear-gradient(135deg,var(--accent),#a78bfa);-webkit-background-clip:text;-webkit-text-fill-color:transparent;background-clip:text}
-.dash-hero p{font-size:15px;color:var(--text2);margin-bottom:28px;position:relative}
-.hero-pills{display:flex;gap:8px;justify-content:center;flex-wrap:wrap;margin-bottom:32px;position:relative}
-.pill{padding:4px 12px;background:var(--bg2);border:1px solid var(--border);border-radius:99px;font-size:12px;color:var(--text2)}
-.start-row{display:flex;align-items:center;justify-content:center;gap:12px;flex-wrap:wrap;position:relative}
+/* ── Live text ── */
+.live-box{min-height:40px;padding:10px 14px;background:var(--bg2);border-radius:var(--r);font-size:14px;color:var(--text2);border:1.5px dashed var(--border);margin-top:10px;font-style:italic;transition:all .2s}
+.live-box.active{color:var(--text0);border-color:var(--accent);background:rgba(99,102,241,.04);font-style:normal}
 
-.stats-row{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin-bottom:28px}
-.stat{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r);padding:18px 14px;text-align:center}
-.stat .s-val{font-size:30px;font-weight:900;color:var(--text0);line-height:1}
-.stat .s-lbl{font-size:12px;color:var(--text2);margin-top:4px}
-.stat .s-ico{font-size:22px;margin-bottom:8px}
+/* ── Timer ── */
+.timer{font-size:30px;font-weight:800;color:var(--text0);letter-spacing:2px;font-variant-numeric:tabular-nums;font-family:ui-monospace,monospace}
+.timer-row{display:flex;align-items:center;gap:14px;margin-bottom:14px}
+.status-tip{font-size:12px;color:var(--text2);flex:1}
 
-/* Recent meetings */
-.section-hd{display:flex;align-items:center;justify-content:space-between;margin-bottom:14px}
-.section-hd .shd-title{font-size:16px;font-weight:700;color:var(--text0)}
-.section-hd .shd-sub{font-size:13px;color:var(--text2)}
-.meeting-list{display:flex;flex-direction:column;gap:8px}
-.m-item{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r);padding:13px 16px;display:flex;align-items:center;gap:12px;cursor:pointer;transition:all .18s}
-.m-item:hover{border-color:var(--accent);box-shadow:var(--shadow-md);transform:translateX(2px)}
-.m-ico{width:38px;height:38px;border-radius:10px;display:flex;align-items:center;justify-content:center;font-size:18px;flex-shrink:0}
-.m-info{flex:1;min-width:0}
-.m-title{font-weight:600;color:var(--text0);font-size:14px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
-.m-meta{font-size:12px;color:var(--text2);margin-top:2px}
-.m-dur{font-size:12px;color:var(--text2);white-space:nowrap}
-.empty{text-align:center;padding:48px 20px;color:var(--text3)}
-.empty .empty-ico{font-size:44px;margin-bottom:12px}
-.empty p{font-size:14px}
+/* ── Notes ── */
+.notes-toolbar{display:flex;gap:6px;margin-bottom:8px;flex-wrap:wrap;align-items:center}
+.tool-btn{padding:5px 12px;border-radius:7px;font-size:13px;font-weight:600;background:var(--bg2);border:1.5px solid var(--border);color:var(--text1);cursor:pointer;transition:all .15s;white-space:nowrap}
+.tool-btn:hover{border-color:var(--accent);color:var(--accent)}
+.notes-area{width:100%;resize:vertical;min-height:320px;font-size:14px;line-height:1.9;font-family:inherit;border-radius:var(--r)}
 
-/* ── Meeting Room layout: fills viewport, no outer scroll ── */
-#sec-room{padding:0}
-.room-inner{display:flex;flex-direction:column;height:100%;padding:14px 28px 10px;min-height:0}
-.room-header{flex-shrink:0;display:flex;align-items:center;justify-content:space-between;margin-bottom:12px;flex-wrap:wrap;gap:10px}
-.room-header-left .room-title{font-size:18px;font-weight:800;color:var(--text0)}
-.room-header-left .room-meta{display:flex;align-items:center;gap:8px;margin-top:4px;flex-wrap:wrap}
-.room-header-right{display:flex;align-items:center;gap:8px;flex-wrap:wrap}
+/* ── Dropzone ── */
+.dropzone{border:2px dashed var(--border);border-radius:var(--r);padding:22px;text-align:center;cursor:pointer;transition:all .2s;color:var(--text2);font-size:14px}
+.dropzone:hover,.dropzone.drag{border-color:var(--accent);background:var(--accent-dim);color:var(--accent)}
+.audio-player-wrap{display:none}
+.audio-filename{font-size:13px;color:var(--text0);margin-bottom:8px;font-weight:600;word-break:break-all}
+audio{width:100%;border-radius:8px;margin-bottom:8px}
 
-.room-grid{display:grid;grid-template-columns:220px 1fr 300px;gap:16px;flex:1;min-height:0;align-items:stretch;overflow:hidden}
-
-/* Side panels */
-.rpanel{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:10px;overflow:hidden;min-height:0}
-.rpanel-title{font-size:11px;font-weight:700;letter-spacing:.06em;text-transform:uppercase;color:var(--text3)}
-
-.timer-wrap{text-align:center;padding:12px 0}
-.timer-val{font-size:30px;font-weight:900;color:var(--text0);letter-spacing:2px;font-variant-numeric:tabular-nums}
-.timer-sub{font-size:11px;color:var(--text2);margin-top:3px}
-.agenda-list{list-style:none;display:flex;flex-direction:column;gap:3px;overflow-y:auto;flex:1}
-.agenda-item{font-size:13px;color:var(--text2);padding:5px 8px;border-radius:var(--r-sm);cursor:pointer;display:flex;align-items:flex-start;gap:7px;transition:background .15s}
-.agenda-item:hover{background:var(--bg2)}
-.agenda-item.done{color:var(--text3);text-decoration:line-through}
-.ag-num{width:17px;height:17px;border-radius:50%;background:var(--accent-dim);color:var(--accent);font-size:10px;font-weight:700;display:flex;align-items:center;justify-content:center;flex-shrink:0;margin-top:2px}
-.divider{height:1px;background:var(--border)}
-
-/* Center panel */
-.center-panel{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r);padding:14px;display:flex;flex-direction:column;gap:6px;overflow:hidden}
-.center-tabs{display:flex;gap:2px;flex-shrink:0}
-.center-tabs button{padding:5px 12px;border-radius:var(--r-sm);font-size:13px;font-weight:500;color:var(--text2);transition:all .18s}
-.center-tabs button.active{background:var(--accent-dim);color:var(--accent);font-weight:700}
-.ctab{display:none;flex:1;flex-direction:column;gap:6px;min-height:0;overflow:hidden}
-.ctab.active{display:flex}
-.notes-ta{resize:none;font-size:14px;line-height:1.7;height:100%;min-height:0;flex:1;overflow-y:auto;background:var(--bg2)}
-.notes-toolbar{display:flex;gap:5px;flex-wrap:wrap;align-items:center;padding:6px 0 8px;border-bottom:1px solid var(--border);margin-bottom:8px}
-.ntb-btn{padding:4px 10px;border-radius:var(--r-sm);font-size:12px;font-weight:600;color:var(--text2);background:var(--bg2);border:1px solid var(--border);cursor:pointer;transition:all .15s;white-space:nowrap}
-.ntb-btn:hover{background:var(--border);color:var(--text0)}
-.ntb-danger:hover{background:rgba(239,68,68,.1);color:var(--danger);border-color:var(--danger)}
-.ntb-smart{padding:5px 14px;border-radius:var(--r-sm);font-size:12px;font-weight:700;color:#fff;background:linear-gradient(90deg,var(--accent),#a78bfa);border:none;cursor:pointer;transition:opacity .15s;white-space:nowrap;margin-left:auto;box-shadow:0 2px 8px rgba(99,102,241,.35)}
-.ntb-smart:hover{opacity:.88}
-.ntb-smart:disabled{opacity:.5;cursor:not-allowed}
-.code-wrap{position:relative;border-radius:var(--r-sm);overflow:hidden;border:1.5px solid var(--border);background:#0d1117;transition:border-color .2s;flex:1;min-height:0;display:flex;flex-direction:column}
-.code-wrap:focus-within{border-color:var(--accent)}
-.line-nums{position:absolute;left:0;top:0;bottom:0;width:34px;background:rgba(0,0,0,.25);padding:10px 0;text-align:center;color:#4a5568;font-size:12px;font-family:monospace;line-height:1.6;pointer-events:none;user-select:none;overflow:hidden}
-.code-ta{display:block;width:100%;height:100%;box-sizing:border-box;padding:10px 12px 10px 44px;min-height:0;flex:1;background:transparent;border:none;outline:none;font-family:'JetBrains Mono','Fira Code',monospace;font-size:13px;color:#c9d1d9;resize:none !important;line-height:1.6;tab-size:2;overflow-y:auto}
-.code-tbar{display:flex;gap:6px;flex-wrap:wrap;align-items:center;flex-shrink:0}
-
-/* Right panel: actions only */
-.room-drop-overlay{display:none;position:fixed;inset:0;z-index:500;background:rgba(99,102,241,.12);border:4px dashed var(--accent);pointer-events:none;align-items:center;justify-content:center;flex-direction:column;gap:12px}
-.room-drop-overlay.active{display:flex}
-.room-drop-overlay .drop-hint{font-size:20px;font-weight:800;color:var(--accent);background:var(--bg1);padding:18px 32px;border-radius:var(--r-lg);box-shadow:var(--shadow-lg);text-align:center}
-/* Upload area inside right panel — fixed height, never squeezes actions */
-.upload-compact{display:flex;flex-direction:column;gap:6px;flex-shrink:0;max-height:200px;overflow-y:auto}
-.upload-dropzone-sm{border:2px dashed var(--border);border-radius:var(--r-sm);padding:10px;text-align:center;cursor:pointer;transition:all .18s;background:var(--bg2);flex-shrink:0}
-.upload-dropzone-sm:hover,.upload-dropzone-sm.drag-over{border-color:var(--accent);background:var(--accent-dim)}
-.upload-status{font-size:11.5px;color:var(--text2);line-height:1.5;min-height:16px}
-.upload-progress-wrap{display:none;margin-top:2px}
-
-/* Action items — fills remaining rpanel height */
-.actions-wrap{flex:1;min-height:60px;overflow-y:auto;display:flex;flex-direction:column;gap:3px}
-/* Agenda items with jump-to highlight */
-.agenda-item.highlight{background:rgba(99,102,241,.22)!important;transition:background .1s}
-/* Highlight flash in notes */
-@keyframes noteHighlight{0%,100%{background:transparent}30%{background:rgba(99,102,241,.22)}}
-.notes-flash{animation:noteHighlight 1.6s ease}
-.ac-item{display:flex;gap:7px;align-items:flex-start;padding:6px 8px;border-radius:var(--r-sm);background:var(--bg2);font-size:12.5px;color:var(--text1);animation:fadeUp .3s}
-.ac-item input[type=checkbox]{margin-top:2px;accent-color:var(--accent);cursor:pointer;flex-shrink:0}
-.ac-item .ac-text{flex:1}
-.ac-item .ac-del{color:var(--text3);font-size:14px;cursor:pointer;flex-shrink:0;line-height:1;padding:1px 3px;border-radius:3px;transition:color .15s}
-.ac-item .ac-del:hover{color:var(--danger)}
-.ac-add{display:flex;gap:6px;margin-top:4px;flex-shrink:0}
-.ac-add input{font-size:13px;padding:6px 10px}
-.ac-add button{flex-shrink:0;padding:6px 12px;background:var(--accent);color:#fff;border-radius:var(--r-sm);font-size:13px;font-weight:600}
-
-/* ── BIG MIC BUTTON ── */
-.room-mic-bar{flex-shrink:0;padding:10px 0 4px;display:flex;flex-direction:column;align-items:center;gap:8px}
-.big-mic-btn{width:100%;max-width:420px;height:64px;border-radius:99px;font-size:17px;font-weight:700;display:flex;align-items:center;justify-content:center;gap:10px;cursor:pointer;border:none;transition:all .22s;position:relative;overflow:hidden}
-.big-mic-btn.off{background:var(--bg1);border:2px solid var(--border);color:var(--text1)}
-.big-mic-btn.off:hover{border-color:var(--accent);color:var(--accent);box-shadow:var(--shadow-md);transform:translateY(-1px)}
-.big-mic-btn.on{background:linear-gradient(135deg,#ef4444,#f97316);color:#fff;box-shadow:0 6px 20px rgba(239,68,68,.45)}
-.big-mic-btn.on:hover{filter:brightness(1.06);transform:translateY(-1px)}
-.big-mic-btn.on::after{content:'';position:absolute;inset:-2px;border-radius:99px;background:linear-gradient(135deg,#ef4444,#f97316);opacity:.4;animation:ripple 1.5s ease-out infinite}
-@keyframes ripple{0%{transform:scale(1);opacity:.4}100%{transform:scale(1.06);opacity:0}}
-.rec-dot{display:inline-block;width:9px;height:9px;border-radius:50%;background:#fff;animation:blink 1.1s ease-in-out infinite;margin-right:2px}
-@keyframes blink{0%,100%{opacity:1}50%{opacity:.2}}
-.mic-sub-row{display:flex;gap:10px;align-items:center;flex-wrap:wrap;justify-content:center}
-.room-badge{display:inline-flex;align-items:center;gap:4px;font-size:12px;padding:4px 10px;border-radius:99px;font-weight:600}
-.rb-live{background:rgba(239,68,68,.12);color:var(--danger)}
-.rb-info{background:var(--accent-dim);color:var(--accent)}
-
-/* Code mode inline toggle */
-.code-mode-toggle{display:flex;align-items:center;gap:8px;padding:8px 14px;background:var(--bg2);border:1px solid var(--border);border-radius:var(--r-sm);font-size:13px;cursor:pointer;transition:all .18s}
-.code-mode-toggle:hover{border-color:var(--accent)}
-.code-mode-toggle.on{background:rgba(52,211,153,.08);border-color:var(--success);color:var(--success)}
-.code-mode-toggle .cmt-label{font-weight:600;color:var(--text1)}
-.code-mode-toggle.on .cmt-label{color:var(--success)}
-
-/* ── Summary ── */
-.sum-hero{background:linear-gradient(135deg,var(--accent) 0%,#a78bfa 100%);border-radius:var(--r);padding:22px 24px;color:#fff;margin-bottom:20px}
-.sum-hero h2{font-size:22px;font-weight:900;margin-bottom:5px}
-.sum-hero .sum-meta{font-size:13px;opacity:.85}
-.sum-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;margin-bottom:14px}
-.sum-block{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r);padding:16px}
-.sum-block h3{font-size:12px;font-weight:700;text-transform:uppercase;letter-spacing:.05em;color:var(--text3);margin-bottom:10px}
-.sum-block ul{list-style:none;display:flex;flex-direction:column;gap:5px}
-.sum-block ul li{font-size:13.5px;color:var(--text1);padding:6px 10px;background:var(--bg2);border-radius:var(--r-sm);display:flex;gap:6px;align-items:flex-start}
-.sum-block ul li::before{content:'•';color:var(--accent);font-weight:700;flex-shrink:0;margin-top:1px}
-.sum-txt{font-size:14px;color:var(--text1);line-height:1.8;white-space:pre-wrap}
+/* ── Room grid ── */
+.room-grid{display:grid;grid-template-columns:1fr 340px;gap:20px;align-items:start}
+@media(max-width:800px){.room-grid{grid-template-columns:1fr}}
 
 /* ── History ── */
-.hist-toolbar{display:flex;gap:8px;margin-bottom:18px;flex-wrap:wrap;align-items:center}
-.hist-search{flex:1;min-width:180px;max-width:300px;padding:7px 14px;font-size:13px;border-radius:99px;background:var(--bg1)}
-.filt{padding:5px 14px;border-radius:99px;font-size:13px;border:1.5px solid var(--border);color:var(--text2);background:var(--bg1);cursor:pointer;transition:all .18s}
-.filt.active,.filt:hover{border-color:var(--accent);color:var(--accent);background:var(--accent-dim)}
+.page-title{font-size:18px;font-weight:800;color:var(--text0);margin-bottom:20px}
+.m-item{display:flex;align-items:center;gap:12px;padding:14px 16px;background:var(--bg1);border:1px solid var(--border);border-radius:12px;margin-bottom:10px;transition:border-color .15s;box-shadow:var(--shadow)}
+.m-item:hover{border-color:var(--accent)}
+.m-info{flex:1;min-width:0;cursor:pointer}
+.m-title{font-weight:700;color:var(--text0);font-size:15px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.m-meta{font-size:12px;color:var(--text2);margin-top:2px;white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.empty-state{text-align:center;padding:64px 20px;color:var(--text2)}
+.empty-ico{font-size:52px;margin-bottom:12px}
+
+/* ── Detail view ── */
+.detail-header{display:flex;align-items:center;gap:12px;margin-bottom:16px;flex-wrap:wrap}
+.detail-title{font-size:18px;font-weight:800;color:var(--text0);flex:1;min-width:0}
+.detail-content{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:16px;font-size:14px;line-height:1.9;white-space:pre-wrap;word-break:break-word;min-height:200px;max-height:calc(100vh - 260px);overflow-y:auto}
 
 /* ── Settings ── */
-.settings-wrap{display:grid;grid-template-columns:1fr 1fr;gap:14px 20px;align-items:stretch}
-.settings-wrap .sg-full{grid-column:1/-1}
-@media(max-width:768px){.settings-wrap{grid-template-columns:1fr}}
-.sg{background:var(--bg1);border:1px solid var(--border);border-radius:var(--r);margin-bottom:0;overflow:hidden}
-.sg-title{padding:11px 18px;font-size:11px;font-weight:700;text-transform:uppercase;letter-spacing:.06em;color:var(--text3);border-bottom:1px solid var(--border);background:var(--bg2)}
-.sr{display:flex;align-items:center;justify-content:space-between;padding:13px 18px;gap:12px;border-bottom:1px solid var(--border)}
-.sr:last-child{border-bottom:none}
-.sr-info .sr-label{font-size:14px;font-weight:600;color:var(--text0)}
-.sr-info .sr-desc{font-size:12px;color:var(--text2);margin-top:2px}
-.chip{display:inline-flex;align-items:center;gap:4px;padding:3px 10px;border-radius:99px;font-size:12px;font-weight:600}
-.chip-green{background:rgba(52,211,153,.12);color:var(--success)}
-.chip-blue{background:var(--accent-dim);color:var(--accent)}
+.sg{background:var(--bg1);border:1px solid var(--border);border-radius:12px;padding:20px;margin-bottom:14px;box-shadow:var(--shadow)}
+.sg-title{font-size:14px;font-weight:700;color:var(--text0);margin-bottom:14px}
+.form-row{margin-bottom:12px}
+.form-label{font-size:13px;color:var(--text2);margin-bottom:4px;display:block}
+.hint{font-size:12px;color:var(--text2);margin-top:5px}
+.hint a{color:var(--accent)}
 
-/* Right panel transcript area fills remaining space */
-/* Right panel upload compact styles already defined above */
-.sync-dot{width:8px;height:8px;border-radius:50%;background:var(--text3);flex-shrink:0}
-.sync-dot.synced{background:var(--success)}
-.sync-dot.syncing{background:var(--warn);animation:blink 1s infinite}
-.sync-dot.error{background:var(--danger)}
-
-/* ── Modal ── */
-.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.55);z-index:300;align-items:center;justify-content:center;padding:20px;backdrop-filter:blur(4px)}
-.overlay.open{display:flex}
-.modal{background:var(--bg1);border-radius:var(--r-lg);padding:28px;max-width:480px;width:100%;box-shadow:var(--shadow-lg);animation:modalIn .2s ease}
-@keyframes modalIn{from{opacity:0;transform:scale(.95) translateY(8px)}to{opacity:1;transform:none}}
-.modal h2{font-size:20px;font-weight:900;color:var(--text0);margin-bottom:5px}
-.modal .msub{font-size:14px;color:var(--text2);margin-bottom:22px}
-.mform{display:flex;flex-direction:column;gap:13px}
-.mlabel{font-size:13px;font-weight:600;color:var(--text0);margin-bottom:6px}
-.mactions{display:flex;gap:10px;justify-content:flex-end;margin-top:22px}
-
-/* ── Audio upload ── */
-.audio-dropzone{border:2px dashed var(--border);border-radius:var(--r);padding:18px 12px;text-align:center;cursor:pointer;transition:all .2s;background:var(--bg2)}
-.audio-dropzone:hover,.audio-dropzone.drag-over{border-color:var(--accent);background:var(--accent-dim)}
-.txmode-btn.active{background:var(--accent-dim);color:var(--accent)}
-.txmode-btn:hover{background:var(--bg2);color:var(--text0)}
+/* ── Save dialog ── */
+.overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.4);z-index:200;align-items:center;justify-content:center}
+.overlay.show{display:flex}
+.dialog{background:var(--bg1);border-radius:14px;padding:28px;width:92%;max-width:400px;box-shadow:0 20px 60px rgba(0,0,0,.2)}
+.dialog h3{font-size:17px;font-weight:800;color:var(--text0);margin-bottom:16px}
+.dialog-btns{display:flex;gap:8px;margin-top:18px;justify-content:flex-end}
 
 /* ── Toast ── */
-.toast{position:fixed;bottom:90px;left:50%;transform:translateX(-50%);background:var(--text0);color:var(--bg1);padding:10px 22px;border-radius:99px;font-size:14px;font-weight:500;z-index:999;pointer-events:none;animation:toastIn .3s ease;white-space:nowrap}
-@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%) translateY(0)}}
-
-/* ── Bottom nav mobile ── */
-.bnav{display:none;position:fixed;bottom:0;left:0;right:0;background:var(--bg1);border-top:1px solid var(--border);z-index:150;padding-bottom:env(safe-area-inset-bottom)}
-.bnav-inner{display:grid;grid-template-columns:repeat(4,1fr)}
-.bnav-btn{display:flex;flex-direction:column;align-items:center;gap:3px;padding:8px 0;cursor:pointer;color:var(--text3);font-size:11px;font-weight:500;transition:color .18s}
-.bnav-btn .bi{font-size:21px;line-height:1}
-.bnav-btn.active{color:var(--accent)}
+.toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%);background:#1A202C;color:#fff;padding:10px 22px;border-radius:99px;font-size:14px;font-weight:600;z-index:999;pointer-events:none;animation:toastIn .2s ease;white-space:nowrap}
+@keyframes toastIn{from{opacity:0;transform:translateX(-50%) translateY(8px)}to{opacity:1;transform:translateX(-50%)}}
 
 /* ── Responsive ── */
-@media(max-width:1100px){
-  .room-grid{grid-template-columns:200px 1fr 280px}
-}
-@media(max-width:900px){
-  .room-grid{grid-template-columns:1fr 260px}
-  .room-left-panel{display:none}
-}
-/* ── Tablet 768px ── */
-@media(max-width:768px){
-  .room-inner{padding:10px 16px 6px}
-  .room-header-right{gap:6px}
-  /* Code mode: hide label text, keep toggle icon only */
-  .code-mode-toggle .cmt-label{display:none}
-  .code-mode-toggle{padding:6px 10px;gap:6px}
-  .room-header-right .btn-secondary{padding:6px 12px;font-size:12.5px}
-  .room-header-right .btn-danger{padding:6px 12px;font-size:12.5px}
-}
-/* ── Mobile 640px ── */
-@media(max-width:640px){
-  .topnav{display:none}
-  .bnav{display:block}
-  body{padding-bottom:60px}
-
-  /* Dashboard */
-  .dash-hero{padding:32px 20px}
-  .dash-hero h1{font-size:24px}
-  .stats-row{gap:8px;grid-template-columns:repeat(2,1fr)}
-  .stat{padding:12px 8px}
-  .stat .s-val{font-size:22px}
-  .sum-grid{grid-template-columns:1fr}
-  .container{padding:16px 16px}
-
-  /* Room – compact header */
-  .room-inner{padding:8px 12px 4px}
-  .room-header{margin-bottom:6px;gap:6px}
-  .room-header-left .room-title{font-size:15px}
-  /* Hide code mode toggle and secondary action buttons; keep only 结束 */
-  .code-mode-toggle{display:none}
-  .room-header-right .btn-secondary{display:none}
-  .room-header-right .btn-danger{padding:6px 14px;font-size:13px}
-
-  /* Room – single-column grid, no rigid min-height */
-  .room-grid{grid-template-columns:1fr}
-  .room-left-panel,.room-right-panel{display:none}
-  .room-grid .center-panel{min-height:0}
-
-  /* Notes toolbar – horizontal scroll, no wrap */
-  .notes-toolbar{overflow-x:auto;flex-wrap:nowrap;gap:4px;padding:5px 0 7px;
-    -webkit-overflow-scrolling:touch;scrollbar-width:none}
-  .notes-toolbar::-webkit-scrollbar{display:none}
-  .ntb-btn{flex-shrink:0;font-size:11.5px;padding:3px 9px}
-  .ntb-smart{font-size:11.5px;padding:4px 10px;flex-shrink:0;margin-left:4px}
-
-  /* Code editor – hide line nums, full-width padding */
-  .line-nums{display:none}
-  .code-ta{padding-left:12px !important}
-  .code-tbar{flex-wrap:nowrap}
-
-  /* Mic bar */
-  .room-mic-bar{padding:6px 0 2px}
-  .big-mic-btn{height:52px;font-size:14px;max-width:100%}
-  .mic-sub-row{gap:6px}
-}
-@media(max-width:400px){
-  .stats-row{grid-template-columns:repeat(2,1fr)}
-  .room-header-left .room-title{font-size:13px}
-  .room-badge{font-size:10px;padding:2px 7px}
+@media(max-width:600px){
+  .wrap{padding:16px 12px}
+  .topbar{padding:0 12px}
+  .nav button{padding:5px 9px;font-size:13px}
+  .timer{font-size:22px}
+  .mic-btn{padding:15px;font-size:15px}
+  .notes-area{min-height:240px}
+  .dialog{padding:20px}
 }
 </style>
 </head>
 <body>
 
-<!-- ══ TOPBAR ══ -->
-<header class="topbar">
+<!-- Topbar -->
+<div class="topbar">
   <div class="logo">
-    <div class="logo-mark">🎯</div>
+    <div class="logo-mark">🎙</div>
     MeetPilot
   </div>
-  <nav class="topnav">
-    <button id="tnav-dashboard" class="active" onclick="nav('dashboard')">首页</button>
-    <button id="tnav-room" onclick="nav('room')">会议室</button>
-    <button id="tnav-history" onclick="nav('history')">历史记录</button>
-    <button id="tnav-settings" onclick="nav('settings')">设置</button>
+  <nav class="nav">
+    <button class="active" onclick="nav('room')">会议室</button>
+    <button onclick="nav('history')">历史记录</button>
+    <button onclick="nav('settings')">设置</button>
   </nav>
-  <div class="topbar-end">
-    <div id="sync-indicator" class="sync-status" style="display:none">
-      <div class="sync-dot" id="sync-dot"></div>
-      <span id="sync-label">未同步</span>
-    </div>
-    <div class="icon-btn" onclick="toggleTheme()" id="theme-icon" title="切换主题">🌙</div>
-  </div>
-</header>
-
-<!-- ══ DASHBOARD ══ -->
-<div class="section active" id="sec-dashboard">
-<div class="container">
-  <div class="dash-hero">
-    <h1>开会，<em>更聪明一点</em></h1>
-    <p>实时语音转文字 · AI 智能总结 · 待办自动识别 · 多端同步</p>
-    <div class="hero-pills">
-      <span class="pill">🔒 本地优先</span>
-      <span class="pill">☁️ 云端同步</span>
-      <span class="pill">🎙 实时转写</span>
-      <span class="pill">🤖 AI 总结</span>
-      <span class="pill">📤 多格式导出</span>
-    </div>
-    <div class="start-row">
-      <button class="btn btn-primary btn-lg" onclick="openModal()">🚀 &nbsp;开始新会议</button>
-      <button class="btn btn-secondary" onclick="nav('history')">📋 查看历史</button>
-    </div>
-  </div>
-
-  <div class="stats-row">
-    <div class="stat">
-      <div class="s-ico">📅</div>
-      <div class="s-val" id="stat-total">0</div>
-      <div class="s-lbl">历史会议</div>
-    </div>
-    <div class="stat">
-      <div class="s-ico">⏱</div>
-      <div class="s-val" id="stat-hours">0h</div>
-      <div class="s-lbl">累计时长</div>
-    </div>
-    <div class="stat">
-      <div class="s-ico">✅</div>
-      <div class="s-val" id="stat-actions">0</div>
-      <div class="s-lbl">行动项</div>
-    </div>
-    <div class="stat">
-      <div class="s-ico">🎙</div>
-      <div class="s-val" id="stat-transcripts">0</div>
-      <div class="s-lbl">转录条数</div>
-    </div>
-  </div>
-
-  <div class="section-hd">
-    <span class="shd-title">近期会议</span>
-    <span class="shd-sub">最近 5 条</span>
-  </div>
-  <div id="recent-list"></div>
-</div>
 </div>
 
-<!-- ══ MEETING ROOM ══ -->
-<div class="section room-section" id="sec-room">
-<div class="room-inner">
-  <div class="room-header">
-    <div class="room-header-left">
-      <div class="room-title" id="room-title">会议名称</div>
-      <div class="room-meta">
-        <span class="room-badge rb-info" id="room-badge">📅 会议</span>
-        <span class="room-badge rb-live" id="room-live-badge" style="display:none"><span class="rec-dot"></span> 录音中</span>
-      </div>
+<!-- Save dialog -->
+<div class="overlay" id="save-overlay" onclick="if(event.target===this)closeSave()">
+  <div class="dialog">
+    <h3>💾 保存会议</h3>
+    <div class="form-row">
+      <label class="form-label">会议名称</label>
+      <input type="text" id="save-title" placeholder="例：产品周会、项目评审..." maxlength="60">
     </div>
-    <div class="room-header-right">
-      <!-- Code mode toggle inline -->
-      <div class="code-mode-toggle" id="code-mode-toggle" onclick="toggleCodeMode()" title="开启代码模式">
-        <span>💻</span>
-        <span class="cmt-label">代码模式</span>
-        <label class="toggle" onclick="event.stopPropagation()">
-          <input type="checkbox" id="code-mode-cb" onchange="toggleCodeMode()">
-          <span class="tslider"></span>
-        </label>
-      </div>
-      <button class="btn btn-secondary btn-sm" onclick="generateSummary()">🤖 AI 总结</button>
-      <button class="btn btn-secondary btn-sm" onclick="exportCurrent('markdown')">📥 导出</button>
-      <button class="btn btn-danger btn-sm" onclick="endMeeting()">⏹ 结束</button>
-    </div>
-  </div>
-
-  <div class="room-grid">
-    <!-- Left: timer + agenda -->
-    <div class="rpanel room-left-panel">
-      <div class="rpanel-title">计时</div>
-      <div class="timer-wrap">
-        <div class="timer-val" id="room-timer">00:00</div>
-        <div class="timer-sub">会议时长</div>
-      </div>
-      <div class="divider"></div>
-      <div class="rpanel-title">议程</div>
-      <ul class="agenda-list" id="room-agenda"></ul>
-    </div>
-
-    <!-- Center: notes / code -->
-    <div class="center-panel">
-      <div class="center-tabs" id="center-tabs">
-        <button class="active" onclick="switchTab('notes',this)">📝 笔记</button>
-        <button id="code-tab-btn" style="display:none" onclick="switchTab('code',this)">💻 代码</button>
-      </div>
-      <!-- Notes -->
-      <div class="ctab active" id="ctab-notes">
-        <!-- Notes toolbar -->
-        <div class="notes-toolbar">
-          <button class="ntb-btn" onclick="notesUndo()" title="撤销">↩ 撤销</button>
-          <button class="ntb-btn" onclick="notesInsertHr()" title="插入分隔线">— 分隔</button>
-          <button class="ntb-btn" onclick="notesInsertTime()" title="插入时间戳">🕐 时间</button>
-          <button class="ntb-btn ntb-danger" onclick="notesClear()" title="清空笔记">🗑 清空</button>
-          <button class="ntb-smart" onclick="smartNotes()" id="smart-notes-btn" title="从转录内容智能提取要点">✨ 智能整理笔记</button>
-        </div>
-        <textarea class="notes-ta" id="room-notes" placeholder="在这里记录会议笔记…&#10;&#10;点击右侧转录段落的「插入笔记 ↗」可快速摘录&#10;点击上方「✨ 智能整理笔记」可自动提取要点"></textarea>
-      </div>
-      <!-- Code -->
-      <div class="ctab" id="ctab-code">
-        <div class="code-tbar">
-          <button class="btn btn-secondary btn-sm" onclick="insertCodeToNotes()">📋 插入笔记</button>
-          <select id="code-lang" style="max-width:140px;padding:5px 10px;font-size:13px">
-            <option>JavaScript</option><option>Python</option><option>Java</option><option>Go</option><option>TypeScript</option><option>Rust</option><option>Bash</option><option>SQL</option><option>C++</option>
-          </select>
-        </div>
-        <div class="code-wrap">
-          <div class="line-nums" id="line-nums">1</div>
-          <textarea class="code-ta" id="room-code" style="resize:none" placeholder="// 粘贴或输入代码片段..." onkeydown="codeKey(event)" oninput="updateNums()"></textarea>
-        </div>
-      </div>
-    </div>
-
-    <!-- Right: upload + actions -->
-    <div class="rpanel room-right-panel">
-      <!-- Compact upload area -->
-      <div class="rpanel-title" style="flex-shrink:0">上传录音</div>
-      <div class="upload-compact" id="upload-compact">
-        <!-- Dropzone -->
-        <div class="upload-dropzone-sm" id="audio-dropzone"
-          onclick="document.getElementById('audio-file-input').click()"
-          ondragover="event.preventDefault();this.classList.add('drag-over')"
-          ondragleave="this.classList.remove('drag-over')"
-          ondrop="handleAudioDrop(event)">
-          <div style="font-size:20px;margin-bottom:4px">🎵</div>
-          <div style="font-size:12px;font-weight:700;color:var(--text0)">点击或拖入录音文件</div>
-          <div style="font-size:11px;color:var(--text3);margin-top:2px">MP3 · WAV · M4A · OGG</div>
-        </div>
-        <input type="file" id="audio-file-input" accept="audio/*" style="display:none" onchange="handleAudioFile(this.files[0])">
-        <!-- After upload: player + status -->
-        <div id="audio-player-wrap" style="display:none">
-          <div style="font-size:11px;font-weight:600;color:var(--text0);margin-bottom:4px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap" id="audio-filename"></div>
-          <audio id="audio-player" controls style="width:100%;height:32px;border-radius:var(--r-sm)" preload="metadata"></audio>
-          <div class="upload-status" id="whisper-status"></div>
-          <div class="upload-progress-wrap" id="whisper-progress-wrap">
-            <div style="background:var(--border);border-radius:99px;height:4px;overflow:hidden;margin-top:4px">
-              <div id="whisper-bar" style="height:100%;background:linear-gradient(90deg,var(--accent),#a78bfa);width:0%;transition:width .4s;border-radius:99px"></div>
-            </div>
-            <div id="whisper-progress-label" style="font-size:10px;color:var(--text3);margin-top:2px"></div>
-          </div>
-          <div style="display:flex;gap:5px;margin-top:6px;flex-wrap:wrap">
-            <button class="btn btn-secondary btn-sm" id="retranscribe-btn" style="display:none;font-size:11px;padding:4px 8px" onclick="retranscribe()">🔄 重新转写</button>
-            <button class="btn btn-secondary btn-sm" style="font-size:11px;padding:4px 8px" onclick="resetAudioUpload()">🗑 重新上传</button>
-          </div>
-        </div>
-        <div id="speech-warn"></div>
-      </div>
-
-      <div class="divider" style="flex-shrink:0"></div>
-      <div style="display:flex;align-items:center;gap:6px;flex-shrink:0">
-        <div class="rpanel-title" style="flex:1">行动项</div>
-        <span id="auto-detected-count" style="font-size:11px;color:var(--warn);display:none">🤖 自动识别</span>
-      </div>
-      <div class="actions-wrap" id="actions-wrap"></div>
-      <div class="ac-add">
-        <input type="text" id="ac-input" placeholder="手动添加待办..." onkeydown="if(event.key==='Enter')addAction()">
-        <button onclick="addAction()">+</button>
-      </div>
-    </div>
-  </div>
-
-  <!-- BIG MIC BUTTON -->
-  <div class="room-mic-bar">
-    <button class="big-mic-btn off" id="big-mic" onclick="toggleMic()">
-      🎙 &nbsp;点击开始录音
-    </button>
-    <div class="mic-sub-row">
-      <button class="btn btn-ghost btn-sm" onclick="nav('dashboard')">🏠 返回首页</button>
-      <span id="mic-hint" style="font-size:12px;color:var(--text3)">支持 Chrome / Edge · 需要麦克风权限</span>
+    <div class="dialog-btns">
+      <button class="btn btn-secondary btn-sm" onclick="closeSave()">取消</button>
+      <button class="btn btn-primary btn-sm" onclick="confirmSave()">保存到本地</button>
     </div>
   </div>
 </div>
-</div>
 
-<!-- ══ SUMMARY ══ -->
-<div class="section" id="sec-summary">
-<div class="container">
-  <div style="display:flex;gap:8px;margin-bottom:20px;flex-wrap:wrap">
-    <button class="btn btn-secondary" onclick="nav('history')">← 返回历史</button>
-    <button class="btn btn-primary" id="sum-export-btn">📥 导出 Markdown</button>
-    <button class="btn btn-secondary" onclick="exportById(viewingId,'txt')">📄 导出 TXT</button>
-  </div>
-  <div class="sum-hero">
-    <h2 id="sum-title">会议总结</h2>
-    <div class="sum-meta" id="sum-meta"></div>
-  </div>
-  <div class="sum-grid">
-    <div class="sum-block">
-      <h3>📌 会议主旨</h3>
-      <p class="sum-txt" id="sum-gist">—</p>
-    </div>
-    <div class="sum-block">
-      <h3>✅ 达成共识 / 决议</h3>
-      <ul id="sum-decisions"></ul>
-    </div>
-    <div class="sum-block">
-      <h3>📋 待办事项</h3>
-      <ul id="sum-todos"></ul>
-    </div>
-    <div class="sum-block">
-      <h3>💬 实录摘要</h3>
-      <p class="sum-txt" id="sum-tx">—</p>
-    </div>
-  </div>
-  <div class="sum-block" style="margin-bottom:0">
-    <h3>📝 会议笔记</h3>
-    <p class="sum-txt" id="sum-notes">—</p>
-  </div>
-</div>
-</div>
+<!-- ════════════════ 会议室 ════════════════ -->
+<section class="section active" id="sec-room">
+  <div class="wrap">
+    <div class="room-grid">
 
-<!-- ══ HISTORY ══ -->
-<div class="section" id="sec-history">
-<div class="container">
-  <div class="page-title">历史记录</div>
-  <div class="hist-toolbar">
-    <input type="text" class="hist-search" id="hist-search" placeholder="🔍 搜索会议..." oninput="renderHist()">
-    <button class="filt active" data-f="all" onclick="setFilt('all',this)">全部</button>
-  </div>
-  <div id="hist-list"></div>
-</div>
-</div>
-
-<!-- ══ SETTINGS ══ -->
-<div class="section" id="sec-settings">
-<div class="container">
-  <div class="page-title">设置</div>
-  <div class="settings-wrap">
-
-    <!-- Multi-device sync -->
-    <div class="sg sg-full">
-      <div class="sg-title">☁️ 多端同步（GitHub Gist）</div>
-      <div class="sr">
-        <div class="sr-info">
-          <div class="sr-label">同步状态</div>
-          <div class="sr-desc">使用私密 Gist 跨设备同步数据，输入 PAT 即可</div>
-        </div>
-        <div class="sync-status">
-          <div class="sync-dot" id="sync-dot-settings"></div>
-          <span id="sync-label-settings">未配置</span>
-        </div>
-      </div>
-      <div class="sr" style="flex-direction:column;align-items:flex-start;gap:10px">
-        <div style="width:100%">
-          <div class="mlabel">GitHub Personal Access Token</div>
-          <div style="display:flex;gap:8px;width:100%">
-            <input type="password" id="gist-pat-input" placeholder="ghp_xxxxxxxxxxxxxxxxxxxx" style="flex:1;font-size:13px">
-            <button class="btn btn-primary btn-sm" onclick="connectGist()" style="flex-shrink:0">连接</button>
-            <button class="btn btn-secondary btn-sm" onclick="disconnectGist()" style="flex-shrink:0">断开</button>
-          </div>
-          <div style="font-size:12px;color:var(--text3);margin-top:6px">需要 <code style="background:var(--bg2);padding:1px 5px;border-radius:4px">gist</code> 权限。在 <a href="https://github.com/settings/tokens/new" target="_blank">GitHub → Settings → Tokens</a> 创建</div>
-        </div>
-        <div style="display:flex;gap:8px">
-          <button class="btn btn-secondary btn-sm" onclick="syncNow()">🔄 立即同步</button>
-          <button class="btn btn-secondary btn-sm" onclick="pullSync()">⬇ 从云端拉取</button>
-        </div>
-        <div id="sync-msg" style="font-size:12px;color:var(--text2)"></div>
-      </div>
-      <div class="sr">
-        <div class="sr-info">
-          <div class="sr-label">🔌 浏览器插件</div>
-          <div class="sr-desc">Chrome 扩展可实现一键开始录音、浮窗控制。<a href="#" onclick="downloadExtension()">下载扩展包</a> 后在 chrome://extensions 中加载</div>
-        </div>
-        <span class="chip chip-blue">Beta</span>
-      </div>
-      <div class="sr">
-        <div class="sr-info">
-          <div class="sr-label">📱 移动端访问</div>
-          <div class="sr-desc">在手机浏览器直接访问 meet-pilot.github.io，已针对移动端优化。小程序版本规划中。</div>
-        </div>
-        <span class="chip chip-green">可用</span>
-      </div>
-    </div>
-
-    <!-- 外观 -->
-    <div class="sg">
-      <div class="sg-title">外观</div>
-      <div class="sr">
-        <div class="sr-info">
-          <div class="sr-label">深色主题</div>
-          <div class="sr-desc">保护眼睛，适合夜间使用</div>
-        </div>
-        <label class="toggle">
-          <input type="checkbox" id="dark-toggle" onchange="toggleTheme()">
-          <span class="tslider"></span>
-        </label>
-      </div>
-    </div>
-
-    <!-- 编码模块 -->
-    <div class="sg">
-      <div class="sg-title">功能模块</div>
-      <div class="sr">
-        <div class="sr-info">
-          <div class="sr-label">💻 编码会议专项模块</div>
-          <div class="sr-desc">全局开关。开启后会议室中出现"代码模式"按钮，可独立控制每次会议是否启用</div>
-        </div>
-        <label class="toggle">
-          <input type="checkbox" id="coding-global-toggle" onchange="toggleCodingGlobal()">
-          <span class="tslider"></span>
-        </label>
-      </div>
-    </div>
-
-    <!-- 语音 -->
-    <div class="sg sg-full">
-      <div class="sg-title">语音识别</div>
-      <div class="sr">
-        <div class="sr-info">
-          <div class="sr-label">识别语言</div>
-          <div class="sr-desc">实时转写所用语言</div>
-        </div>
-        <select id="lang-select" style="max-width:180px;font-size:13px" onchange="saveSetting('lang',this.value)">
-          <option value="zh-CN">中文（普通话）</option>
-          <option value="zh-TW">中文（繁体）</option>
-          <option value="en-US">English (US)</option>
-          <option value="ja-JP">日本語</option>
-        </select>
-      </div>
-      <div class="sr">
-        <div class="sr-info">
-          <div class="sr-label">自动识别待办</div>
-          <div class="sr-desc">从转录中自动提取行动项（含关键词时提醒）</div>
-        </div>
-        <label class="toggle">
-          <input type="checkbox" id="auto-action-toggle" checked onchange="saveSetting('autoAction',this.checked)">
-          <span class="tslider"></span>
-        </label>
-      </div>
-      <!-- Cloud speech API -->
-      <div class="sr" style="flex-direction:column;align-items:flex-start;gap:10px">
-        <div class="sr-info" style="width:100%">
-          <div class="sr-label">☁️ 录音文件转写 API Key</div>
-          <div class="sr-desc">上传本地录音时使用云端 API 转写，速度快且无需下载模型。兼容 OpenAI Whisper API 格式</div>
-        </div>
-        <!-- Setup guide -->
-        <div style="width:100%;background:var(--accent-soft);border:1px solid var(--accent-dim);border-radius:var(--r-sm);padding:12px;font-size:12.5px;line-height:1.8">
-          <div style="font-weight:700;color:var(--accent);margin-bottom:6px">📋 配置步骤（二选一）</div>
-          <div style="color:var(--text1)">
-            <b>方案 A · SiliconFlow（国内可访问，有免费额度）</b><br>
-            1. 访问 <code style="background:var(--bg2);padding:1px 5px;border-radius:3px">siliconflow.cn</code> → 注册账号（手机号）<br>
-            2. 进入控制台 → <b>API 密钥</b> → 新建，复制 <code style="background:var(--bg2);padding:1px 5px;border-radius:3px">sk-...</code><br>
-            3. 下方填入 Key，端点填：<code style="background:var(--bg2);padding:1px 5px;border-radius:3px;user-select:all">https://api.siliconflow.cn/v1/audio/transcriptions</code>
-          </div>
-          <div style="color:var(--text1);margin-top:8px">
-            <b>方案 B · OpenAI（全球通用）</b><br>
-            1. 访问 <code style="background:var(--bg2);padding:1px 5px;border-radius:3px">platform.openai.com</code> → API Keys → Create<br>
-            2. 填入 <code style="background:var(--bg2);padding:1px 5px;border-radius:3px">sk-...</code>，端点留空即可
-          </div>
-          <div style="color:var(--text3);margin-top:8px;font-size:11.5px">💡 Key 仅保存在本地浏览器，不会上传任何服务器</div>
-        </div>
-        <div style="width:100%;display:flex;flex-direction:column;gap:8px">
-          <div>
-            <div class="mlabel">API Key</div>
-            <input type="password" id="speech-api-key-input" placeholder="sk-..." style="font-size:13px" oninput="saveSpeechApiKey()">
-          </div>
-          <div>
-            <div class="mlabel">API 端点（OpenAI 留空，SiliconFlow 需填写）</div>
-            <input type="text" id="speech-api-endpoint-input" placeholder="https://api.siliconflow.cn/v1/audio/transcriptions" style="font-size:13px" oninput="saveSpeechApiEndpoint()">
-          </div>
-          <div id="speech-api-status" style="font-size:12px;color:var(--text3)">
-            未配置 · 未配置时将在浏览器本地运行模型（首次需下载约 74MB，较慢）
-          </div>
-        </div>
-      </div>
-    </div>
-
-    <!-- 隐私 -->
-    <div class="sg sg-full">
-      <div class="sg-title">隐私与数据</div>
-      <div class="sr">
-        <div class="sr-info"><div class="sr-label">🔒 本地存储</div><div class="sr-desc">会议记录仅存本地浏览器，不强制上云</div></div>
-        <span class="chip chip-green">已启用</span>
-      </div>
-      <div class="sr">
-        <div class="sr-info"><div class="sr-label">清空所有本地数据</div><div class="sr-desc">删除全部会议历史，不可恢复</div></div>
-        <button class="btn btn-danger btn-sm" onclick="clearAll()">清空</button>
-      </div>
-    </div>
-
-    <div class="sg sg-full">
-      <div class="sg-title">关于</div>
-      <div class="sr">
-        <div class="sr-info"><div class="sr-label">MeetPilot</div><div class="sr-desc">智能会议助手 · 本地优先 · 隐私安全 · 多端同步</div></div>
-        <span class="chip chip-blue">v3.0</span>
-      </div>
-    </div>
-  </div>
-</div>
-</div>
-
-<!-- ══ ROOM-WIDE DRAG OVERLAY ══ -->
-<div class="room-drop-overlay" id="room-drop-overlay">
-  <div style="font-size:48px">🎵</div>
-  <div class="drop-hint">松开鼠标上传录音文件</div>
-  <div style="font-size:13px;color:var(--text2)">支持 MP3 · WAV · M4A · OGG · WebM</div>
-</div>
-
-<!-- ══ BOTTOM NAV ══ -->
-<nav class="bnav">
-  <div class="bnav-inner">
-    <div class="bnav-btn active" id="bn-dashboard" onclick="nav('dashboard')"><div class="bi">🏠</div><span>首页</span></div>
-    <div class="bnav-btn" id="bn-room" onclick="nav('room')"><div class="bi">🎙</div><span>会议室</span></div>
-    <div class="bnav-btn" id="bn-history" onclick="nav('history')"><div class="bi">📋</div><span>历史</span></div>
-    <div class="bnav-btn" id="bn-settings" onclick="nav('settings')"><div class="bi">⚙️</div><span>设置</span></div>
-  </div>
-</nav>
-
-<!-- ══ NEW MEETING MODAL ══ -->
-<div class="overlay" id="modal" onclick="if(event.target===this)closeModal()">
-  <div class="modal">
-    <h2>🚀 开始新会议</h2>
-    <div class="msub">填写基本信息，立即开始</div>
-    <div class="mform">
+      <!-- 左：笔记区 -->
       <div>
-        <div class="mlabel">会议主题 <span style="color:var(--danger)">*</span></div>
-        <input type="text" id="m-title" placeholder="例：Q2 产品规划讨论" maxlength="80" autofocus>
+        <div class="card">
+          <div class="card-title">📝 会议记录</div>
+          <div class="notes-toolbar">
+            <button class="tool-btn" onclick="markHighlight()" title="选中文字后点击">⭐ 标记重点</button>
+            <button class="tool-btn" onclick="markTodo()" title="选中文字后点击">☑ 标记待办</button>
+            <button class="tool-btn" onclick="copyNotes()">📋 复制全部</button>
+            <button class="tool-btn" onclick="exportNotes()">📥 导出文本</button>
+            <button class="tool-btn" onclick="clearNotes()" style="margin-left:auto;color:var(--danger)">🗑 清空</button>
+          </div>
+          <textarea id="notes" class="notes-area" placeholder="实时转写内容将自动追加到此处&#10;也可直接在此输入或编辑会议记录..."></textarea>
+        </div>
+        <div style="display:flex;gap:8px;justify-content:flex-end">
+          <button class="btn btn-primary" onclick="openSave()">💾 保存会议</button>
+        </div>
       </div>
+
+      <!-- 右：控制区 -->
       <div>
-        <div class="mlabel">会议议程（每行一项，可选）</div>
-        <textarea id="m-agenda" rows="4" placeholder="1. 现状回顾&#10;2. 问题分析&#10;3. 方案讨论&#10;4. 行动计划" style="border-radius:var(--r-sm);padding:9px 13px;font-size:14px"></textarea>
+        <!-- 录音控制 -->
+        <div class="card">
+          <div class="card-title">🎙 实时录音转写</div>
+          <div class="timer-row">
+            <div class="timer" id="timer">00:00</div>
+            <div class="status-tip" id="status-tip">准备就绪</div>
+          </div>
+          <div id="speech-warn"></div>
+          <button class="mic-btn off" id="mic-btn" onclick="toggleMic()">
+            🎙 &nbsp;点击开始录音
+          </button>
+          <div class="live-box" id="live-box">实时识别内容将显示在此...</div>
+        </div>
+
+        <!-- 音频上传 -->
+        <div class="card">
+          <div class="card-title">📁 上传音频转写</div>
+          <div class="dropzone" id="dropzone"
+            ondragover="event.preventDefault();this.classList.add('drag')"
+            ondragleave="this.classList.remove('drag')"
+            ondrop="handleDrop(event)"
+            onclick="document.getElementById('audio-input').click()">
+            <input type="file" id="audio-input" accept="audio/*" style="display:none" onchange="handleFile(this.files[0])">
+            <div>🎵 点击或拖入音频文件</div>
+            <div style="font-size:12px;margin-top:4px;color:var(--text2)">支持 MP3、WAV、M4A、OGG 等格式</div>
+          </div>
+          <div class="audio-player-wrap" id="audio-player-wrap">
+            <div class="audio-filename" id="audio-filename"></div>
+            <audio id="audio-player" controls></audio>
+            <button class="btn btn-secondary btn-sm" style="width:100%" onclick="resetAudio()">↩ 重新上传</button>
+          </div>
+          <div id="upload-status" style="font-size:12px;color:var(--text2);margin-top:8px;min-height:18px"></div>
+        </div>
       </div>
-    </div>
-    <div class="mactions">
-      <button class="btn btn-secondary" onclick="closeModal()">取消</button>
-      <button class="btn btn-primary" onclick="startMeeting()">🚀 开始</button>
+
     </div>
   </div>
-</div>
+</section>
+
+<!-- ════════════════ 历史记录 ════════════════ -->
+<section class="section" id="sec-history">
+  <div class="wrap">
+
+    <!-- 列表视图 -->
+    <div id="hist-list-wrap">
+      <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:20px">
+        <div class="page-title">历史记录</div>
+        <button class="btn btn-secondary btn-sm" id="clear-all-btn" onclick="clearAll()" style="color:var(--danger);display:none">🗑 清空全部</button>
+      </div>
+      <div id="hist-list"></div>
+    </div>
+
+    <!-- 详情视图 -->
+    <div id="hist-detail" style="display:none">
+      <div class="detail-header">
+        <button class="btn btn-secondary btn-sm" onclick="closeDetail()">← 返回</button>
+        <div class="detail-title" id="detail-title"></div>
+        <button class="btn btn-secondary btn-sm" onclick="exportDetail()">📥 导出</button>
+      </div>
+      <div style="font-size:12px;color:var(--text2);margin-bottom:12px" id="detail-meta"></div>
+      <div class="detail-content" id="detail-content"></div>
+    </div>
+
+  </div>
+</section>
+
+<!-- ════════════════ 设置 ════════════════ -->
+<section class="section" id="sec-settings">
+  <div class="wrap" style="max-width:620px">
+    <div class="page-title">设置</div>
+
+    <div class="sg">
+      <div class="sg-title">🔑 语音识别 API Key</div>
+      <div class="form-row">
+        <label class="form-label">API Key（用于上传音频文件时调用云端转写）</label>
+        <input type="password" id="s-apikey" placeholder="sk-..." oninput="saveSetting('apikey',this.value)">
+      </div>
+      <div class="form-row">
+        <label class="form-label">API Endpoint（留空使用 OpenAI 默认，可改为其他 Whisper 兼容地址）</label>
+        <input type="text" id="s-endpoint" placeholder="https://api.openai.com/v1/audio/transcriptions" oninput="saveSetting('endpoint',this.value)">
+      </div>
+      <div class="hint">
+        推荐免费接口：
+        <a href="https://console.groq.com" target="_blank">Groq</a>（注册即得，速度极快） ·
+        <a href="https://siliconflow.cn" target="_blank">SiliconFlow</a>（国内，中文效果好）
+      </div>
+    </div>
+
+    <div class="sg">
+      <div class="sg-title">📖 使用说明</div>
+      <div style="font-size:14px;line-height:2.1;color:var(--text1)">
+        <b>实时录音：</b>点击「开始录音」，允许麦克风后即可实时转写（需 Chrome / Edge）。<br>
+        <b>音频上传：</b>上传 MP3/WAV/M4A 文件，配置 API Key 后自动调用云端转写。<br>
+        <b>标记重点：</b>选中文字后点击「⭐ 标记重点」，内容前后加上【重点】标记。<br>
+        <b>标记待办：</b>选中文字后点击「☑ 标记待办」，内容前加上 [待办] 标记。<br>
+        <b>保存会议：</b>点击「💾 保存会议」，输入名称后保存到本地浏览器。<br>
+        <b>历史记录：</b>点击顶部「历史记录」标签，查看、导出或删除已保存的会议。<br>
+        <br>
+        <b style="color:var(--warn)">⚠️ 若页面功能未更新，请按 Ctrl+Shift+R 强制刷新。</b>
+      </div>
+    </div>
+
+    <div class="sg">
+      <div class="sg-title">ℹ️ 关于</div>
+      <div style="font-size:14px;line-height:2;color:var(--text1)">
+        <b>MeetPilot</b> · 纯前端会议实时转录工具<br>
+        版本：<b>v4.0</b> · 100% 本地运行，无服务端，不上传任何数据<br>
+        所有记录仅存储在您的浏览器本地（localStorage），清除浏览器数据时会同步删除。
+      </div>
+    </div>
+
+  </div>
+</section>
 
 <script>
-// ══════════════════════════════════════════════════
-//  STATE
-// ══════════════════════════════════════════════════
-const S = {
-  section: 'dashboard',
-  theme: 'light',
-  codingGlobal: false,  // global coding module switch
-  codeModeActive: false, // per-meeting code mode
-  micActive: false,
-  meeting: null,
-  meetings: [],
+'use strict';
+
+const SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
+const STORE_KEY = 'meetpilot_v4';
+
+let S = {
   recognition: null,
+  micActive: false,
   timerInterval: null,
-  syncStatus: 'none', // none | syncing | synced | error
-  settings: { lang: 'zh-CN', autoAction: true },
+  startTime: null,
+  meetings: [],
+  settings: { apikey: '', endpoint: '' },
 };
-let viewingId = null;
+let _viewingId = null;
+let _audioURL = null;
 
-const SR = window.SpeechRecognition || window.webkitSpeechRecognition;
-
-// Auto-detect action keywords
-const ACTION_KW = ['需要', '记得', '跟进', '确认', '通知', '联系', '安排', '负责', '待办',
-                   '下一步', '计划', '待确认', 'todo', 'TODO', '要做', '应该', '必须'];
-
-// ══════════════════════════════════════════════════
-//  INIT
-// ══════════════════════════════════════════════════
-function init() {
-  const d = JSON.parse(localStorage.getItem('mp3_data') || '{}');
-  if (d.theme) S.theme = d.theme;
-  if (d.codingGlobal !== undefined) S.codingGlobal = d.codingGlobal;
-  if (d.meetings) S.meetings = d.meetings;
-  if (d.settings) Object.assign(S.settings, d.settings);
-
-  applyTheme();
-  applyCodingGlobal();
-  updateStats();
-  renderRecent();
+// ── 初始化 ──
+(function init() {
+  loadData();
+  checkSpeech();
   loadSettingsUI();
-  updateSyncUI();
-
-  // Restore gist PAT indicator
-  if (localStorage.getItem('mp3_gist_pat')) {
-    document.getElementById('gist-pat-input').value = '••••••••••••••••••••';
-  }
-
-  // Restore in-progress meeting after accidental refresh
-  const inProgress = S.meetings.find(m => !m.endTime);
-  if (inProgress) {
-    if (!Array.isArray(inProgress.transcript)) inProgress.transcript = [];
-    S.meeting = inProgress;
-    // Restore room UI
-    document.getElementById('room-title').textContent = inProgress.title;
-    document.getElementById('room-badge').textContent = '📅 ' + new Date(inProgress.startTime).toLocaleDateString('zh-CN',{month:'2-digit',day:'2-digit'});
-    document.getElementById('room-notes').value = inProgress.notes || '';
-    document.getElementById('room-code').value = inProgress.code || '';
-    // Replay transcript into feed
-    const feed = document.getElementById('tx-feed');
-    feed.innerHTML = '<div class="tx-live" id="tx-live"></div>';
-    inProgress.transcript.slice().reverse().forEach(item => {
-      const time = new Date(item.time).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',second:'2-digit'});
-      const safeText = item.text.replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      const el = document.createElement('div');
-      el.className = 'tx-item final';
-      el.innerHTML = `<div class="tx-item-row"><input type="checkbox" class="tx-check" onchange="txToggleSelect(this)"><div class="tx-time">${time}</div><span class="tx-insert-btn" onclick="insertTxToNotes(this)">插入笔记 ↗</span></div><span class="tx-body" onclick="txBodyClick(event,this)">${safeText}</span>`;
-      feed.insertBefore(el, feed.firstChild);
-    });
-    // Restore timer
-    clearInterval(S.timerInterval);
-    S.timerInterval = setInterval(() => {
-      if (!S.meeting) return;
-      const secs = Math.floor((Date.now() - S.meeting.startTime) / 1000);
-      document.getElementById('room-timer').textContent =
-        String(Math.floor(secs/60)).padStart(2,'0') + ':' + String(secs%60).padStart(2,'0');
-    }, 1000);
-    setCodeMode(false);
-    document.getElementById('code-mode-toggle').style.display = '';
-    nav('room');
-    // Show restore toast
-    setTimeout(() => toast('📋 已恢复上次会议记录：' + inProgress.title), 400);
-  }
-
-  // Auto-save before unload (e.g. accidental refresh during meeting)
-  window.addEventListener('beforeunload', () => {
-    if (S.meeting) {
-      S.meeting.notes = document.getElementById('room-notes')?.value || S.meeting.notes;
-      S.meeting.code = document.getElementById('room-code')?.value || S.meeting.code;
-      // Save in-progress meeting into meetings list temporarily
-      const idx = S.meetings.findIndex(m => m.id === S.meeting.id);
-      if (idx === -1) S.meetings.unshift(S.meeting);
-      else S.meetings[idx] = S.meeting;
-      saveData();
-    }
+  document.getElementById('save-title').addEventListener('keydown', e => {
+    if (e.key === 'Enter') confirmSave();
   });
+})();
 
-  // Periodic auto-save every 30s during active meeting
-  setInterval(() => {
-    if (S.meeting) saveData();
-  }, 30000);
+// ── 导航 ──
+function nav(page) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav button').forEach(b => b.classList.remove('active'));
+  document.getElementById('sec-' + page).classList.add('active');
+  const idx = { room: 0, history: 1, settings: 2 }[page] ?? 0;
+  document.querySelectorAll('.nav button')[idx]?.classList.add('active');
+  if (page === 'history') renderHist();
+}
+
+// ── 数据 ──
+function loadData() {
+  try {
+    // 兼容旧版本存储键名
+    const raw = localStorage.getItem(STORE_KEY)
+             || localStorage.getItem('mp_lite')
+             || localStorage.getItem('mp3_data');
+    if (!raw) return;
+    const d = JSON.parse(raw);
+    if (Array.isArray(d.meetings)) {
+      S.meetings = d.meetings.map(m => ({
+        id: m.id || Date.now() + Math.random(),
+        title: m.title || '未命名会议',
+        savedAt: m.savedAt || m.endTime || m.startTime || Date.now(),
+        text: m.text
+          || m.notes
+          || (Array.isArray(m.transcript) ? m.transcript.map(t => t.text || '').join('\n') : '')
+          || '',
+      })).filter(m => m.title || m.text);
+    }
+    if (d.settings) {
+      if (d.settings.apikey) S.settings.apikey = d.settings.apikey;
+      if (d.settings.endpoint) S.settings.endpoint = d.settings.endpoint;
+    }
+    // 兼容旧版分散存储的 API key
+    if (!S.settings.apikey) {
+      const k = localStorage.getItem('mp3_speech_api_key');
+      if (k) S.settings.apikey = k;
+    }
+    if (!S.settings.endpoint) {
+      const ep = localStorage.getItem('mp3_speech_api_endpoint');
+      if (ep) S.settings.endpoint = ep;
+    }
+  } catch (e) { /* 忽略损坏数据 */ }
 }
 
 function saveData() {
-  // 确保进行中的会议始终持久化（S.meeting 可能尚未加入 S.meetings）
-  if (S.meeting) {
-    const idx = S.meetings.findIndex(m => m.id === S.meeting.id);
-    if (idx === -1) S.meetings.unshift(S.meeting);
-    else S.meetings[idx] = S.meeting;
-  }
-  localStorage.setItem('mp3_data', JSON.stringify({
-    theme: S.theme, codingGlobal: S.codingGlobal,
-    meetings: S.meetings, settings: S.settings,
+  localStorage.setItem(STORE_KEY, JSON.stringify({
+    meetings: S.meetings,
+    settings: S.settings,
   }));
 }
 
-// ══════════════════════════════════════════════════
-//  NAVIGATION
-// ══════════════════════════════════════════════════
-const SECTIONS = ['dashboard','room','summary','history','settings'];
-
-function nav(name) {
-  S.section = name;
-  SECTIONS.forEach(n => {
-    document.getElementById('sec-'+n)?.classList.toggle('active', n===name);
-    document.getElementById('tnav-'+n)?.classList.toggle('active', n===name);
-    document.getElementById('bn-'+n)?.classList.toggle('active', n===name);
-  });
-  if (name === 'history') renderHist();
-  // Ensure timer is always running when room is visible
-  if (name === 'room') ensureTimer();
-}
-
-// ══════════════════════════════════════════════════
-//  THEME
-// ══════════════════════════════════════════════════
-function applyTheme() {
-  document.documentElement.setAttribute('data-theme', S.theme);
-  document.getElementById('theme-icon').textContent = S.theme === 'dark' ? '☀️' : '🌙';
-  const dt = document.getElementById('dark-toggle');
-  if (dt) dt.checked = S.theme === 'dark';
-}
-function toggleTheme() {
-  S.theme = S.theme === 'dark' ? 'light' : 'dark';
-  applyTheme();
-  saveData();
-}
-
-// ══════════════════════════════════════════════════
-//  CODING MODULE
-// ══════════════════════════════════════════════════
-function applyCodingGlobal() {
-  const on = S.codingGlobal;
-  const tog = document.getElementById('coding-global-toggle');
-  if (tog) tog.checked = on;
-  // Code mode toggle is always visible in room — global setting only controls default
-}
-function toggleCodingGlobal() {
-  S.codingGlobal = document.getElementById('coding-global-toggle').checked;
-  applyCodingGlobal();
-  // If turning off, also disable code mode
-  if (!S.codingGlobal) setCodeMode(false);
-  saveData();
-}
-
-function toggleCodeMode() {
-  const cb = document.getElementById('code-mode-cb');
-  setCodeMode(cb.checked);
-}
-function setCodeMode(on) {
-  S.codeModeActive = on;
-  document.getElementById('code-mode-cb').checked = on;
-  document.getElementById('code-mode-toggle').classList.toggle('on', on);
-  document.getElementById('code-tab-btn').style.display = on ? '' : 'none';
-  if (!on && S.section === 'room') {
-    // Switch back to notes if code tab is active
-    const codeTabActive = document.getElementById('ctab-code').classList.contains('active');
-    if (codeTabActive) switchTab('notes', document.querySelector('.center-tabs button'));
-  }
-}
-
-// ══════════════════════════════════════════════════
-//  SETTINGS
-// ══════════════════════════════════════════════════
-function saveSetting(k, v) {
-  S.settings[k] = v;
-  saveData();
-}
+// ── 设置 ──
 function loadSettingsUI() {
-  const ls = document.getElementById('lang-select');
-  if (ls) ls.value = S.settings.lang || 'zh-CN';
-  const aa = document.getElementById('auto-action-toggle');
-  if (aa) aa.checked = S.settings.autoAction !== false;
-  // Load speech API config
-  const savedKey = localStorage.getItem('mp3_speech_api_key');
-  const savedEndpoint = localStorage.getItem('mp3_speech_api_endpoint');
-  const keyInput = document.getElementById('speech-api-key-input');
-  const epInput = document.getElementById('speech-api-endpoint-input');
-  if (keyInput && savedKey) keyInput.value = '••••••••••••••••••••';
-  if (epInput && savedEndpoint) epInput.value = savedEndpoint;
-  updateSpeechApiStatus();
+  document.getElementById('s-apikey').value = S.settings.apikey || '';
+  document.getElementById('s-endpoint').value = S.settings.endpoint || '';
 }
 
-function saveSpeechApiKey() {
-  const v = document.getElementById('speech-api-key-input')?.value.trim();
-  if (v && !v.startsWith('•')) {
-    localStorage.setItem('mp3_speech_api_key', v);
-    document.getElementById('speech-api-key-input').value = '••••••••••••••••••••';
-  } else if (!v) {
-    localStorage.removeItem('mp3_speech_api_key');
-  }
-  updateSpeechApiStatus();
+function saveSetting(key, val) {
+  S.settings[key] = val.trim();
+  saveData();
 }
 
-function saveSpeechApiEndpoint() {
-  const v = document.getElementById('speech-api-endpoint-input')?.value.trim();
-  if (v) localStorage.setItem('mp3_speech_api_endpoint', v);
-  else localStorage.removeItem('mp3_speech_api_endpoint');
-}
-
-function updateSpeechApiStatus() {
-  const el = document.getElementById('speech-api-status');
-  if (!el) return;
-  const hasKey = !!localStorage.getItem('mp3_speech_api_key');
-  const endpoint = localStorage.getItem('mp3_speech_api_endpoint') || 'https://api.openai.com/v1/audio/transcriptions';
-  if (hasKey) {
-    const host = new URL(endpoint).hostname;
-    el.style.color = 'var(--success)';
-    el.textContent = `✅ 已配置 · 使用 ${host}`;
-  } else {
-    el.style.color = 'var(--text3)';
-    el.textContent = '未配置 · 将使用本地 Whisper 模型（首次加载约 74MB）';
-  }
-}
-
-// ══════════════════════════════════════════════════
-//  MODAL
-// ══════════════════════════════════════════════════
-function openModal() {
-  document.getElementById('modal').classList.add('open');
-  setTimeout(() => document.getElementById('m-title').focus(), 80);
-}
-function closeModal() {
-  document.getElementById('modal').classList.remove('open');
-}
-
-// ══════════════════════════════════════════════════
-//  START / END MEETING
-// ══════════════════════════════════════════════════
-function startMeeting() {
-  const title = document.getElementById('m-title').value.trim();
-  if (!title) { document.getElementById('m-title').focus(); return; }
-  const agRaw = document.getElementById('m-agenda').value.trim();
-  const agenda = agRaw ? agRaw.split('\n').filter(Boolean) : [];
-  closeModal();
-
-  S.meeting = {
-    id: Date.now(),
-    title,
-    agenda,
-    startTime: Date.now(),
-    endTime: null,
-    transcript: [],
-    notes: '',
-    code: '',
-    actions: [],
-    summary: null,
-  };
-  S.codeModeActive = false;
-
-  // Reset room UI
-  document.getElementById('room-title').textContent = title;
-  document.getElementById('room-badge').textContent = '📅 ' + new Date().toLocaleDateString('zh-CN',{month:'2-digit',day:'2-digit'});
-  document.getElementById('room-live-badge').style.display = 'none';
-  document.getElementById('room-notes').value = '';
-  document.getElementById('room-code').value = '';
-  document.getElementById('actions-wrap').innerHTML = '';
-  document.getElementById('auto-detected-count').style.display = 'none';
-  autoDetectedCount = 0;
-
-  // Agenda — start empty, will be filled by smartNotes / real-time sync
-  const ul = document.getElementById('room-agenda');
-  ul.innerHTML = agenda.length
-    ? agenda.map((a,i) =>
-        `<li class="agenda-item" onclick="agendaJump(this)">\
-<span class="ag-num">${i+1}</span><span>${a}</span></li>`).join('')
-    : '<li style="font-size:12px;color:var(--text3);padding:6px 8px">智能整理后自动生成</li>';
-
-  // Code mode reset
-  setCodeMode(false);
-  document.getElementById('code-tab-btn').style.display = 'none';
-  document.getElementById('code-mode-cb').checked = false;
-  document.getElementById('code-mode-toggle').classList.remove('on');
-  document.getElementById('code-mode-toggle').style.display = '';  // always visible
-
-  // Timer
+// ── 计时器 ──
+function startTimer() {
+  S.startTime = Date.now();
   clearInterval(S.timerInterval);
-  S.timerInterval = null; // reset so ensureTimer() will start fresh
-  // Timer starts via nav('room') → ensureTimer()
-
-  checkSpeech();
-  nav('room');
-  // Auto-start mic after a short delay (allow DOM to settle)
-  if (SR) {
-    const liveEl = document.getElementById('tx-live');
-    if (liveEl) liveEl.textContent = '⏳ 正在请求麦克风权限，请在弹窗中点击"允许"...';
-    setTimeout(() => {
-      if (S.meeting && !S.micActive) startMic();
-    }, 700);
-  }
-}
-
-// Ensure timer is ticking whenever the room is visible (handles resume / nav back)
-function ensureTimer() {
-  if (!S.meeting) return;
-  if (S.timerInterval) return; // already running
-  if (S.meeting.endTime) {
-    // Frozen — show elapsed
-    const secs = Math.floor((S.meeting.endTime - S.meeting.startTime) / 1000);
-    document.getElementById('room-timer').textContent =
-      String(Math.floor(secs/60)).padStart(2,'0') + ':' + String(secs%60).padStart(2,'0');
-    return;
-  }
   S.timerInterval = setInterval(() => {
-    if (!S.meeting) return;
-    const secs = Math.floor((Date.now() - S.meeting.startTime) / 1000);
-    document.getElementById('room-timer').textContent =
-      String(Math.floor(secs/60)).padStart(2,'0') + ':' + String(secs%60).padStart(2,'0');
+    const s = Math.floor((Date.now() - S.startTime) / 1000);
+    document.getElementById('timer').textContent =
+      String(Math.floor(s / 60)).padStart(2, '0') + ':' + String(s % 60).padStart(2, '0');
   }, 1000);
 }
 
-function endMeeting() {
-  if (!confirm('结束会议并生成 AI 总结？')) return;
+function stopTimer() {
   clearInterval(S.timerInterval);
-  stopMic();
-
-  if (S.meeting) {
-    S.meeting.endTime = Date.now();
-    S.meeting.notes = document.getElementById('room-notes').value;
-    S.meeting.code = document.getElementById('room-code').value;
-    S.meeting.actions = getActions();
-    S.meeting.summary = buildSummary(S.meeting);
-    // Replace existing entry or prepend (avoid duplicates from auto-save)
-    const existIdx = S.meetings.findIndex(m => m.id === S.meeting.id);
-    if (existIdx >= 0) S.meetings[existIdx] = S.meeting;
-    else S.meetings.unshift(S.meeting);
-    if (S.meetings.length > 200) S.meetings.pop();
-    saveData();
-    updateStats();
-    renderRecent();
-    renderHist();
-    syncNowSilent();
-
-    viewingId = S.meeting.id;
-    renderSummary(S.meeting);
-    document.getElementById('sum-export-btn').onclick = () => exportById(viewingId, 'markdown');
-    nav('summary');
-    S.meeting = null;
-  }
+  S.timerInterval = null;
 }
 
-// ══════════════════════════════════════════════════
-//  CENTER TAB
-// ══════════════════════════════════════════════════
-function switchTab(tab, btn) {
-  document.querySelectorAll('.ctab').forEach(el => el.classList.remove('active'));
-  document.querySelectorAll('.center-tabs button').forEach(el => el.classList.remove('active'));
-  document.getElementById('ctab-'+tab).classList.add('active');
-  if (btn) btn.classList.add('active');
-}
-
-// ══════════════════════════════════════════════════
-//  SPEECH
-// ══════════════════════════════════════════════════
+// ── 语音识别 ──
 function checkSpeech() {
-  const w = document.getElementById('speech-warn');
-  const mb = document.getElementById('big-mic');
+  const warn = document.getElementById('speech-warn');
+  const btn = document.getElementById('mic-btn');
   if (!SR) {
-    w.innerHTML = '<div style="font-size:12px;color:var(--warn);padding:7px 10px;background:rgba(245,158,11,.1);border-radius:var(--r-sm);margin-bottom:6px">⚠️ 请使用 Chrome 或 Edge 浏览器以启用语音识别</div>';
-    mb.disabled = true;
-    mb.style.opacity = '.5';
-  } else {
-    w.innerHTML = '';
-    mb.disabled = false;
-    mb.style.opacity = '';
+    warn.innerHTML = '<div style="font-size:12px;color:var(--warn);background:rgba(245,158,11,.1);padding:8px 12px;border-radius:8px;margin-bottom:10px">⚠️ 实时录音需使用 Chrome 或 Edge 浏览器</div>';
+    btn.disabled = true;
   }
 }
 
@@ -1200,11 +423,11 @@ function toggleMic() {
 }
 
 function startMic() {
-  if (!SR) { alert('请使用 Chrome 或 Edge 浏览器'); return; }
+  if (!SR) { toast('请使用 Chrome 或 Edge 浏览器'); return; }
   if (S.recognition) S.recognition.abort();
 
   const r = new SR();
-  r.lang = S.settings.lang || 'zh-CN';
+  r.lang = 'zh-CN';
   r.continuous = true;
   r.interimResults = true;
   S.recognition = r;
@@ -1213,39 +436,39 @@ function startMic() {
   r.onresult = (e) => {
     let interim = '';
     for (let i = e.resultIndex; i < e.results.length; i++) {
-      const txt = e.results[i][0].transcript;
       if (e.results[i].isFinal) {
-        addTx(txt, true);
-        if (S.meeting) S.meeting.transcript.push({ time: Date.now(), text: txt });
-        // Auto-detect action items
-        if (S.settings.autoAction !== false) autoDetect(txt);
+        appendToNotes(e.results[i][0].transcript.trim());
       } else {
-        interim += txt;
+        interim += e.results[i][0].transcript;
       }
     }
-    const live = document.getElementById('tx-live');
-    if (live) live.textContent = interim || '';
+    const box = document.getElementById('live-box');
+    box.textContent = interim || '实时识别内容将显示在此...';
+    box.className = 'live-box' + (interim ? ' active' : '');
   };
 
   r.onerror = (e) => {
     if (e.error === 'not-allowed') {
       stopMic();
-      // Show inline retry prompt instead of blocking alert
-      const liveEl = document.getElementById('tx-live');
-      if (liveEl) liveEl.innerHTML = '🚫 麦克风权限被拒绝<br><span style="color:var(--accent);cursor:pointer;font-size:12px;text-decoration:underline" onclick="startMic()">点击这里重试 →</span><br><span style="font-size:11px;color:var(--text3)">（需在浏览器地址栏旁的🔒图标中允许麦克风）</span>';
+      document.getElementById('live-box').innerHTML =
+        '🚫 麦克风权限被拒绝<br><small style="color:var(--text2)">请在地址栏🔒图标中允许麦克风后重试</small>';
       return;
     }
-    if (e.error !== 'aborted') console.warn('Speech:', e.error);
+    if (e.error !== 'aborted') setStatusTip('识别错误：' + e.error);
   };
 
   r.onend = () => {
-    if (S.micActive) try { S.recognition.start(); } catch(e) {}
+    if (S.micActive) try { S.recognition.start(); } catch (ex) {}
   };
 
   try {
     r.start();
-    updateMicUI(true);
-  } catch(e) {
+    const btn = document.getElementById('mic-btn');
+    btn.className = 'mic-btn on';
+    btn.innerHTML = '<span class="rec-dot"></span> 录音中 — 点击停止';
+    startTimer();
+    setStatusTip('🎙 正在录音，实时转写中...');
+  } catch (e) {
     S.micActive = false;
     toast('无法启动录音：' + e.message);
   }
@@ -1253,1388 +476,310 @@ function startMic() {
 
 function stopMic() {
   S.micActive = false;
-  if (S.recognition) { try { S.recognition.abort(); } catch(e) {} S.recognition = null; }
-  updateMicUI(false);
-}
-
-function updateMicUI(on) {
-  const mb = document.getElementById('big-mic');
-  const lb = document.getElementById('room-live-badge');
-  if (on) {
-    mb.className = 'big-mic-btn on';
-    mb.innerHTML = '<span class="rec-dot"></span> &nbsp;录音中 — 点击停止';
-    lb.style.display = '';
-    document.getElementById('mic-hint').textContent = '正在使用麦克风 · 实时转写中';
-  } else {
-    mb.className = 'big-mic-btn off';
-    mb.innerHTML = '🎙 &nbsp;点击开始录音';
-    lb.style.display = 'none';
-    document.getElementById('mic-hint').textContent = '支持 Chrome / Edge · 需要麦克风权限';
+  if (S.recognition) {
+    try { S.recognition.abort(); } catch (e) {}
+    S.recognition = null;
   }
+  const btn = document.getElementById('mic-btn');
+  btn.className = 'mic-btn off';
+  btn.innerHTML = '🎙 &nbsp;点击开始录音';
+  const box = document.getElementById('live-box');
+  box.textContent = '实时识别内容将显示在此...';
+  box.className = 'live-box';
+  stopTimer();
+  setStatusTip('录音已停止');
 }
 
-// Write live mic transcript line directly into notes
-function addTx(text, final, spkId) {
-  if (!final || !text?.trim()) return;
-  const notes = document.getElementById('room-notes');
-  if (!notes) return;
-  const spkLabel = spkId != null ? `[说话人${parseInt(spkId)+1}] ` : '';
-  notes.value += (notes.value && !notes.value.endsWith('\n') ? '\n' : '') + spkLabel + text.trim() + '\n';
-  notes.scrollTop = notes.scrollHeight;
-  // Save to meeting transcript in order
-  if (S.meeting) S.meeting.transcript.push({ time: Date.now(), text: text.trim(), spkId: spkId ?? null });
-  // Real-time agenda auto-refresh
-  autoSyncAgenda();
+function setStatusTip(msg) {
+  document.getElementById('status-tip').textContent = msg;
 }
 
-// ══════════════════════════════════════════════════
-//  AUTO-DETECT ACTION ITEMS
-// ══════════════════════════════════════════════════
-let autoDetectedCount = 0;
-
-function autoDetect(text) {
-  const hit = ACTION_KW.some(kw => text.includes(kw));
-  if (!hit) return;
-
-  // Extract candidate action: split by punctuation, pick sentences with keywords
-  const sentences = text.split(/[，。！？、；\n]/).filter(s => s.trim().length > 3);
-  const candidates = sentences.filter(s => ACTION_KW.some(kw => s.includes(kw)));
-
-  candidates.forEach(c => {
-    const cleaned = c.trim();
-    if (cleaned.length < 4) return;
-    addActionItem(cleaned, true);
-    autoDetectedCount++;
-  });
-
-  if (autoDetectedCount > 0) {
-    const badge = document.getElementById('auto-detected-count');
-    badge.textContent = `🤖 自动识别 ${autoDetectedCount} 条`;
-    badge.style.display = '';
-  }
+// ── 笔记操作 ──
+function appendToNotes(text) {
+  if (!text) return;
+  const ta = document.getElementById('notes');
+  const cur = ta.value;
+  ta.value = cur + (cur && !cur.endsWith('\n') ? '\n' : '') + text + '\n';
+  ta.scrollTop = ta.scrollHeight;
 }
 
-// ══════════════════════════════════════════════════
-//  ACTION ITEMS
-// ══════════════════════════════════════════════════
-function addAction() {
-  const inp = document.getElementById('ac-input');
-  const t = inp.value.trim();
-  if (!t) return;
-  inp.value = '';
-  addActionItem(t, false);
+function markHighlight() {
+  const ta = document.getElementById('notes');
+  const s = ta.selectionStart, e = ta.selectionEnd;
+  if (s === e) { toast('请先选中要标记的文字'); return; }
+  const sel = ta.value.slice(s, e);
+  const marked = '【重点】' + sel + '【/重点】';
+  ta.value = ta.value.slice(0, s) + marked + ta.value.slice(e);
+  ta.setSelectionRange(s, s + marked.length);
+  ta.focus();
+  toast('✅ 已标记为重点');
 }
 
-function addActionItem(text, auto) {
-  const wrap = document.getElementById('actions-wrap');
-  const el = document.createElement('div');
-  el.className = 'ac-item';
-  el.innerHTML = `
-    <input type="checkbox">
-    <span class="ac-text">${text}${auto ? '<span class="auto-badge">自动</span>' : ''}</span>
-    <span class="ac-del" onclick="this.parentElement.remove()">×</span>`;
-  wrap.appendChild(el);
-  wrap.scrollTop = wrap.scrollHeight;
+function markTodo() {
+  const ta = document.getElementById('notes');
+  const s = ta.selectionStart, e = ta.selectionEnd;
+  if (s === e) { toast('请先选中要标记的文字'); return; }
+  const sel = ta.value.slice(s, e);
+  const marked = '[待办] ' + sel;
+  ta.value = ta.value.slice(0, s) + marked + ta.value.slice(e);
+  ta.setSelectionRange(s, s + marked.length);
+  ta.focus();
+  toast('✅ 已标记为待办');
 }
 
-function getActions() {
-  const res = [];
-  document.querySelectorAll('#actions-wrap .ac-item').forEach(el => {
-    const cb = el.querySelector('input[type=checkbox]');
-    let txt = el.querySelector('.ac-text')?.textContent || '';
-    txt = txt.trim();
-    if (txt) res.push({ text: txt, done: cb?.checked || false });
-  });
-  return res;
+function copyNotes() {
+  const text = document.getElementById('notes').value;
+  if (!text.trim()) { toast('暂无内容'); return; }
+  navigator.clipboard?.writeText(text)
+    .then(() => toast('✅ 已复制到剪贴板'))
+    .catch(() => {
+      document.getElementById('notes').select();
+      document.execCommand('copy');
+      toast('✅ 已复制');
+    });
 }
 
-// ══════════════════════════════════════════════════
-//  CODE EDITOR
-// ══════════════════════════════════════════════════
-function codeKey(e) {
-  if (e.key === 'Tab') {
-    e.preventDefault();
-    const ta = e.target, s = ta.selectionStart;
-    ta.value = ta.value.substring(0,s) + '  ' + ta.value.substring(ta.selectionEnd);
-    ta.selectionStart = ta.selectionEnd = s + 2;
-    updateNums();
-  }
-}
-function updateNums() {
-  const ta = document.getElementById('room-code');
-  const n = (ta.value.match(/\n/g)||[]).length + 1;
-  document.getElementById('line-nums').textContent = Array.from({length:n},(_,i)=>i+1).join('\n');
-}
-function insertCodeToNotes() {
-  const code = document.getElementById('room-code').value.trim();
-  if (!code) return;
-  const lang = document.getElementById('code-lang').value.toLowerCase();
-  const notes = document.getElementById('room-notes');
-  notes.value += `\n\n\`\`\`${lang}\n${code}\n\`\`\`\n`;
-  switchTab('notes', document.querySelector('.center-tabs button'));
-  toast('代码已插入笔记');
+function clearNotes() {
+  const ta = document.getElementById('notes');
+  if (!ta.value.trim()) return;
+  if (!confirm('确认清空当前会议记录内容？')) return;
+  ta.value = '';
+  toast('已清空');
 }
 
-// ══════════════════════════════════════════════════
-//  AI SUMMARY
-// ══════════════════════════════════════════════════
-function generateSummary() {
-  if (!S.meeting) return;
-  S.meeting.notes = document.getElementById('room-notes').value;
-  S.meeting.actions = getActions();
-  S.meeting.summary = buildSummary(S.meeting);
-  toast('✅ AI 总结已生成，结束会议后可查看完整版');
+function exportNotes() {
+  const text = document.getElementById('notes').value;
+  if (!text.trim()) { toast('暂无内容可导出'); return; }
+  downloadText(text, '会议记录_' + fmtDate(new Date()) + '.txt');
 }
 
-function buildSummary(m) {
-  const tx = (m.transcript || []).map(t => t.text).join(' ');
-  const actions = (m.actions || []).map(a => a.text);
-  const dur = m.endTime ? Math.round((m.endTime - m.startTime) / 60000) : 0;
-
-  // Extract decisions
-  const decKW = ['决定','确认','同意','通过','明确','共识'];
-  const all = tx.split(/[。！？\n]/).filter(s => s.length > 3);
-  const decisions = all.filter(s => decKW.some(k => s.includes(k))).slice(0, 5);
-
-  let gist = `本次会议「${m.title}」`;
-  if (dur) gist += `历时约 ${dur} 分钟`;
-  gist += `，围绕主题展开深入讨论。`;
-  if (m.transcript?.length) gist += `\n共产生 ${m.transcript.length} 条实时转录记录。`;
-  if (m.agenda?.length) gist += `\n\n议程覆盖：${m.agenda.join('、')}。`;
-
-  return {
-    gist,
-    decisions: decisions.length ? decisions : ['（未从转录中识别到明确决议，请在笔记中补充）'],
-    todos: actions.length ? actions : ['（未添加行动项）'],
-    transcriptSummary: m.transcript?.length
-      ? m.transcript.slice(-6).map(t => t.text).join('。')
-      : '（本次未启用语音转录）',
-    notes: m.notes || '',
-  };
-}
-
-function renderSummary(m) {
-  const s = m.summary;
-  if (!s) return;
-  const dur = m.endTime ? Math.round((m.endTime - m.startTime) / 60000) : '—';
-  const dt = new Date(m.startTime).toLocaleString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
-  document.getElementById('sum-title').textContent = '📋 ' + m.title;
-  document.getElementById('sum-meta').textContent = `${dt}  ·  时长 ${dur} 分钟`;
-  document.getElementById('sum-gist').textContent = s.gist;
-  document.getElementById('sum-tx').textContent = s.transcriptSummary;
-  document.getElementById('sum-notes').textContent = s.notes || '（无笔记）';
-  document.getElementById('sum-decisions').innerHTML = (s.decisions||[]).map(d=>`<li>${d}</li>`).join('');
-  document.getElementById('sum-todos').innerHTML = (s.todos||[]).map(t=>`<li>${t}</li>`).join('');
-}
-
-// ══════════════════════════════════════════════════
-//  EXPORT
-// ══════════════════════════════════════════════════
-function exportCurrent(fmt) {
-  if (!S.meeting) { toast('当前无进行中的会议'); return; }
-  S.meeting.notes = document.getElementById('room-notes').value;
-  S.meeting.actions = getActions();
-  doExport(S.meeting, fmt);
-}
-
-function exportById(id, fmt) {
-  const m = S.meetings.find(x => x.id === id);
-  if (!m) { toast('找不到会议数据'); return; }
-  doExport(m, fmt);
-}
-
-function doExport(m, fmt) {
-  const dt = new Date(m.startTime).toLocaleDateString('zh-CN').replace(/\//g,'-');
-  const dur = m.endTime ? Math.round((m.endTime - m.startTime) / 60000) : '—';
-  const tx = (m.transcript||[]).map(t => t.text).join('\n');
-  const actions = (m.actions||[]).map(a => (a.done?'[x]':'[ ]') + ' ' + a.text).join('\n');
-
-  let content;
-  if (fmt === 'markdown') {
-    content = `# 📋 ${m.title}\n\n`;
-    content += `**日期：** ${new Date(m.startTime).toLocaleString('zh-CN')}  \n**时长：** ${dur} 分钟\n\n---\n\n`;
-    if (m.agenda?.length) content += `## 📅 会议议程\n${m.agenda.map((a,i)=>`${i+1}. ${a}`).join('\n')}\n\n`;
-    content += `## 📝 会议笔记\n${m.notes||'（无笔记）'}\n\n`;
-    content += `## ✅ 行动项\n${actions||'（无行动项）'}\n\n`;
-    content += `## 💬 会议实录\n${tx||'（未启用语音转录）'}\n`;
-    if (m.code) content += `\n## 💻 代码片段\n\`\`\`\n${m.code}\n\`\`\`\n`;
-  } else {
-    content = `【${m.title}】\n日期：${new Date(m.startTime).toLocaleString('zh-CN')}\n时长：${dur} 分钟\n\n`;
-    content += `【议程】\n${(m.agenda||[]).join('\n')||'无'}\n\n`;
-    content += `【笔记】\n${m.notes||'无'}\n\n`;
-    content += `【行动项】\n${actions||'无'}\n\n`;
-    content += `【实录】\n${tx||'（未启用语音转录）'}\n`;
-  }
-
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([content], {type:'text/plain;charset=utf-8'}));
-  a.download = `${m.title}_${dt}.${fmt==='markdown'?'md':'txt'}`;
-  a.click();
-  URL.revokeObjectURL(a.href);
-}
-
-// ══════════════════════════════════════════════════
-//  MULTI-DEVICE SYNC (GitHub Gist)
-// ══════════════════════════════════════════════════
-function getGistPAT() { return localStorage.getItem('mp3_gist_pat') || ''; }
-function getGistId()  { return localStorage.getItem('mp3_gist_id') || ''; }
-
-async function connectGist() {
-  let pat = document.getElementById('gist-pat-input').value.trim();
-  if (!pat || pat.startsWith('•')) {
-    toast('请输入有效的 GitHub PAT');
+// ── 保存会议 ──
+function openSave() {
+  if (!document.getElementById('notes').value.trim()) {
+    toast('暂无内容，请先录音或输入记录');
     return;
   }
-  // Verify token
-  setSyncStatus('syncing', '验证中...');
-  try {
-    const res = await fetch('https://api.github.com/user', {
-      headers: { Authorization: 'Bearer ' + pat }
-    });
-    if (!res.ok) throw new Error('Token 无效，请检查权限');
-    const user = await res.json();
-    localStorage.setItem('mp3_gist_pat', pat);
-    document.getElementById('gist-pat-input').value = '••••••••••••••••••••';
-    setSyncStatus('synced', '已连接 @' + user.login);
-    updateSyncUI();
-    await syncNow();
-    toast('✅ 已连接 GitHub @' + user.login);
-  } catch(e) {
-    setSyncStatus('error', '连接失败');
-    toast('❌ ' + e.message);
+  document.getElementById('save-title').value = '';
+  document.getElementById('save-overlay').classList.add('show');
+  setTimeout(() => document.getElementById('save-title').focus(), 60);
+}
+
+function closeSave() {
+  document.getElementById('save-overlay').classList.remove('show');
+}
+
+function confirmSave() {
+  const rawTitle = document.getElementById('save-title').value.trim();
+  const title = rawTitle || ('会议_' + fmtDate(new Date()));
+  const text = document.getElementById('notes').value;
+  const m = { id: Date.now(), title, savedAt: Date.now(), text };
+  S.meetings.unshift(m);
+  if (S.meetings.length > 300) S.meetings.pop();
+  saveData();
+  closeSave();
+  document.getElementById('notes').value = '';
+  stopMic();
+  stopTimer();
+  document.getElementById('timer').textContent = '00:00';
+  setStatusTip('准备就绪');
+  toast('✅ 已保存："' + title + '"');
+}
+
+// ── 音频上传 ──
+function handleDrop(e) {
+  e.preventDefault();
+  document.getElementById('dropzone').classList.remove('drag');
+  const file = e.dataTransfer.files[0];
+  if (file && file.type.startsWith('audio/')) handleFile(file);
+  else toast('请拖入音频文件（MP3 / WAV / M4A 等）');
+}
+
+function handleFile(file) {
+  if (!file) return;
+  if (_audioURL) URL.revokeObjectURL(_audioURL);
+  _audioURL = URL.createObjectURL(file);
+  document.getElementById('audio-player').src = _audioURL;
+  document.getElementById('audio-filename').textContent = file.name;
+  document.getElementById('dropzone').style.display = 'none';
+  document.getElementById('audio-player-wrap').style.display = '';
+  const ta = document.getElementById('notes');
+  const now = new Date().toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+  if (ta.value && !ta.value.endsWith('\n')) ta.value += '\n';
+  ta.value += `\n--- 📁 ${file.name} (${now}) ---\n`;
+  ta.scrollTop = ta.scrollHeight;
+  startTranscribe(file);
+}
+
+function resetAudio() {
+  const player = document.getElementById('audio-player');
+  player.pause(); player.src = '';
+  if (_audioURL) { URL.revokeObjectURL(_audioURL); _audioURL = null; }
+  document.getElementById('audio-input').value = '';
+  document.getElementById('dropzone').style.display = '';
+  document.getElementById('audio-player-wrap').style.display = 'none';
+  document.getElementById('upload-status').textContent = '';
+}
+
+function setUploadStatus(msg) {
+  document.getElementById('upload-status').textContent = msg;
+}
+
+async function startTranscribe(file) {
+  const apiKey = S.settings.apikey;
+  if (!apiKey) {
+    setUploadStatus('⚠️ 请先在「设置」中配置语音识别 API Key');
+    return;
   }
-}
+  const endpoint = S.settings.endpoint || 'https://api.openai.com/v1/audio/transcriptions';
+  const modelName = endpoint.includes('siliconflow') ? 'FunAudioLLM/SenseVoiceSmall' : 'whisper-1';
 
-function disconnectGist() {
-  localStorage.removeItem('mp3_gist_pat');
-  localStorage.removeItem('mp3_gist_id');
-  document.getElementById('gist-pat-input').value = '';
-  setSyncStatus('none', '已断开');
-  updateSyncUI();
-  toast('已断开同步');
-}
-
-async function syncNow() {
-  const pat = getGistPAT();
-  if (!pat) return;
-  setSyncStatus('syncing', '同步中...');
+  setUploadStatus('☁️ 上传中，请稍候...');
   try {
-    const data = JSON.stringify({ meetings: S.meetings, settings: S.settings, version: Date.now() });
-    const gistId = getGistId();
-    let res;
-    if (gistId) {
-      res = await fetch(`https://api.github.com/gists/${gistId}`, {
-        method: 'PATCH',
-        headers: { Authorization: 'Bearer '+pat, 'Content-Type': 'application/json' },
-        body: JSON.stringify({ files: { 'meetpilot-data.json': { content: data } } })
-      });
-    } else {
-      res = await fetch('https://api.github.com/gists', {
-        method: 'POST',
-        headers: { Authorization: 'Bearer '+pat, 'Content-Type': 'application/json' },
-        body: JSON.stringify({
-          description: 'MeetPilot sync data (private)',
-          public: false,
-          files: { 'meetpilot-data.json': { content: data } }
-        })
-      });
+    const formData = new FormData();
+    formData.append('file', file, file.name);
+    formData.append('model', modelName);
+    formData.append('language', 'zh');
+    formData.append('response_format', 'verbose_json');
+    if (!endpoint.includes('siliconflow')) formData.append('timestamp_granularities[]', 'segment');
+
+    const res = await fetch(endpoint, {
+      method: 'POST',
+      headers: { 'Authorization': 'Bearer ' + apiKey },
+      body: formData,
+    });
+    if (!res.ok) {
+      const err = await res.json().catch(() => ({}));
+      throw new Error(err.error?.message || `HTTP ${res.status}`);
     }
-    const gist = await res.json();
-    if (!res.ok) throw new Error(gist.message || '同步失败');
-    if (!gistId) localStorage.setItem('mp3_gist_id', gist.id);
-    const now = new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'});
-    setSyncStatus('synced', `上次同步 ${now}`);
-    document.getElementById('sync-msg').textContent = `✅ 数据已同步至 Gist，其他设备凭同一 PAT 可拉取`;
-  } catch(e) {
-    setSyncStatus('error', '同步失败');
-    document.getElementById('sync-msg').textContent = '❌ ' + e.message;
-  }
-}
+    setUploadStatus('🔍 解析结果...');
+    const result = await res.json();
+    const rawSegs = result.segments?.length ? result.segments : (result.text ? [{ text: result.text }] : []);
 
-async function syncNowSilent() {
-  const pat = getGistPAT();
-  if (!pat) return;
-  try { await syncNow(); } catch(e) {}
-}
-
-async function pullSync() {
-  const pat = getGistPAT();
-  if (!pat) { toast('请先连接 GitHub PAT'); return; }
-  const gistId = getGistId();
-  if (!gistId) { toast('尚未创建同步 Gist，请先上传一次'); return; }
-  setSyncStatus('syncing', '拉取中...');
-  try {
-    const res = await fetch(`https://api.github.com/gists/${gistId}`, {
-      headers: { Authorization: 'Bearer '+pat }
+    const lines = [];
+    rawSegs.forEach(seg => {
+      const cleaned = (seg.text || '').replace(/<\|[^|]*\|>/g, '').trim();
+      if (!cleaned) return;
+      if (cleaned.length > 120) {
+        cleaned.split(/(?<=[。！？；\n])\s*/).filter(p => p.trim()).forEach(p => lines.push(p.trim()));
+      } else {
+        lines.push(cleaned);
+      }
     });
-    const gist = await res.json();
-    if (!res.ok) throw new Error(gist.message || '拉取失败');
-    const raw = gist.files?.['meetpilot-data.json']?.content;
-    if (!raw) throw new Error('Gist 中没有找到 meetpilot-data.json');
-    const d = JSON.parse(raw);
-    if (d.meetings) { S.meetings = d.meetings; }
-    if (d.settings) Object.assign(S.settings, d.settings);
-    saveData();
-    updateStats();
-    renderRecent();
-    const now = new Date().toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit'});
-    setSyncStatus('synced', `拉取完成 ${now}`);
-    toast('✅ 已从云端拉取最新数据');
-  } catch(e) {
-    setSyncStatus('error', '拉取失败');
-    toast('❌ ' + e.message);
+
+    if (lines.length) {
+      lines.forEach(l => appendToNotes(l));
+      setUploadStatus(`✅ 转写完成，共 ${lines.length} 段`);
+      toast(`✅ 转写完成，共 ${lines.length} 段`);
+    } else {
+      setUploadStatus('⚠️ 未识别到内容，请检查音频文件');
+    }
+  } catch (err) {
+    setUploadStatus('❌ 转写失败：' + err.message);
+    toast('❌ 转写失败：' + err.message);
   }
 }
 
-function setSyncStatus(status, label) {
-  S.syncStatus = status;
-  const cls = {none:'',syncing:'syncing',synced:'synced',error:'error'};
-  ['sync-dot','sync-dot-settings'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) { el.className = 'sync-dot ' + (cls[status]||''); }
-  });
-  ['sync-label','sync-label-settings'].forEach(id => {
-    const el = document.getElementById(id);
-    if (el) el.textContent = label || '';
-  });
-}
-
-function updateSyncUI() {
-  const hasPat = !!getGistPAT();
-  const topInd = document.getElementById('sync-indicator');
-  if (topInd) topInd.style.display = hasPat ? '' : 'none';
-  if (!hasPat) setSyncStatus('none', '未配置');
-}
-
-// ══════════════════════════════════════════════════
-//  EXTENSION DOWNLOAD
-// ══════════════════════════════════════════════════
-function downloadExtension() {
-  toast('📦 扩展包正在生成...');
-  // Build a minimal extension zip manifest in JSON and offer download as JSON
-  const manifest = {
-    manifest_version: 3,
-    name: 'MeetPilot',
-    version: '1.0',
-    description: '智能会议助手 - 一键开始录音',
-    action: { default_popup: 'popup.html', default_icon: { '48': 'icon.png' } },
-    permissions: ['activeTab', 'storage'],
-    host_permissions: ['https://meet-pilot.github.io/*']
-  };
-  const popup = `<!DOCTYPE html><html><head><meta charset="UTF-8"><style>
-body{width:220px;padding:16px;font-family:system-ui;background:#F0F4F8}
-h2{font-size:14px;font-weight:800;margin-bottom:12px;color:#1A202C}
-a{display:block;padding:9px 14px;background:#6366F1;color:#fff;border-radius:8px;text-align:center;text-decoration:none;font-size:13px;font-weight:700;margin-bottom:8px}
-a:hover{filter:brightness(1.1)}
-p{font-size:11px;color:#718096;text-align:center}
-</style></head><body>
-<h2>🎯 MeetPilot</h2>
-<a href="https://meet-pilot.github.io" target="_blank">🚀 打开会议助手</a>
-<a href="https://meet-pilot.github.io#room" target="_blank">🎙 直接进入会议室</a>
-<p>在会议室页面点击大按钮开始录音</p>
-</body></html>`;
-
-  // Create a simple "extension info" text file since we can't create a real zip
-  const info = `MeetPilot Chrome 扩展安装指南\n\n1. 在 Chrome 地址栏输入: chrome://extensions\n2. 开启右上角"开发者模式"\n3. 点击"加载已解压的扩展程序"\n4. 选择包含以下文件的文件夹\n\n== manifest.json ==\n${JSON.stringify(manifest,null,2)}\n\n== popup.html ==\n${popup}\n\n说明：将以上两个文件保存到同一文件夹，然后在 Chrome 扩展管理器中加载即可。`;
-  const a = document.createElement('a');
-  a.href = URL.createObjectURL(new Blob([info],{type:'text/plain;charset=utf-8'}));
-  a.download = 'meetpilot-extension-guide.txt';
-  a.click();
-  setTimeout(()=>toast('✅ 安装指南已下载，按指引操作'),500);
-}
-
-// ══════════════════════════════════════════════════
-//  STATS & LISTS
-// ══════════════════════════════════════════════════
-function updateStats() {
-  document.getElementById('stat-total').textContent = S.meetings.length;
-  const totalMins = S.meetings.reduce((s,m) => s+(m.endTime?Math.round((m.endTime-m.startTime)/60000):0), 0);
-  document.getElementById('stat-hours').textContent = (Math.round(totalMins/60*10)/10)+'h';
-  const totalAc = S.meetings.reduce((s,m) => s+(m.actions||[]).length, 0);
-  document.getElementById('stat-actions').textContent = totalAc;
-  const totalTx = S.meetings.reduce((s,m) => s+(m.transcript?.length||0), 0);
-  document.getElementById('stat-transcripts').textContent = totalTx;
-}
-
-function renderRecent() {
-  const el = document.getElementById('recent-list');
-  const list = S.meetings.slice(0,5);
-  if (!list.length) {
-    el.innerHTML = '<div class="empty"><div class="empty-ico">🎙</div><p>还没有会议记录<br>点击"开始新会议"创建第一条</p></div>';
-    return;
-  }
-  el.innerHTML = '<div class="meeting-list">' + list.map(mItemHTML).join('') + '</div>';
-}
-
-function mItemHTML(m) {
-  const dur = m.endTime ? Math.round((m.endTime-m.startTime)/60000) : null;
-  const dt = new Date(m.startTime).toLocaleDateString('zh-CN',{month:'2-digit',day:'2-digit'});
-  const ac = (m.actions||[]).filter(a=>!a.done).length;
-  return `<div class="m-item" onclick="viewMeeting(${m.id})">
-    <div class="m-ico" style="background:var(--accent-dim)">📋</div>
-    <div class="m-info">
-      <div class="m-title">${m.title}</div>
-      <div class="m-meta">${dt}${dur?' · '+dur+'分钟':''}${m.transcript?.length?' · '+m.transcript.length+'条转录':''}${ac?' · ⚡'+ac+'项待办':''}</div>
-    </div>
-    ${dur?`<div class="m-dur">${dur}min</div>`:''}
-  </div>`;
-}
-
-// ══════════════════════════════════════════════════
-//  HISTORY
-// ══════════════════════════════════════════════════
-let histFilt = 'all';
-function setFilt(f, btn) {
-  histFilt = f;
-  document.querySelectorAll('.filt').forEach(b=>b.classList.remove('active'));
-  btn.classList.add('active');
-  renderHist();
-}
+// ── 历史记录 ──
 function renderHist() {
-  const q = (document.getElementById('hist-search')?.value||'').toLowerCase();
-  let list = S.meetings;
-  if (q) list = list.filter(m => m.title.toLowerCase().includes(q) ||
-    (m.transcript||[]).some(t => t.text.toLowerCase().includes(q)));
-  const el = document.getElementById('hist-list');
-  if (!list.length) {
-    el.innerHTML = '<div class="empty"><div class="empty-ico">📋</div><p>没有匹配的会议记录</p></div>';
+  const list = document.getElementById('hist-list');
+  const clearBtn = document.getElementById('clear-all-btn');
+  if (!S.meetings.length) {
+    list.innerHTML = `<div class="empty-state">
+      <div class="empty-ico">📋</div>
+      <p style="font-weight:600;color:var(--text0)">暂无会议记录</p>
+      <p style="font-size:13px;margin-top:6px">前往「会议室」录音后保存即可在此查看</p>
+    </div>`;
+    clearBtn.style.display = 'none';
     return;
   }
-  el.innerHTML = '<div class="meeting-list">' + list.map(m => {
-    const dur = m.endTime ? Math.round((m.endTime-m.startTime)/60000) : null;
-    const dt = new Date(m.startTime).toLocaleString('zh-CN',{year:'numeric',month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
-    const txCount = (m.transcript||[]).length;
-    const isActive = !m.endTime;
-    const badge = isActive
-      ? `<span style="font-size:11px;padding:2px 8px;border-radius:99px;background:rgba(16,185,129,.12);color:var(--success);font-weight:700;margin-left:6px">进行中</span>`
-      : (txCount ? `<span style="font-size:11px;color:var(--text3);margin-left:6px">${txCount} 条转录</span>` : '');
+  clearBtn.style.display = '';
+  list.innerHTML = S.meetings.map(m => {
+    const dt = new Date(m.savedAt).toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+    const preview = (m.text || '').replace(/\n/g, ' ').slice(0, 55);
     return `<div class="m-item">
-      <div class="m-ico" style="background:var(--accent-dim)">${isActive?'🔴':'📋'}</div>
-      <div class="m-info" onclick="viewMeeting(${m.id})" style="cursor:pointer;flex:1;min-width:0">
-        <div class="m-title">${m.title}${badge}</div>
-        <div class="m-meta">${dt}${dur?' · '+dur+'分钟':''}</div>
+      <div class="m-info" onclick="viewMeeting(${m.id})">
+        <div class="m-title">${escHtml(m.title)}</div>
+        <div class="m-meta">${dt}${preview ? ' · ' + escHtml(preview) + '...' : ''}</div>
       </div>
-      <div style="display:flex;gap:6px;flex-shrink:0;align-items:center">
-        <button class="btn btn-secondary btn-sm" title="继续编辑" onclick="resumeMeeting(${m.id})">✏️ 继续</button>
-        <button class="btn btn-secondary btn-sm" onclick="exportById(${m.id},'markdown')">📥</button>
-        <button class="btn btn-danger btn-sm" onclick="delMeeting(${m.id})">🗑</button>
+      <div style="display:flex;gap:6px;flex-shrink:0">
+        <button class="btn btn-secondary btn-sm" onclick="exportById(${m.id})" title="导出为文本">📥</button>
+        <button class="btn btn-danger btn-sm" onclick="delMeeting(${m.id})" title="删除">🗑</button>
       </div>
     </div>`;
-  }).join('') + '</div>';
+  }).join('');
 }
 
 function viewMeeting(id) {
   const m = S.meetings.find(x => x.id === id);
   if (!m) return;
-  if (!m.summary) m.summary = buildSummary(m);
-  viewingId = id;
-  renderSummary(m);
-  document.getElementById('sum-export-btn').onclick = () => exportById(id, 'markdown');
-  nav('summary');
+  _viewingId = id;
+  document.getElementById('hist-list-wrap').style.display = 'none';
+  document.getElementById('hist-detail').style.display = '';
+  document.getElementById('detail-title').textContent = m.title;
+  const dt = new Date(m.savedAt).toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+  document.getElementById('detail-meta').textContent = '保存时间：' + dt;
+  document.getElementById('detail-content').textContent = m.text || '（无内容）';
 }
 
-function resumeMeeting(id) {
-  const m = S.meetings.find(x => x.id === id);
-  if (!m) return;
-  // Save current meeting if active
-  if (S.meeting && S.meeting.id !== id) {
-    S.meeting.notes = document.getElementById('room-notes')?.value || S.meeting.notes;
-    const ci = S.meetings.findIndex(x => x.id === S.meeting.id);
-    if (ci >= 0) S.meetings[ci] = S.meeting; else S.meetings.unshift(S.meeting);
-  }
-  S.meeting = m;
-
-  // Restore header
-  document.getElementById('room-title').textContent = m.title;
-  const dt = new Date(m.startTime).toLocaleDateString('zh-CN',{month:'2-digit',day:'2-digit'});
-  document.getElementById('room-badge').textContent = '📅 ' + dt;
-
-  // Restore notes & code
-  document.getElementById('room-notes').value = m.notes || '';
-  const codeEl = document.getElementById('room-code');
-  if (codeEl) codeEl.value = m.code || '';
-
-  // Restore action items
-  const actWrap = document.getElementById('actions-list');
-  if (actWrap) {
-    actWrap.innerHTML = '';
-    (m.actions || []).forEach(a => {
-      const d = document.createElement('div');
-      d.className = 'action-item' + (a.done ? ' done' : '');
-      d.innerHTML = `<input type="checkbox" ${a.done?'checked':''} onchange="toggleAction(this,${a.id})">
-        <span class="action-text" contenteditable="true" onblur="updateAction(this,${a.id})">${a.text.replace(/</g,'&lt;').replace(/>/g,'&gt;')}</span>
-        <button class="action-del" onclick="delAction(${a.id})">✕</button>`;
-      actWrap.appendChild(d);
-    });
-  }
-
-  // Replay transcript into live feed (most recent on top)
-  const feed = document.getElementById('tx-feed');
-  if (feed) {
-    feed.innerHTML = '<div class="tx-live" id="tx-live"></div>';
-    const txItems = (m.transcript || []).slice();
-    // Show up to 60 items to avoid overload
-    txItems.slice(-60).forEach(item => {
-      const t = item.time ? new Date(item.time).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',second:'2-digit'}) : '--:--:--';
-      const safeText = (item.text||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-      const spkIdx = item.spkId != null ? parseInt(item.spkId) % 5 : null;
-      const spkHtml = spkIdx != null ? `<span class="tx-spk tx-spk-${spkIdx}">说话人${spkIdx+1}</span>` : '';
-      const el = document.createElement('div');
-      el.className = 'tx-item final';
-      el.innerHTML = `<div class="tx-item-row"><input type="checkbox" class="tx-check" onchange="txToggleSelect(this)"><div class="tx-time">${spkHtml}${t}</div><span class="tx-insert-btn" onclick="insertTxToNotes(this)">插入笔记 ↗</span></div><span class="tx-body" onclick="txBodyClick(event,this)">${safeText}</span>`;
-      feed.insertBefore(el, feed.firstChild);
-    });
-  }
-
-  // Replay uploaded transcript into upload feed
-  const uploadFeed = document.getElementById('tx-upload-feed');
-  if (uploadFeed) {
-    const uploadTx = (m.transcript || []).filter(t => t.source === 'upload');
-    if (uploadTx.length) {
-      uploadFeed.innerHTML = '';
-      uploadFeed.style.display = 'flex';
-      uploadTx.slice(-60).forEach(item => {
-        const t = item.time ? new Date(item.time).toLocaleTimeString('zh-CN',{hour:'2-digit',minute:'2-digit',second:'2-digit'}) : '--:--:--';
-        const safeText = (item.text||'').replace(/</g,'&lt;').replace(/>/g,'&gt;');
-        const spkIdx = item.spkId != null ? parseInt(item.spkId) % 5 : null;
-        const spkHtml = spkIdx != null ? `<span class="tx-spk tx-spk-${spkIdx}">说话人${spkIdx+1}</span>` : '';
-        const el = document.createElement('div');
-        el.className = 'tx-item final';
-        el.innerHTML = `<div class="tx-item-row"><input type="checkbox" class="tx-check" onchange="txToggleSelect(this)"><div class="tx-time">${spkHtml}${t}</div><span class="tx-insert-btn" onclick="insertTxToNotes(this)">插入笔记 ↗</span></div><span class="tx-body" onclick="txBodyClick(event,this)">${safeText}</span>`;
-        uploadFeed.appendChild(el);
-      });
-      // Switch to upload tab to show the transcripts
-      const uploadBtn = document.getElementById('txmode-upload');
-      if (uploadBtn) switchTxMode('upload', uploadBtn);
-    } else {
-      uploadFeed.style.display = 'none';
-    }
-  }
-
-  // Timer — let nav('room') → ensureTimer() handle it
-  clearInterval(S.timerInterval);
-  S.timerInterval = null;
-
-  setCodeMode(false);
-  document.getElementById('code-mode-toggle').style.display = '';
-  checkSpeech();
-  nav('room');
-  toast('📋 已载入：' + m.title);
+function closeDetail() {
+  document.getElementById('hist-list-wrap').style.display = '';
+  document.getElementById('hist-detail').style.display = 'none';
+  _viewingId = null;
 }
 
 function delMeeting(id) {
-  if (!confirm('删除这条会议记录？')) return;
+  if (!confirm('删除这条会议记录？删除后不可恢复。')) return;
   S.meetings = S.meetings.filter(m => m.id !== id);
-  saveData(); updateStats(); renderHist(); renderRecent();
+  saveData();
+  renderHist();
+  toast('已删除');
 }
 
 function clearAll() {
-  if (!confirm('清空所有会议记录？不可恢复。')) return;
+  if (!confirm('清空所有会议记录？此操作不可恢复。')) return;
   S.meetings = [];
-  saveData(); updateStats(); renderRecent();
-  toast('已清空所有数据');
+  saveData();
+  renderHist();
+  toast('已清空所有记录');
 }
 
-// ══════════════════════════════════════════════════
-//  TOAST
-// ══════════════════════════════════════════════════
+function exportById(id) {
+  const m = S.meetings.find(x => x.id === id);
+  if (!m) return;
+  const dt = new Date(m.savedAt).toLocaleString('zh-CN');
+  downloadText(`${m.title}\n保存时间：${dt}\n\n${m.text}`, m.title.replace(/[\\/:*?"<>|]/g, '_') + '.txt');
+}
+
+function exportDetail() {
+  if (_viewingId) exportById(_viewingId);
+}
+
+// ── 工具函数 ──
+function escHtml(s) {
+  return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;');
+}
+
+function fmtDate(d) {
+  return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+}
+
+function downloadText(text, filename) {
+  const blob = new Blob([text], { type: 'text/plain;charset=utf-8' });
+  const a = document.createElement('a');
+  a.href = URL.createObjectURL(blob);
+  a.download = filename;
+  a.click();
+  URL.revokeObjectURL(a.href);
+}
+
 function toast(msg) {
-  document.querySelectorAll('.toast').forEach(el=>el.remove());
+  document.querySelectorAll('.toast').forEach(el => el.remove());
   const el = document.createElement('div');
   el.className = 'toast';
   el.textContent = msg;
   document.body.appendChild(el);
-  setTimeout(() => el.remove(), 2500);
+  setTimeout(() => el.remove(), 2600);
 }
-
-
-// ══════════════════════════════════════════════════
-//  AUDIO UPLOAD & PLAYBACK TRANSCRIPTION
-// ══════════════════════════════════════════════════
-let audioObjectURL = null;
-
-function switchTxMode() { /* transcript panel removed — no-op */ }
-
-function handleAudioDrop(e) {
-  e.preventDefault();
-  document.getElementById('audio-dropzone').classList.remove('drag-over');
-  const file = e.dataTransfer.files[0];
-  if (file && file.type.startsWith('audio/')) handleAudioFile(file);
-  else toast('请拖入音频文件（MP3/WAV/M4A 等）');
-}
-
-let _currentAudioFile = null;
-
-function handleAudioFile(file) {
-  if (!file) return;
-  _currentAudioFile = file;
-  if (audioObjectURL) URL.revokeObjectURL(audioObjectURL);
-  audioObjectURL = URL.createObjectURL(file);
-
-  const player = document.getElementById('audio-player');
-  player.src = audioObjectURL;
-  document.getElementById('audio-filename').textContent = file.name;
-  document.getElementById('audio-dropzone').style.display = 'none';
-  document.getElementById('audio-player-wrap').style.display = '';
-  document.getElementById('retranscribe-btn').style.display = 'none';
-  // Write file header into notes
-  const notes = document.getElementById('room-notes');
-  if (notes) {
-    const now = new Date().toLocaleString('zh-CN',{month:'2-digit',day:'2-digit',hour:'2-digit',minute:'2-digit'});
-    if (notes.value && !notes.value.endsWith('\n')) notes.value += '\n';
-    notes.value += `\n--- 📁 ${file.name} (${now}) ---\n`;
-    notes.scrollTop = notes.scrollHeight;
-  }
-  // Auto-start Whisper transcription immediately
-  startWhisperTranscribe(file);
-}
-
-async function startWhisperTranscribe(file) {
-  const apiKey = localStorage.getItem('mp3_speech_api_key');
-  if (apiKey) {
-    await startCloudTranscribe(file, apiKey);
-  } else {
-    const el = document.getElementById('whisper-status');
-    if (el) el.innerHTML = '⚠️ 尚未配置语音识别 API Key<br><span style="font-size:12px;color:var(--text2)">请前往 <b>设置 → 语音识别</b> 填写 API Key 后点击"🔄 重新转写"<br>推荐免费使用 <a href="https://console.groq.com" target="_blank" style="color:var(--accent)">Groq API</a>（注册即得，速度极快）</span>';
-    document.getElementById('retranscribe-btn').style.display = '';
-  }
-}
-
-// Resolve actual audio file duration (used to set meeting timer for uploads)
-function getAudioDuration(file) {
-  return new Promise(resolve => {
-    const url = URL.createObjectURL(file);
-    const audio = new Audio();
-    audio.addEventListener('loadedmetadata', () => { URL.revokeObjectURL(url); resolve(audio.duration || 0); });
-    audio.addEventListener('error', () => { URL.revokeObjectURL(url); resolve(0); });
-    audio.src = url;
-  });
-}
-
-async function startCloudTranscribe(file, apiKey) {
-  const setStatus = (msg) => {
-    const el = document.getElementById('whisper-status');
-    if (el) el.textContent = msg;
-  };
-  document.getElementById('retranscribe-btn').style.display = 'none';
-  document.getElementById('whisper-progress-wrap').style.display = 'none';
-  const liveEl = document.getElementById('tx-upload-live');
-  if (liveEl) liveEl.textContent = '';
-
-  // ── 先取音频时长，用于会议计时器 ──
-  const audioDurSec = await getAudioDuration(file);
-  if (audioDurSec > 0 && S.meeting) {
-    S.meeting.audioDuration = Math.round(audioDurSec * 1000);
-    // Backdate startTime so the timer shows the recording's actual duration
-    S.meeting.startTime = Date.now() - S.meeting.audioDuration;
-    clearInterval(S.timerInterval);
-    S.timerInterval = null;
-    ensureTimer();  // restarts with correct elapsed
-  }
-
-  const endpoint = localStorage.getItem('mp3_speech_api_endpoint')
-    || 'https://api.openai.com/v1/audio/transcriptions';
-  // Auto-select model name based on provider
-  const modelName = endpoint.includes('siliconflow') ? 'FunAudioLLM/SenseVoiceSmall' : 'whisper-1';
-  const langMap = { 'zh-CN': 'zh', 'zh-TW': 'zh', 'en-US': 'en', 'ja-JP': 'ja' };
-
-  try {
-    setStatus('☁️ 上传音频中，请稍候...');
-    const formData = new FormData();
-    formData.append('file', file, file.name);
-    formData.append('model', modelName);
-    formData.append('language', langMap[S.settings.lang] || 'zh');
-    formData.append('response_format', 'verbose_json');
-    if (!endpoint.includes('siliconflow')) {
-      formData.append('timestamp_granularities[]', 'segment');
-    }
-
-    const res = await fetch(endpoint, {
-      method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + apiKey },
-      body: formData
-    });
-
-    if (!res.ok) {
-      const errData = await res.json().catch(() => ({}));
-      throw new Error(errData.error?.message || `HTTP ${res.status}`);
-    }
-
-    setStatus('🔍 解析结果...');
-    const result = await res.json();
-    const rawSegments = result.segments?.length ? result.segments : (result.text ? [{ text: result.text }] : []);
-
-    // Split long segments into sentences for better usability
-    const segments = [];
-    rawSegments.forEach(seg => {
-      const cleaned = (seg.text || '').replace(/<\|[^|]*\|>/g, '').trim();
-      if (cleaned.length < 2) return;
-      // If segment is very long (>120 chars), split by sentence punctuation
-      if (cleaned.length > 120) {
-        const parts = cleaned.split(/(?<=[。！？；\n])\s*/).filter(p => p.trim().length > 1);
-        parts.forEach(p => segments.push({ ...seg, text: p.trim() }));
-      } else {
-        segments.push({ ...seg, text: cleaned });
-      }
-    });
-
-    if (segments.length > 0) {
-      segments.forEach(seg => {
-        const text = seg.text;
-        const spkId = seg.spk_id ?? seg.speaker ?? null;
-        addTxToFeed(text, 'tx-upload-feed', null, spkId); // addTx内部已push transcript
-        if (S.settings.autoAction !== false) autoDetect(text);
-      });
-      setStatus(`✅ 云端转写完成，共 ${segments.length} 段`);
-      appendTranscriptToNotes(segments.map(s => s.text));
-      if (S.meeting) saveData();
-      // 自动触发 AI 智能整理（议程 + 行动项）
-      await aiSmartNotes('auto');
-    } else {
-      setStatus('⚠️ 未识别到内容，请检查音频文件是否含有语音');
-    }
-  } catch (err) {
-    console.error('Cloud transcribe error:', err);
-    setStatus('❌ 转写失败：' + err.message);
-  }
-  document.getElementById('retranscribe-btn').style.display = '';
-}
-
-async function startLocalWhisper(file) {
-  const setStatus = (msg) => {
-    const el = document.getElementById('whisper-status');
-    if (el) el.textContent = msg;
-  };
-  const setProgress = (pct, label) => {
-    const wrap = document.getElementById('whisper-progress-wrap');
-    if (wrap) wrap.style.display = (pct >= 0 && pct < 100) ? '' : 'none';
-    const bar = document.getElementById('whisper-bar');
-    if (bar) bar.style.width = pct + '%';
-    const lbl = document.getElementById('whisper-progress-label');
-    if (lbl && label) lbl.textContent = label;
-  };
-  document.getElementById('retranscribe-btn').style.display = 'none';
-  const liveEl = document.getElementById('tx-upload-live');
-  if (liveEl) liveEl.textContent = '';
-
-  try {
-    if (!window._whisperPipe) {
-      setStatus('⏳ 首次使用，正在加载本地模型（约 74MB，加载后自动缓存）...\n💡 建议在设置中配置云端 API Key，速度更快');
-      setProgress(0, '准备下载...');
-      const { pipeline, env } = await import('https://cdn.jsdelivr.net/npm/@xenova/transformers@2.17.2');
-      env.allowLocalModels = false;
-      window._whisperPipe = await pipeline(
-        'automatic-speech-recognition',
-        'Xenova/whisper-base',
-        {
-          progress_callback: (info) => {
-            if (info.status === 'downloading' && info.total) {
-              const pct = Math.round((info.loaded / info.total) * 100);
-              setProgress(pct, `下载中 ${pct}%（${(info.loaded/1024/1024).toFixed(1)}/${(info.total/1024/1024).toFixed(1)} MB）`);
-            } else if (info.status === 'loading') {
-              setStatus('⚙️ 模型加载中，请稍候...');
-              setProgress(99, '初始化模型...');
-            }
-          }
-        }
-      );
-    }
-
-    setProgress(100, '');
-    setStatus('🎵 正在解码音频...');
-    const arrayBuffer = await file.arrayBuffer();
-    const audioCtx = new (window.AudioContext || window.webkitAudioContext)({ sampleRate: 16000 });
-    const decoded = await audioCtx.decodeAudioData(arrayBuffer.slice(0));
-    audioCtx.close();
-    const audio = decoded.getChannelData(0);
-
-    setStatus('🤖 本地 AI 转写中，请稍候...');
-    const langMap = { 'zh-CN': 'chinese', 'zh-TW': 'chinese', 'en-US': 'english', 'ja-JP': 'japanese' };
-    const result = await window._whisperPipe(audio, {
-      language: langMap[S.settings.lang] || 'chinese',
-      task: 'transcribe',
-      chunk_length_s: 30,
-      stride_length_s: 5,
-      return_timestamps: true
-    });
-
-    const chunks = (result.chunks || []).filter(ch => ch.text.trim().length >= 2);
-    if (chunks.length > 0) {
-      chunks.forEach(ch => {
-        const text = ch.text.trim();
-        addTxToFeed(text, 'tx-upload-feed', null); // addTx内部已push transcript
-        if (S.settings.autoAction !== false) autoDetect(text);
-      });
-      setStatus(`✅ 转写完成，共识别 ${chunks.length} 段文字`);
-      appendTranscriptToNotes(chunks.map(c => c.text.trim()));
-      if (S.meeting) saveData();
-      await aiSmartNotes('auto');
-    } else {
-      setStatus('⚠️ 未识别到内容，请检查音频文件是否含有语音');
-    }
-  } catch (err) {
-    console.error('Whisper error:', err);
-    setStatus('❌ 转写失败：' + err.message);
-  }
-  document.getElementById('retranscribe-btn').style.display = '';
-}
-
-function retranscribe() {
-  if (_currentAudioFile) startWhisperTranscribe(_currentAudioFile);
-}
-
-function resetAudioUpload() {
-  const player = document.getElementById('audio-player');
-  player.pause(); player.src = '';
-  if (audioObjectURL) { URL.revokeObjectURL(audioObjectURL); audioObjectURL = null; }
-  document.getElementById('audio-file-input').value = '';
-  document.getElementById('audio-dropzone').style.display = '';
-  document.getElementById('audio-player-wrap').style.display = 'none';
-  document.getElementById('whisper-status').textContent = '';
-}
-
-
-// Stub kept for call-sites; routes to addTx which writes to notes
-function addTxToFeed(text, feedId, liveId, spkId) {
-  addTx(text, true, spkId ?? null);
-}
-
-// ══════════════════════════════════════════════════
-//  NOTES TOOLBAR ACTIONS
-// ══════════════════════════════════════════════════
-let _notesHistory = [];
-
-function notesSnapshot() {
-  const ta = document.getElementById('room-notes');
-  _notesHistory.push({ v: ta.value, s: ta.selectionStart });
-  if (_notesHistory.length > 50) _notesHistory.shift();
-}
-
-function notesUndo() {
-  if (!_notesHistory.length) return toast('没有可撤销的内容');
-  const snap = _notesHistory.pop();
-  const ta = document.getElementById('room-notes');
-  ta.value = snap.v;
-  ta.selectionStart = ta.selectionEnd = snap.s;
-  ta.focus();
-}
-
-function notesClear() {
-  const ta = document.getElementById('room-notes');
-  if (!ta.value.trim()) return;
-  if (!confirm('确认清空笔记？此操作可通过"撤销"恢复。')) return;
-  notesSnapshot();
-  ta.value = '';
-  ta.focus();
-  toast('笔记已清空，可点击"撤销"恢复');
-}
-
-function notesInsertHr() {
-  const ta = document.getElementById('room-notes');
-  notesSnapshot();
-  const cur = ta.selectionStart;
-  const ins = '\n\n---\n\n';
-  ta.value = ta.value.slice(0, cur) + ins + ta.value.slice(cur);
-  ta.selectionStart = ta.selectionEnd = cur + ins.length;
-  ta.focus();
-}
-
-function notesInsertTime() {
-  const ta = document.getElementById('room-notes');
-  notesSnapshot();
-  const cur = ta.selectionStart;
-  const now = new Date().toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' });
-  const ins = `\n**[${now}]** `;
-  ta.value = ta.value.slice(0, cur) + ins + ta.value.slice(cur);
-  ta.selectionStart = ta.selectionEnd = cur + ins.length;
-  ta.focus();
-}
-
-// ── segmentTitle: 从段落 items 选出内容密度最高的句子作为主旨标题 ──
-function segmentTitle(items) {
-  // 单字功能词（出现在此集合的字，在句子打分时扣分）
-  const STOP_CH = new Set('的了在是我有和就不都也很到说要去你会着好这那它他她但而以为对从把被让于给啊哦嗯呢吧嘛么吗哇哎嘿唉哟');
-  // 短语级停用词（包含这些词组时额外扣分）
-  const STOP_BI = new Set([
-    '就是','然后','所以','因为','但是','如果','其实','这个','那个','什么','怎么',
-    '可以','已经','还是','一个','一些','没有','现在','时候','可能','应该','需要',
-    '知道','觉得','感觉','很多','一下','这样','那样','一直','一起','一定',
-    '大家','主要','其他','另外','比较','有些','有点','有时','对对','嗯嗯','哈哈',
-    '我们','你们','他们','就行','好的','对的','是的','不是','还有','以及',
-  ]);
-
-  const text = items.map(t => t.text.trim()).join('。');
-  // 切句（按标点 + 停顿词切分）
-  const sents = text.split(/[。！？，,\n]+/).map(s => s.trim())
-    .filter(s => s.replace(/[^\u4e00-\u9fff]/g, '').length >= 4); // 至少4个汉字
-
-  function score(s) {
-    let sc = 0;
-    const cjk = [...s].filter(c => /[\u4e00-\u9fff]/.test(c));
-    for (const c of cjk) sc += STOP_CH.has(c) ? -1 : 2;
-    for (let i = 0; i < s.length - 1; i++) {
-      if (STOP_BI.has(s.slice(i, i + 2))) sc -= 3;
-    }
-    // 奖励适中长度（8~18字最佳）
-    if (cjk.length >= 5 && cjk.length <= 14) sc += 4;
-    return sc;
-  }
-
-  if (sents.length) {
-    const best = sents.reduce((a, b) => score(a) >= score(b) ? a : b);
-    // 去掉开头的填充词（嗯/啊/哦/对/就是…）
-    const clean = best.replace(/^[嗯啊哦哇哎对好是那这就然后]+[，,]?\s*/u, '');
-    const out = clean || best;
-    return out.length > 20 ? out.slice(0, 18) + '…' : out;
-  }
-
-  // 兜底：去除所有停用字后取前16字
-  const stripped = [...text].filter(c => /[\u4e00-\u9fff]/.test(c) && !STOP_CH.has(c)).join('');
-  return stripped.slice(0, 16) || text.slice(0, 16) || '（无内容）';
-}
-
-// ── smartNotes: entry point — uses AI if API key available, else local ──
-function smartNotes() { aiSmartNotes('manual'); }
-
-// ── aiSmartNotes: calls chat completions → actions panel only (agenda handled by autoSyncAgenda) ──
-async function aiSmartNotes(triggerSource) {
-  let tx = (S.meeting?.transcript || []).filter(t => t.text?.trim().length > 2);
-  // 兜底：transcript为空时从notes textarea读内容
-  if (!tx.length) {
-    const notesVal = document.getElementById('room-notes')?.value?.trim();
-    if (notesVal && notesVal.length > 10) {
-      tx = notesVal.split('\n').filter(l => l.trim().length > 2).map(l => ({ text: l.trim() }));
-    }
-  }
-  if (!tx.length) {
-    if (triggerSource === 'manual') toast('暂无转录内容，请先录音或上传录音');
-    return;
-  }
-  const apiKey = localStorage.getItem('mp3_speech_api_key');
-  if (!apiKey) { smartNotesLocal(); return; }
-
-  const btn = document.getElementById('smart-notes-btn');
-  if (btn) { btn.disabled = true; btn.textContent = '⏳ AI 整理中...'; }
-
-  const whisperEp = localStorage.getItem('mp3_speech_api_endpoint') || 'https://api.openai.com/v1/audio/transcriptions';
-  const chatEp = whisperEp.replace(/\/audio\/transcriptions.*$/, '/chat/completions');
-  const model = whisperEp.includes('siliconflow') ? 'Qwen/Qwen2.5-7B-Instruct' : 'gpt-4o-mini';
-
-  const fullText = tx.map(t => {
-    const spk = t.spkId != null ? `[说话人${parseInt(t.spkId)+1}] ` : '';
-    return spk + t.text.trim();
-  }).join('\n').slice(0, 4000);
-
-  // 只提取行动项，议程由 autoSyncAgenda 负责不覆盖
-  const prompt = `你是会议记录助手。从会议转录中提取行动项。规则：
-- 必须有明确的动作动词（如：确认、跟进、整理、提交、联系、安排、完成、调研）
-- 过滤掉模糊表达、感叹句、纯陈述句
-- 每条行动项简洁直接，5-40字
-- 最多提取10条，宁缺毋滥
-
-转录内容：
-${fullText}
-
-只返回 JSON，不要解释：
-{"actions":["行动项1","行动项2"]}`;
-
-  try {
-    const res = await fetch(chatEp, {
-      method: 'POST',
-      headers: { 'Authorization': 'Bearer ' + apiKey, 'Content-Type': 'application/json' },
-      body: JSON.stringify({ model, messages: [{ role: 'user', content: prompt }], temperature: 0.2, max_tokens: 500 })
-    });
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const data = await res.json();
-    const raw = data.choices?.[0]?.message?.content || '';
-    const m = raw.match(/\{[\s\S]*\}/);
-    if (!m) throw new Error('AI 返回格式错误');
-    const parsed = JSON.parse(m[0]);
-
-    // ── 更新行动项（替换 AI 旧项，保留手动项），不碰议程 ──
-    const wrap = document.getElementById('actions-wrap');
-    wrap.querySelectorAll('.ac-item[data-auto="1"]').forEach(el => el.remove());
-    if (parsed.actions?.length) {
-      const frag = document.createDocumentFragment();
-      parsed.actions.forEach(text => {
-        const div = document.createElement('div');
-        div.className = 'ac-item';
-        div.dataset.auto = '1';
-        div.innerHTML = `<input type="checkbox"><span class="ac-text">${text}</span><span class="ac-del" onclick="this.parentElement.remove()">×</span>`;
-        div.querySelector('input').addEventListener('change', e => div.classList.toggle('done', e.target.checked));
-        frag.appendChild(div);
-      });
-      wrap.prepend(frag);
-      const badge = document.getElementById('auto-detected-count');
-      if (badge) { badge.textContent = `🤖 AI识别 ${parsed.actions.length} 条`; badge.style.display=''; }
-    }
-
-    if (S.meeting) {
-      S.meeting.actions = getActions();
-      saveData(); updateStats(); renderRecent(); renderHist();
-    }
-    toast(`✅ AI识别行动项 ${parsed.actions?.length||0} 条`);
-  } catch (err) {
-    console.warn('AI smart notes failed, falling back to local:', err.message);
-    smartNotesLocal();
-    if (triggerSource === 'manual') toast('AI整理失败，已用本地算法');
-  } finally {
-    // 无论成功失败都同步仪表盘
-    if (S.meeting) { saveData(); updateStats(); renderRecent(); renderHist(); }
-    if (btn) { btn.disabled = false; btn.textContent = '✨ 智能整理笔记'; }
-  }
-}
-
-// ── smartNotesLocal: local keyword-based fallback ──
-function smartNotesLocal() {
-  let tx = (S.meeting?.transcript || []).filter(t => t.text?.trim().length > 1);
-
-  // Fallback: parse notes textarea into pseudo-transcript
-  if (!tx.length) {
-    const ta = document.getElementById('room-notes');
-    const lines = (ta?.value || '').split('\n').map(l => l.trim())
-      .filter(l => l.length > 3 && !l.startsWith('---') && !l.startsWith('#') && !l.startsWith('['));
-    if (lines.length) tx = lines.map(text => ({ text, spkId: null }));
-  }
-
-  if (!tx.length) {
-    toast('暂无转录内容，请先录音或上传录音后再整理');
-    return;
-  }
-
-  const btn = document.getElementById('smart-notes-btn');
-  btn.disabled = true;
-  btn.textContent = '⏳ 整理中...';
-
-  // ── 1. 分段：按说话人切换 或 每 6 条一段 ──
-  const hasSpeaker = tx.some(t => t.spkId != null);
-  const segments = [];
-  if (hasSpeaker) {
-    let cur = { spk: tx[0].spkId, items: [tx[0]] };
-    for (let i = 1; i < tx.length; i++) {
-      if (tx[i].spkId !== cur.spk) { segments.push(cur); cur = { spk: tx[i].spkId, items: [tx[i]] }; }
-      else cur.items.push(tx[i]);
-    }
-    segments.push(cur);
-  } else {
-    const CHUNK = 6;
-    for (let i = 0; i < tx.length; i += CHUNK)
-      segments.push({ spk: null, items: tx.slice(i, i + CHUNK) });
-  }
-
-  // ── 3. 行动项提取（严格模式）──
-  // 必须同时包含「主体+动作/截止」才采纳
-  const actionPatterns = [
-    /([^\s，。]{2,8})(?:需要|要|负责|去|来|请|应该)([^，。！？]{4,})/g,
-    /([^\s，。]{2,8})(?:跟进|确认|调研|整理|提交|完成|输出|梳理|准备|协调|安排|联系|落实)([^，。！？]{0,20})/g,
-    /下一步[：:]?\s*([^，。！？\n]{5,40})/g,
-    /action\s*item[：:]?\s*([^，。！？\n]{5,40})/gi,
-    /待办[：:]?\s*([^，。！？\n]{5,40})/g,
-    /TODO[：:]?\s*([^，。！？\n]{5,40})/gi,
-  ];
-
-  const fullText = tx.map(t => t.text.trim()).join('。');
-  const rawActions = new Set();
-  for (const pat of actionPatterns) {
-    let m;
-    pat.lastIndex = 0;
-    while ((m = pat.exec(fullText)) !== null) {
-      const candidate = m[0].trim();
-      if (candidate.length >= 6 && candidate.length <= 60) rawActions.add(candidate);
-    }
-  }
-  // 额外：句子包含明确动词短语且≥8字
-  const verbKW = ['跟进','确认','调研','整理','提交','完成','输出','梳理','准备','协调','联系','落实','负责','安排'];
-  fullText.split(/[。！？\n]/).forEach(s => {
-    s = s.trim();
-    if (s.length >= 8 && s.length <= 60 && verbKW.some(k => s.includes(k))) rawActions.add(s);
-  });
-  const actions = [...rawActions].slice(0, 10);
-
-  // ── 4. 更新议程面板 ──
-  const ul = document.getElementById('room-agenda');
-  if (segments.length) {
-    ul.innerHTML = segments.map((seg, idx) => {
-      const label = seg.spk != null ? `说话人${parseInt(seg.spk)+1}·` : '';
-      const summary = label + segmentTitle(seg.items);
-      // Store first word of first item as noteref anchor
-      const noteref = encodeURIComponent(seg.items[0].text.trim().slice(0, 12));
-      return `<li class="agenda-item" data-noteref="${noteref}" onclick="agendaJump(this)">
-        <span class="ag-num">${idx+1}</span><span title="${summary}">${summary}</span>
-      </li>`;
-    }).join('');
-  } else {
-    ul.innerHTML = '<li style="font-size:12px;color:var(--text3);padding:6px 8px">暂无可分段内容</li>';
-  }
-
-  // ── 5. 更新行动项面板（替换自动识别部分，保留手动添加项）──
-  const wrap = document.getElementById('actions-wrap');
-  // Remove previously auto-generated items (data-auto="1"), keep manual ones
-  wrap.querySelectorAll('.ac-item[data-auto="1"]').forEach(el => el.remove());
-
-  if (actions.length) {
-    const frag = document.createDocumentFragment();
-    actions.forEach(text => {
-      const div = document.createElement('div');
-      div.className = 'ac-item';
-      div.dataset.auto = '1';
-      div.innerHTML = `<input type="checkbox"><span class="ac-text">${text}</span>`;
-      div.querySelector('input').addEventListener('change', e => {
-        div.classList.toggle('done', e.target.checked);
-      });
-      frag.appendChild(div);
-    });
-    wrap.prepend(frag);
-    const badge = document.getElementById('auto-detected-count');
-    if (badge) { badge.textContent = `🤖 自动识别 ${actions.length} 条`; badge.style.display = ''; }
-  }
-
-  btn.disabled = false;
-  btn.textContent = '✨ 智能整理笔记';
-  toast(`✅ 议程 ${segments.length} 段 · 行动项 ${actions.length} 条`);
-}
-
-// ── agendaJump: click agenda item → scroll notes + flash highlight ──
-function agendaJump(el) {
-  const ref = decodeURIComponent(el.dataset.noteref || '');
-  if (!ref) return;
-  const ta = document.getElementById('room-notes');
-  if (!ta) return;
-  const idx = ta.value.indexOf(ref);
-  if (idx < 0) { toast('对应纪要文本未找到'); return; }
-
-  // Scroll textarea to the matching position
-  // Measure line height to approximate scroll position
-  const lines = ta.value.slice(0, idx).split('\n');
-  const lineH = parseInt(getComputedStyle(ta).lineHeight) || 20;
-  ta.scrollTop = Math.max(0, (lines.length - 2)) * lineH;
-
-  // Highlight the agenda item briefly
-  el.classList.add('highlight');
-  setTimeout(() => el.classList.remove('highlight'), 1600);
-
-  // Flash the notes textarea
-  ta.classList.add('notes-flash');
-  setTimeout(() => ta.classList.remove('notes-flash'), 1700);
-}
-
-/// ── autoSyncAgenda: lightweight real-time agenda refresh after every N new lines ──
-let _autoSyncCount = 0;
-function autoSyncAgenda() {
-  _autoSyncCount++;
-  // Re-run every 8 new transcript entries, but only update agenda (skip actions)
-  if (_autoSyncCount % 8 !== 0) return;
-  const tx = (S.meeting?.transcript || []).filter(t => t.text?.trim().length > 1);
-  if (tx.length < 4) return;
-  const CHUNK = 6;
-  const hasSpeaker = tx.some(t => t.spkId != null);
-  const segments = [];
-  if (hasSpeaker) {
-    let cur = { spk: tx[0].spkId, items: [tx[0]] };
-    for (let i = 1; i < tx.length; i++) {
-      if (tx[i].spkId !== cur.spk) { segments.push(cur); cur = { spk: tx[i].spkId, items: [tx[i]] }; }
-      else cur.items.push(tx[i]);
-    }
-    segments.push(cur);
-  } else {
-    for (let i = 0; i < tx.length; i += CHUNK)
-      segments.push({ spk: null, items: tx.slice(i, i + CHUNK) });
-  }
-  const ul = document.getElementById('room-agenda');
-  if (!ul || !segments.length) return;
-  ul.innerHTML = segments.map((seg, idx) => {
-    const label = seg.spk != null ? `说话人${parseInt(seg.spk)+1}·` : '';
-    const summary = label + segmentTitle(seg.items);
-    const noteref = encodeURIComponent(seg.items[0].text.trim().slice(0, 12));
-    return `<li class="agenda-item" data-noteref="${noteref}" onclick="agendaJump(this)">
-      <span class="ag-num">${idx+1}</span><span title="${summary}">${summary}</span>
-    </li>`;
-  }).join('');
-}
-
-// ══════════════════════════════════════════════════
-//  TRANSCRIPT → NOTES (click-to-insert)
-// ══════════════════════════════════════════════════
-// ══════════════════════════════════════════════════
-//  TRANSCRIPT MULTI-SELECT & BATCH INSERT
-// ══════════════════════════════════════════════════
-function txToggleSelect(cb) {
-  const item = cb.closest('.tx-item');
-  item.classList.toggle('tx-selected', cb.checked);
-  txUpdateBatchBar();
-}
-
-function txBodyClick(e, bodyEl) {
-  // Clicking the text body toggles selection (unless user is selecting text)
-  if (window.getSelection().toString().trim()) return;
-  const item = bodyEl.closest('.tx-item');
-  const cb = item.querySelector('.tx-check');
-  cb.checked = !cb.checked;
-  item.classList.toggle('tx-selected', cb.checked);
-  txUpdateBatchBar();
-}
-
-function txUpdateBatchBar() {
-  const count = document.querySelectorAll('.tx-item.tx-selected').length;
-  const bar = document.getElementById('tx-batch-bar');
-  const countEl = document.getElementById('tx-batch-count');
-  if (count > 0) {
-    bar.classList.add('show');
-    countEl.textContent = `已选 ${count} 段`;
-  } else {
-    bar.classList.remove('show');
-  }
-}
-
-function txClearSelect() {
-  document.querySelectorAll('.tx-item.tx-selected').forEach(item => {
-    item.classList.remove('tx-selected');
-    const cb = item.querySelector('.tx-check');
-    if (cb) cb.checked = false;
-  });
-  txUpdateBatchBar();
-}
-
-function txBatchInsert() {
-  const items = document.querySelectorAll('.tx-item.tx-selected');
-  if (!items.length) return;
-  const notes = document.getElementById('room-notes');
-  let inserts = [];
-  items.forEach(item => {
-    const bodyEl = item.querySelector('.tx-body');
-    const timeEl = item.querySelector('.tx-time');
-    const spkEl  = item.querySelector('.tx-spk');
-    if (!bodyEl) return;
-    const text = bodyEl.textContent.trim();
-    const time = timeEl ? [...timeEl.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim() : '';
-    const spk  = spkEl ? spkEl.textContent.trim() : '';
-    const label = [spk, time].filter(Boolean).join(' ');
-    inserts.push(`> [${label}] ${text}`);
-  });
-  const block = '\n' + inserts.join('\n') + '\n';
-  const cursor = notes.selectionStart;
-  notes.value = notes.value.slice(0, cursor) + block + notes.value.slice(cursor);
-  notes.selectionStart = notes.selectionEnd = cursor + block.length;
-  notes.focus();
-  // Switch to notes tab
-  switchTab('notes', document.querySelector('.center-tabs button'));
-  toast(`已将 ${items.length} 段插入笔记`);
-  txClearSelect();
-}
-
-// Auto-append transcription result to notes after upload transcription
-// Called after upload transcription finishes — adds a trailing separator & switches to notes tab
-function appendTranscriptToNotes(texts) {
-  const notes = document.getElementById('room-notes');
-  if (!notes) return;
-  // Add end-of-file marker (content was already streamed in by addTx per-segment)
-  if (!notes.value.endsWith('\n')) notes.value += '\n';
-  toast(`✅ 转写完成，共 ${texts.length} 段，已写入笔记`);
-  switchTab('notes', document.querySelector('.center-tabs button'));
-  notes.scrollTop = notes.scrollHeight;
-}
-
-function insertTxToNotes(btn) {
-  const item = btn.closest('.tx-item');
-  const bodyEl = item?.querySelector('.tx-body');
-  const timeEl = item?.querySelector('.tx-time');
-  const spkEl  = item?.querySelector('.tx-spk');
-  if (!bodyEl) return;
-
-  // Use selected text if user highlighted something, else full paragraph
-  const sel = window.getSelection();
-  let text;
-  if (sel && sel.rangeCount > 0 && item.contains(sel.anchorNode) && sel.toString().trim()) {
-    text = sel.toString().trim();
-    sel.removeAllRanges();
-  } else {
-    text = bodyEl.textContent.trim();
-  }
-
-  const time = timeEl ? [...timeEl.childNodes].filter(n => n.nodeType === 3).map(n => n.textContent).join('').trim() : '';
-  const spk  = spkEl ? spkEl.textContent.trim() : '';
-  const label = [spk, time].filter(Boolean).join(' ');
-
-  const notes = document.getElementById('room-notes');
-  const cursor = notes.selectionStart;
-  const before = notes.value.substring(0, cursor);
-  const after  = notes.value.substring(cursor);
-  const insert = `\n> [${label}] ${text}\n`;
-  notes.value = before + insert + after;
-  notes.selectionStart = notes.selectionEnd = cursor + insert.length;
-  notes.focus();
-  item.classList.add('selected-for-note');
-  btn.textContent = '已插入 ✓';
-  btn.style.background = 'var(--success)';
-  setTimeout(() => {
-    item.classList.remove('selected-for-note');
-    btn.textContent = '插入笔记 ↗';
-    btn.style.background = '';
-  }, 1800);
-  toast('已插入笔记');
-}
-
-// ══════════════════════════════════════════════════
-//  GLOBAL DRAG-AND-DROP (anywhere in room section)
-// ══════════════════════════════════════════════════
-let dragEnterCount = 0;
-const overlay = () => document.getElementById('room-drop-overlay');
-
-document.addEventListener('dragenter', (e) => {
-  if (S.section !== 'room') return;
-  dragEnterCount++;
-  overlay()?.classList.add('active');
-});
-document.addEventListener('dragleave', (e) => {
-  if (S.section !== 'room') return;
-  // Only decrement when leaving to outside the window
-  if (e.relatedTarget === null) {
-    dragEnterCount = 0;
-    overlay()?.classList.remove('active');
-  } else {
-    dragEnterCount = Math.max(0, dragEnterCount - 1);
-    if (dragEnterCount === 0) overlay()?.classList.remove('active');
-  }
-});
-document.addEventListener('dragover', (e) => {
-  if (S.section !== 'room') return;
-  e.preventDefault();
-});
-document.addEventListener('drop', (e) => {
-  if (S.section !== 'room') return;
-  e.preventDefault();
-  dragEnterCount = 0;
-  overlay()?.classList.remove('active');
-  const file = e.dataTransfer?.files[0];
-  if (!file) return;
-  if (!file.type.startsWith('audio/')) {
-    toast('请拖入音频文件（MP3 / WAV / M4A 等）');
-    return;
-  }
-  // Switch to upload tab and load file
-  switchTxMode('upload', document.getElementById('txmode-upload'));
-  handleAudioFile(file);
-  toast('🎵 录音文件已加载，AI 转写即将开始...');
-});
-
-// ══════════════════════════════════════════════════
-//  KEYBOARD
-// ══════════════════════════════════════════════════
-document.addEventListener('keydown', e => {
-  if (e.ctrlKey && e.key === 'Enter' && S.section === 'room') {
-    const notes = document.getElementById('room-notes');
-    if (document.activeElement === notes) {
-      notes.value += '\n\n---\n\n';
-      notes.selectionStart = notes.selectionEnd = notes.value.length;
-    }
-  }
-  if (e.key === 'Escape') closeModal();
-});
-
-// ══════════════════════════════════════════════════
-//  BOOT
-// ══════════════════════════════════════════════════
-init();
 </script>
 </body>
 </html>
