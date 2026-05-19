@@ -6,8 +6,8 @@
 <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
 <meta http-equiv="Pragma" content="no-cache">
 <meta http-equiv="Expires" content="0">
-<title>MeetPilot · 智能会议助手 v3.11</title>
-<meta name="version" content="3.11-20260519">
+<title>MeetPilot · 智能会议助手 v3.12</title>
+<meta name="version" content="3.12-20260519">
 <style>
 :root{
   --bg0:#F0F4F8;--bg1:#FFFFFF;--bg2:#F7F9FC;--border:#E2E8F0;
@@ -667,6 +667,21 @@ select{cursor:pointer}
       </div>
     </div>
 
+    <!-- 编码模块 -->
+    <div class="sg">
+      <div class="sg-title">功能模块</div>
+      <div class="sr">
+        <div class="sr-info">
+          <div class="sr-label">💻 编码会议专项模块</div>
+          <div class="sr-desc">全局开关。开启后会议室中出现"代码模式"按钮，可独立控制每次会议是否启用</div>
+        </div>
+        <label class="toggle">
+          <input type="checkbox" id="coding-global-toggle" onchange="toggleCodingGlobal()">
+          <span class="tslider"></span>
+        </label>
+      </div>
+    </div>
+
     <!-- 语音 -->
     <div class="sg sg-full">
       <div class="sg-title">语音识别</div>
@@ -727,21 +742,6 @@ select{cursor:pointer}
             未配置 · 未配置时将在浏览器本地运行模型（首次需下载约 74MB，较慢）
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- 编码模块 -->
-    <div class="sg">
-      <div class="sg-title">功能模块</div>
-      <div class="sr">
-        <div class="sr-info">
-          <div class="sr-label">💻 编码会议专项模块</div>
-          <div class="sr-desc">全局开关。开启后会议室中出现"代码模式"按钮，可独立控制每次会议是否启用</div>
-        </div>
-        <label class="toggle">
-          <input type="checkbox" id="coding-global-toggle" onchange="toggleCodingGlobal()">
-          <span class="tslider"></span>
-        </label>
       </div>
     </div>
 
