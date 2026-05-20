@@ -399,6 +399,7 @@ let S = {
   micActive: false,
   timerInterval: null,
   startTime: null,
+  elapsed: 0,
   meetings: [],
   settings: { apikey: '', endpoint: '' },
 };
@@ -477,11 +478,16 @@ function startTimer() {
   S.startTime = Date.now();
   clearInterval(S.timerInterval);
   S.timerInterval = setInterval(() => {
-    const s = Math.floor((Date.now() - S.startTime) / 1000);
+    const s = S.elapsed + Math.floor((Date.now() - S.startTime) / 1000);
     document.getElementById('timer').textContent = pad(Math.floor(s / 60)) + ':' + pad(s % 60);
   }, 1000);
 }
-function stopTimer() { clearInterval(S.timerInterval); S.timerInterval = null; }
+function stopTimer() {
+  if (S.startTime) S.elapsed += Math.floor((Date.now() - S.startTime) / 1000);
+  S.startTime = null;
+  clearInterval(S.timerInterval);
+  S.timerInterval = null;
+}
 function pad(n) { return String(n).padStart(2, '0'); }
 
 // ── Speech ──
@@ -647,6 +653,8 @@ function stopMic() {
 
 function restartMic() {
   stopMic();
+  S.elapsed = 0;
+  document.getElementById('timer').textContent = '00:00';
   document.getElementById('speech-warn').innerHTML = '';
   setStatusTip('准备就绪');
   setTimeout(() => startMic(), 300);
@@ -819,7 +827,7 @@ function quickSave() {
   // 清空笔记和标题
   notes.innerHTML = '';
   titleInput.value = '';
-  stopMic(); stopTimer();
+  stopMic(); stopTimer(); S.elapsed = 0;
   document.getElementById('timer').textContent = '00:00';
   document.getElementById('mic-actions').classList.remove('show');
   setStatusTip('准备就绪');
