@@ -83,7 +83,7 @@ input[type=text]:focus,input[type=password]:focus{border-color:var(--accent)}
 .notes-footer{padding:8px 12px;border-top:1px solid var(--border);display:flex;justify-content:flex-end;gap:8px;flex-shrink:0;background:var(--bg2)}
 
 /* ── Mark styles (inside editor + history detail) ── */
-.mark-hl{background:var(--hl-bg);color:var(--hl-color);border-radius:3px;padding:1px 3px;font-weight:500}
+.mark-hl{background:var(--hl-bg);color:var(--hl-color);border-radius:3px;padding:1px 3px;font-weight:500;-webkit-box-decoration-break:clone;box-decoration-break:clone}
 .mark-hl.mark-flash{outline:2px solid var(--hl-color);outline-offset:1px}
 .mark-todo{display:inline-flex;align-items:center;gap:5px;color:var(--accent)}
 .mark-todo input[type=checkbox]{width:14px;height:14px;flex-shrink:0;accent-color:var(--accent);cursor:pointer}
@@ -146,7 +146,7 @@ audio{width:100%;border-radius:7px;margin-bottom:7px}
 .detail-title-input{font-size:18px;font-weight:800;color:var(--text0);flex:1;min-width:0;border:none;outline:none;background:transparent;border-bottom:2px solid transparent;transition:border-color .2s;padding:2px 0;font-family:inherit}
 .detail-title-input:focus{border-bottom-color:var(--accent)}
 .detail-content{background:var(--bg2);border:1px solid var(--border);border-radius:var(--r);padding:18px;font-size:14px;line-height:1.95;word-break:break-word;min-height:200px;max-height:calc(100vh - 280px);overflow-y:auto}
-.detail-content .mark-hl{background:var(--hl-bg);color:var(--hl-color);border-radius:3px;padding:1px 3px;font-weight:500}
+.detail-content .mark-hl{background:var(--hl-bg);color:var(--hl-color);border-radius:3px;padding:1px 3px;font-weight:500;-webkit-box-decoration-break:clone;box-decoration-break:clone}
 .detail-content .mark-todo{display:inline-flex;align-items:center;gap:5px;color:var(--accent)}
 .detail-content .mark-todo input{width:14px;height:14px;flex-shrink:0;accent-color:var(--accent)}
 .detail-content .mark-todo.done{text-decoration:line-through;opacity:.55}
