@@ -308,9 +308,13 @@ audio{width:100%;border-radius:7px;margin-bottom:7px}
       <div class="detail-header">
         <button class="btn btn-secondary btn-sm" onclick="closeDetail()">← 返回</button>
         <input type="text" class="detail-title-input" id="detail-title" maxlength="60" onblur="saveDetailTitle()">
-        <button class="btn btn-secondary btn-sm" onclick="exportDetail()">📥 导出</button>
+        <button class="btn btn-secondary btn-sm" onclick="exportDetail()">📥 导出文字</button>
+        <button class="btn btn-secondary btn-sm" id="export-audio-btn" onclick="exportDetailAudio()" style="display:none">🎵 导出录音</button>
       </div>
       <div style="font-size:12px;color:var(--text2);margin-bottom:12px" id="detail-meta"></div>
+      <div id="detail-audio-wrap" style="display:none;margin-bottom:12px">
+        <audio id="detail-audio-player" controls style="width:100%;border-radius:8px"></audio>
+      </div>
       <div class="detail-content" id="detail-content"></div>
     </div>
   </div>
@@ -391,6 +395,42 @@ audio{width:100%;border-radius:7px;margin-bottom:7px}
 <script>
 'use strict';
 
+// ── IndexedDB audio store ──
+const ADB_NAME = 'meetpilot_audio', ADB_VER = 1, ADB_STORE = 'blobs';
+let _audioDB = null;
+function _openAudioDB() {
+  if (_audioDB) return Promise.resolve(_audioDB);
+  return new Promise((res, rej) => {
+    const req = indexedDB.open(ADB_NAME, ADB_VER);
+    req.onupgradeneeded = e => e.target.result.createObjectStore(ADB_STORE);
+    req.onsuccess = e => { _audioDB = e.target.result; res(_audioDB); };
+    req.onerror = e => rej(e.target.error);
+  });
+}
+function saveAudioBlob(key, blob) {
+  return _openAudioDB().then(db => new Promise((res, rej) => {
+    const tx = db.transaction(ADB_STORE, 'readwrite');
+    tx.objectStore(ADB_STORE).put(blob, key);
+    tx.oncomplete = () => res();
+    tx.onerror = e => rej(e.target.error);
+  }));
+}
+function getAudioBlob(key) {
+  return _openAudioDB().then(db => new Promise((res, rej) => {
+    const req = db.transaction(ADB_STORE, 'readonly').objectStore(ADB_STORE).get(key);
+    req.onsuccess = e => res(e.target.result || null);
+    req.onerror = e => rej(e.target.error);
+  }));
+}
+function deleteAudioBlob(key) {
+  return _openAudioDB().then(db => new Promise((res) => {
+    const tx = db.transaction(ADB_STORE, 'readwrite');
+    tx.objectStore(ADB_STORE).delete(key);
+    tx.oncomplete = () => res();
+    tx.onerror = () => res(); // silent
+  }));
+}
+
 const SR = window.SpeechRecognition || window.webkitSpeechRecognition || null;
 const STORE_KEY = 'meetpilot_v4';
 
@@ -405,6 +445,7 @@ let S = {
 };
 let _recorder = null;   // MediaRecorder for cloud-mode recording
 let _recStream = null;  // mic stream kept alive during recording
+let _recChunks = [];    // accumulate all audio chunks for saving
 let _viewingId = null;
 let _audioURL = null;
 // References to mark elements for sidebar click-to-scroll
@@ -535,6 +576,7 @@ function startMic() {
 // ── 云端模式：MediaRecorder 分块 → Whisper API ──
 function _startCloudMic(stream) {
   _recStream = stream;
+  _recChunks = [];
   const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus')
     ? 'audio/webm;codecs=opus' : 'audio/webm';
   _recorder = new MediaRecorder(stream, { mimeType });
@@ -542,6 +584,7 @@ function _startCloudMic(stream) {
 
   _recorder.ondataavailable = async (e) => {
     if (!e.data || e.data.size < 1000) return; // 太短跳过
+    _recChunks.push(e.data); // 累积到本地
     setStatusTip('☁️ 转写中…');
     try {
       const endpoint = S.settings.endpoint || 'https://api.openai.com/v1/audio/transcriptions';
@@ -633,13 +676,20 @@ function warnBox(msg, type) {
 
 function stopMic() {
   S.micActive = false;
-  // 停止云端模式
+  // 停止云端模式，合并音频 chunks 暂存
   if (_recorder && _recorder.state !== 'inactive') {
     _recorder.requestData(); // 把最后一块也发出去
     _recorder.stop();
   }
   _recorder = null;
   if (_recStream) { _recStream.getTracks().forEach(t => t.stop()); _recStream = null; }
+  // 暂存合并后的录音 blob，供 quickSave 时使用
+  if (_recChunks.length) {
+    const mimeType = MediaRecorder.isTypeSupported('audio/webm;codecs=opus') ? 'audio/webm;codecs=opus' : 'audio/webm';
+    S._pendingAudioBlob = new Blob(_recChunks, { type: mimeType });
+    S._pendingAudioExt = 'webm';
+    _recChunks = [];
+  }
   // 停止 Web Speech 模式
   if (S.recognition) { try { S.recognition.abort(); } catch (e) {} S.recognition = null; }
   const btn = document.getElementById('mic-btn');
@@ -653,6 +703,9 @@ function stopMic() {
 
 function restartMic() {
   stopMic();
+  S._pendingAudioBlob = null;
+  S._pendingAudioExt = null;
+  _recChunks = [];
   S.elapsed = 0;
   document.getElementById('timer').textContent = '00:00';
   document.getElementById('speech-warn').innerHTML = '';
@@ -820,7 +873,15 @@ function quickSave() {
   if (!text) { toast('暂无内容，请先录音或输入记录'); return; }
   const titleInput = document.getElementById('notes-title');
   const title = titleInput.value.trim() || ('会议_' + fmtDate(new Date()));
-  const m = { id: Date.now(), title, savedAt: Date.now(), source: 'manual', text, html: notes.innerHTML };
+  const audioKey = S._pendingAudioBlob ? ('audio_' + Date.now()) : null;
+  const m = {
+    id: Date.now(), title, savedAt: Date.now(), source: 'manual', text, html: notes.innerHTML,
+    ...(audioKey ? { audioKey, audioName: title + '.' + (S._pendingAudioExt || 'webm'), audioExt: S._pendingAudioExt || 'webm' } : {}),
+  };
+  if (audioKey && S._pendingAudioBlob) {
+    saveAudioBlob(audioKey, S._pendingAudioBlob).catch(() => {});
+    S._pendingAudioBlob = null; S._pendingAudioExt = null;
+  }
   S.meetings.unshift(m);
   if (S.meetings.length > 300) S.meetings.pop();
   saveData();
@@ -916,6 +977,8 @@ async function startTranscribe(file) {
       // ── 自动保存到历史记录 ──
       const autoTitle = file.name.replace(/\.[^/.]+$/, '');
       const autoText = lines.join('\n');
+      const audioKey = 'audio_' + Date.now();
+      const ext = file.name.split('.').pop() || 'webm';
       const autoM = {
         id: Date.now(),
         title: autoTitle,
@@ -923,10 +986,14 @@ async function startTranscribe(file) {
         source: 'upload',
         text: autoText,
         html: lines.map(l => `<div>${escHtml(l)}</div>`).join(''),
+        audioKey,
+        audioName: file.name,
+        audioExt: ext,
       };
       S.meetings.unshift(autoM);
       if (S.meetings.length > 300) S.meetings.pop();
       saveData();
+      saveAudioBlob(audioKey, file).catch(() => {});
     } else {
       setUploadStatus('⚠️ 未识别到内容，请检查音频文件');
     }
@@ -972,18 +1039,42 @@ function viewMeeting(id) {
   document.getElementById('hist-detail').style.display = '';
   document.getElementById('detail-title').value = m.title;
   const dt = new Date(m.savedAt).toLocaleString('zh-CN', { year: 'numeric', month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
-  document.getElementById('detail-meta').textContent = '保存时间：' + dt + (m.source === 'upload' ? '  ·  音频转录' : '');
+  const sourceTag = m.source === 'upload' ? '  ·  音频转录' : (m.source === 'manual' && m.audioKey ? '  ·  实时录音' : '');
+  document.getElementById('detail-meta').textContent = '保存时间：' + dt + sourceTag;
   const contentEl = document.getElementById('detail-content');
   if (m.html) {
     contentEl.innerHTML = m.html;
-    // 历史详情中复选框只读
     contentEl.querySelectorAll('input[type=checkbox]').forEach(cb => cb.disabled = true);
   } else {
     contentEl.textContent = m.text || '（无内容）';
   }
+  // 音频播放器
+  const audioWrap = document.getElementById('detail-audio-wrap');
+  const audioPlayer = document.getElementById('detail-audio-player');
+  const exportAudioBtn = document.getElementById('export-audio-btn');
+  // 清理上一条记录的 objectURL
+  if (audioPlayer._blobURL) { URL.revokeObjectURL(audioPlayer._blobURL); audioPlayer._blobURL = null; }
+  audioPlayer.src = '';
+  audioWrap.style.display = 'none';
+  exportAudioBtn.style.display = 'none';
+  if (m.audioKey) {
+    getAudioBlob(m.audioKey).then(blob => {
+      if (!blob) return;
+      const url = URL.createObjectURL(blob);
+      audioPlayer._blobURL = url;
+      audioPlayer.src = url;
+      audioWrap.style.display = '';
+      exportAudioBtn.style.display = '';
+    }).catch(() => {});
+  }
 }
 
 function closeDetail() {
+  const audioPlayer = document.getElementById('detail-audio-player');
+  if (audioPlayer._blobURL) { URL.revokeObjectURL(audioPlayer._blobURL); audioPlayer._blobURL = null; }
+  audioPlayer.src = '';
+  document.getElementById('detail-audio-wrap').style.display = 'none';
+  document.getElementById('export-audio-btn').style.display = 'none';
   document.getElementById('hist-list-wrap').style.display = '';
   document.getElementById('hist-detail').style.display = 'none';
   _viewingId = null;
@@ -999,12 +1090,15 @@ function saveDetailTitle() {
 
 function delMeeting(id) {
   if (!confirm('删除这条会议记录？删除后不可恢复。')) return;
+  const m = S.meetings.find(x => x.id === id);
+  if (m?.audioKey) deleteAudioBlob(m.audioKey).catch(() => {});
   S.meetings = S.meetings.filter(m => m.id !== id);
   saveData(); renderHist(); toast('已删除');
 }
 
 function clearAll() {
   if (!confirm('清空所有会议记录？此操作不可恢复。')) return;
+  S.meetings.forEach(m => { if (m.audioKey) deleteAudioBlob(m.audioKey).catch(() => {}); });
   S.meetings = []; saveData(); renderHist(); toast('已清空所有记录');
 }
 
@@ -1015,6 +1109,20 @@ function exportById(id) {
 }
 
 function exportDetail() { if (_viewingId) exportById(_viewingId); }
+
+function exportDetailAudio() {
+  if (!_viewingId) return;
+  const m = S.meetings.find(x => x.id === _viewingId);
+  if (!m || !m.audioKey) return;
+  getAudioBlob(m.audioKey).then(blob => {
+    if (!blob) { toast('⚠️ 未找到录音文件'); return; }
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = (m.audioName || m.title + '.' + (m.audioExt || 'webm'));
+    a.click();
+    setTimeout(() => URL.revokeObjectURL(a.href), 5000);
+  }).catch(() => toast('⚠️ 导出录音失败'));
+}
 
 // ── Utils ──
 function escHtml(s) { return (s || '').replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;'); }
